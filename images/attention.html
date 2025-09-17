@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Self-Attention vs Single-Head Attention — Example</title>
+  <style>
+    :root{
+      --bg:#ffffff; --muted:#475569; --accent:#0ea5e9; --card:#fbfbfd;
+    }
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      margin: 28px;
+      color: #102a43;
+      background: var(--bg);
+      line-height:1.6;
+    }
+    .container { max-width:1100px; margin:0 auto; }
+    h1 { text-align:center; color:#0b2545; margin-bottom:6px; }
+    p.lead { text-align:center; color:var(--muted); margin-top:0; margin-bottom:18px; }
+    .card { background:var(--card); border:1px solid #e6eef6; padding:18px; border-radius:8px; margin:18px 0; }
+    .diagram-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; align-items:start; }
+    @media (max-width:880px) { .diagram-row { grid-template-columns:1fr; } }
+    .svg-wrap { overflow-x:auto; border:1px solid #e6eef6; padding:8px; background:#fff; border-radius:6px; }
+    svg { max-width:100%; height:auto; display:block; }
+    .explain { margin-top:12px; color:var(--muted); font-size:0.98rem; }
+    .step { margin:10px 0; }
+    .small { font-size:0.95rem; color:var(--muted); }
+    .legend { font-size:0.9rem; color:#0b2545; }
+    .panel-title { font-weight:700; margin:8px 0 6px; color:#0b3b5a; }
+    .callout { background:#f1f8ff; border-left:4px solid var(--accent); padding:10px 12px; border-radius:6px; margin-top:12px; color:#053b57; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Self-Attention vs Single-Head Attention</h1>
+    <p class="lead">Same sentence, two ways to attend. Example sentence: <em>"The bank of the river is wide."</em></p>
+
+    <section class="card">
+      <h2 style="margin-top:0">Quick reminder (plain words)</h2>
+      <p class="small">Self-attention means every token can look at every token (including itself) to build a new contextual representation. Single-head attention is one concrete way to implement self-attention: it uses one set of query/key/value projections (one "view") to compute attention weights and produce an output.</p>
+    </section>
+
+    <section class="card">
+      <div class="diagram-row">
+        <!-- Single-head attention panel -->
+        <div>
+          <div class="panel-title">Single-Head Attention (per-token view)</div>
+          <div class="svg-wrap" role="img" aria-label="Single head attention diagram">
+            <!-- SVG illustrating 'bank' attending strongly to 'river' -->
+            <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="shTitle shDesc">
+              <title id="shTitle">Single head attention: bank attends to river</title>
+              <desc id="shDesc">Shows tokens horizontally and an arrow from 'bank' to 'river' with thicker stroke indicating stronger attention.</desc>
+
+              <!-- Tokens row -->
+              <g font-family="Segoe UI, Roboto, Arial">
+                <rect x="20" y="30" width="120" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="80" y="52" text-anchor="middle" font-size="14" fill="#92400e">The</text>
+
+                <rect x="160" y="30" width="120" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="220" y="52" text-anchor="middle" font-size="14" fill="#92400e">bank</text>
+
+                <rect x="300" y="30" width="120" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="360" y="52" text-anchor="middle" font-size="14" fill="#92400e">of</text>
+
+                <rect x="440" y="30" width="140" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="510" y="52" text-anchor="middle" font-size="14" fill="#92400e">river</text>
+
+                <rect x="600" y="30" width="80" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="640" y="52" text-anchor="middle" font-size="14" fill="#92400e">is</text>
+
+                <rect x="20" y="90" width="120" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="80" y="112" text-anchor="middle" font-size="14" fill="#92400e">wide</text>
+              </g>
+
+              <!-- current token highlight (bank) -->
+              <rect x="156" y="24" width="128" height="48" rx="8" fill="none" stroke="#0ea5e9" stroke-width="2"></rect>
+              <text x="220" y="18" text-anchor="middle" font-size="12" fill="#0b2545">current token (query)</text>
+
+              <!-- Arrow from bank -> river (strong) -->
+              <defs>
+                <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                  <path d="M0,0 L8,4 L0,8 z" fill="#0ea5e9"/>
+                </marker>
+              </defs>
+              <path d="M280,60 C360,90 460,90 500,60" fill="none" stroke="#0ea5e9" stroke-width="8" stroke-linecap="round" marker-end="url(#arrowHead)"/>
+              <text x="390" y="96" text-anchor="middle" font-size="12" fill="#0b2545">high attention → 'river'</text>
+
+              <!-- Faint arrows to other tokens (weaker attention) -->
+              <path d="M280,60 C220,110 160,120 80,110" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.5" stroke-linecap="round" marker-end="url(#arrowHead)"/>
+              <path d="M280,60 C320,120 380,120 440,110" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.5" stroke-linecap="round" marker-end="url(#arrowHead)"/>
+
+              <!-- Softmax weights annotation -->
+              <text x="360" y="140" font-size="12" fill="#475569" text-anchor="middle">example weights (softmax): [the:0.05, bank:0.10, of:0.05, river:0.70, is:0.05, wide:0.05]</text>
+
+              <!-- result -->
+              <rect x="120" y="160" width="460" height="56" rx="8" fill="#f1f5f9" stroke="#cbd5e1"></rect>
+              <text x="350" y="185" text-anchor="middle" font-size="13" fill="#0b2545">attended representation for "bank" ≈ 0.70·value("river") + 0.10·value("bank") + ...</text>
+            </svg>
+          </div>
+
+          <div class="explain">
+            <div class="step"><strong>What happened:</strong> with a single head, "bank" builds its new vector mainly by looking at "river". The query for "bank" matched the key of "river" strongly, so river's value dominated the weighted sum.</div>
+            <div class="step small">Takeaway: single-head attention gives one perspective. Here that perspective resolves ambiguity by giving most weight to the nearby related word "river".</div>
+          </div>
+        </div>
+
+        <!-- Self-attention panel -->
+        <div>
+          <div class="panel-title">Self-Attention (overall view)</div>
+          <div class="svg-wrap" role="img" aria-label="Self attention diagram">
+            <!-- SVG showing many-to-many attention (multiple arrows) -->
+            <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="saTitle saDesc">
+              <title id="saTitle">Self attention: every token attends to every token</title>
+              <desc id="saDesc">Shows tokens and arrows from many tokens to many tokens, with thicker arrows where attention is stronger.</desc>
+
+              <!-- Tokens row -->
+              <g font-family="Segoe UI, Roboto, Arial">
+                <rect x="24" y="28" width="100" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="74" y="50" text-anchor="middle" font-size="13" fill="#92400e">The</text>
+
+                <rect x="140" y="28" width="100" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="190" y="50" text-anchor="middle" font-size="13" fill="#92400e">bank</text>
+
+                <rect x="256" y="28" width="72" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="292" y="50" text-anchor="middle" font-size="13" fill="#92400e">of</text>
+
+                <rect x="342" y="28" width="100" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="392" y="50" text-anchor="middle" font-size="13" fill="#92400e">river</text>
+
+                <rect x="458" y="28" width="60" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="488" y="50" text-anchor="middle" font-size="13" fill="#92400e">is</text>
+
+                <rect x="536" y="28" width="84" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"></rect>
+                <text x="578" y="50" text-anchor="middle" font-size="13" fill="#92400e">wide</text>
+              </g>
+
+              <!-- Many arrows (illustrate every token attending to every token) -->
+              <defs>
+                <marker id="arrow2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 z" fill="#0ea5e9"/>
+                </marker>
+              </defs>
+
+              <!-- sample arrows: The -> bank, The -> river -->
+              <path d="M74,64 C110,110 160,110 190,64" fill="none" stroke="#0ea5e9" stroke-width="1.8" opacity="0.7" marker-end="url(#arrow2)"/>
+              <path d="M74,64 C180,160 320,160 392,64" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.5" marker-end="url(#arrow2)"/>
+
+              <!-- bank -> river (strong) -->
+              <path d="M190,64 C220,120 320,120 392,64" fill="none" stroke="#0ea5e9" stroke-width="7" stroke-linecap="round" marker-end="url(#arrow2)"/>
+
+              <!-- of -> river (moderate) -->
+              <path d="M292,64 C320,110 360,120 392,64" fill="none" stroke="#0ea5e9" stroke-width="2.6" opacity="0.9" marker-end="url(#arrow2)"/>
+
+              <!-- river -> wide -->
+              <path d="M392,64 C420,110 480,120 578,64" fill="none" stroke="#0ea5e9" stroke-width="2" opacity="0.85" marker-end="url(#arrow2)"/>
+
+              <!-- bank -> The (small) -->
+              <path d="M190,64 C120,100 80,110 74,64" fill="none" stroke="#0ea5e9" stroke-width="1" opacity="0.45" marker-end="url(#arrow2)"/>
+
+              <!-- annotations -->
+              <text x="350" y="140" text-anchor="middle" font-size="12" fill="#0b2545">Many-to-many attention: each token's query compares to all keys → softmax weights → weighted sum of values → new token vectors</text>
+
+              <rect x="80" y="170" width="540" height="56" rx="8" fill="#f7f9fc" stroke="#e6eef6"></rect>
+              <text x="350" y="200" text-anchor="middle" font-size="13" fill="#0b2545">Result: all tokens (including 'bank') obtain contextual vectors reflecting the whole sentence.</text>
+            </svg>
+          </div>
+
+          <div class="explain">
+            <div class="step"><strong>What happened:</strong> every token considered every other token. The strong arrow from "bank" to "river" is visible here too, but you also see other interactions (e.g., "river" → "wide").</div>
+            <div class="step small">Takeaway: self-attention is the general mechanism; single-head attention is one particular computation of that mechanism (one Q/K/V set). In practice, transformers usually run many heads in parallel so they can capture several relationships at once.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>Classroom shorthand:</strong> with self-attention, every student can ask every other student for help. With single-head attention they ask with one kind of question. With multi-head attention they ask many kinds of questions at the same time.
+      </div>
+    </section>
+
+    <section class="card">
+      <h3 style="margin-top:0">Concrete step summary (for the token "bank")</h3>
+      <div class="small">
+        <ol>
+          <li>Project each token to Q, K, V using W<sub>Q</sub>, W<sub>K</sub>, W<sub>V</sub>.</li>
+          <li>Compute scores q<sub>bank</sub>·k<sub>j</sub>/√d<sub>k</sub> for all tokens j.</li>
+          <li>Softmax the scores → weights a<sub>bank,j</sub>.</li>
+          <li>Compute head<sub>bank</sub> = Σ<sub>j</sub> a<sub>bank,j</sub> · v<sub>j</sub>.</li>
+          <li>Project head<sub>bank</sub> with W<sub>O</sub> → a<sub>bank</sub> (final vector in model space).</li>
+        </ol>
+      </div>
+    </section>
+
+    <footer style="text-align:center;color:var(--muted);margin-top:18px;">
+      Want a downloadable PNG of these diagrams or a side-by-side "tired vs wide" attention comparison for the pronoun examples? Say the word and I’ll create it.
+    </footer>
+  </div>
+</body>
+</html>

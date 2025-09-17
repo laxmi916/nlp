@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chapter 20 — Transformers: Introduction</title>
+  <style>
+    body { font-family: Georgia, 'Times New Roman', Times, serif; margin: 0; color: #111827; background: #fbfdff; line-height: 1.6; }
+    .container { max-width: 900px; margin: 48px auto; padding: 28px; background: #ffffff; border-radius: 8px; box-shadow: 0 10px 30px rgba(17,24,39,0.06); }
+    header { border-bottom: 1px solid #eef2f7; padding-bottom: 16px; margin-bottom: 20px; }
+    h1 { font-size: 28px; margin: 0 0 6px; }
+    .meta { color: #6b7280; font-size: 14px; }
+    h2 { font-size: 20px; margin-top: 22px; }
+    p { margin: 12px 0; font-size: 16px; color: #111827; }
+    ul { margin: 8px 0 8px 22px; }
+    .note { background: #f8fafc; border-left: 4px solid #60a5fa; padding: 10px 14px; color: #374151; border-radius: 4px; }
+    .code { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    footer { margin-top: 28px; border-top: 1px solid #eef2f7; padding-top: 12px; color: #6b7280; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Transformers: Introduction</h1>
+    </header>
+
+    <section>
+      <h2>Introduction to the Transformer</h2>
+      <p>
+        The <strong>transformer</strong>,is the standard architecture behind today’s large language models (LLMs). Transformers have completely changed the way we do speech and language processing, and every chapter that follows will build on this idea.
+      </p>
+    </section>
+
+    <section>
+      <h2>What is a Transformer?</h2>
+      <p>
+        A transformer is a <strong>neural network</strong> with a special structure that uses <strong>self-attention (or multi-head attention)</strong>.
+      </p>
+      <ul>
+        <li><strong>Attention</strong> is a way for the model to decide which other words (tokens) are important when figuring out the meaning of the current word.</li>
+        <li>This allows the model to capture relationships between tokens even when they are far apart in the sentence.</li>
+      </ul>
+    </section>
+
+    <section>
+  <h2>Transformer Architecture</h2>
+  <p>The figure below shows the main components of the transformer:</p>
+  <img src="./images/transformer-architecture.png" 
+       alt="Diagram of transformer architecture" 
+       width="700">
+
+      <p>The transformer has <strong>three main parts</strong>:</p>
+
+      <h3>1. Input Encoding</h3>
+      <ul>
+        <li>Each input token (like the word <span class="code">thanks</span>) is turned into a vector using an <strong>embedding matrix (E)</strong>.</li>
+        <li>The model also adds <strong>position information</strong>, so it knows the order of tokens.</li>
+      </ul>
+
+      <h3>2. Transformer Blocks (the core of the model)</h3>
+      <ul>
+        <li>These are stacked in <strong>columns</strong>, often 12–96 layers deep.</li>
+        <li>Each block contains:
+          <ul>
+            <li><strong>Multi-head attention</strong> (looks at other tokens for context)</li>
+            <li><strong>Feedforward networks</strong> (process the information further)</li>
+            <li><strong>Layer normalization</strong> (keeps training stable)</li>
+          </ul>
+        </li>
+        <li>Together, the blocks transform the sequence of input vectors <span class="code">(x<sub>1</sub>, …, x<sub>n</sub>)</span> into output vectors <span class="code">(h<sub>1</sub>, …, h<sub>n</sub>)</span>.</li>
+      </ul>
+
+      <h3>3. Language Modeling Head</h3>
+      <ul>
+        <li>After the last block, the model produces predictions.</li>
+        <li>Each final vector is passed through an <strong>unembedding matrix (U)</strong> and a <strong>softmax</strong> function to choose the most likely next token.</li>
+      </ul>
+    </section>
+
+
+    <section>
+      <h2>Summary</h2>
+      <p>
+        In short: a <strong>transformer</strong> is a neural network that predicts tokens one by one. It works by first turning tokens into vectors, then processing them through stacks of attention-based layers, and finally predicting the next token using a softmax output head.
+      </p>
+    </section>
+
+  <h2>🌟 Attention</h2>
+  <p>
+    In older models like <b>word2vec</b>, each word always had <b>one fixed meaning</b>.  
+    For example:
+  </p>
+  <ul>
+    <li>The word <b>“chicken”</b> always had the same vector, no matter if we meant the animal or the food.</li>
+    <li>The word <b>“it”</b> always had the same vector, even though in different sentences it can mean different things.</li>
+  </ul>
+  <p>
+    But in real life, the meaning of a word depends on <b>context</b> (the other words around it).  
+    That’s what <b>transformers + attention</b> solve.
+  </p>
+
+  <h3>🐔 Example 1: "it" with different meanings</h3>
+  <ol>
+    <li><i>The chicken didn’t cross the road because <b>it</b> was too tired.</i> → Here, <b>it = chicken</b>.</li>
+    <li><i>The chicken didn’t cross the road because <b>it</b> was too wide.</i> → Here, <b>it = road</b>.</li>
+  </ol>
+  <p>
+    👉 The word “it” changes its meaning depending on what came before.  
+    Transformers figure this out using <b>attention</b>: they look at all the words in the sentence and decide which ones are important for understanding “it”.
+  </p>
+
+  <p><b>Attention</b> is the mechanism in the transformer that weighs and combines the
+representations from appropriate other tokens in the context from layer k+1 to build
+the representation for tokens in layer k.</p>
+
+  <img src="./images/SimpleAttentionDiagram.png" 
+       alt="Simple Attention Diagram" 
+       width="700">
+
+    <!-- Simple Attention Diagram (copy into your HTML) -->
+<div style="max-width:900px;margin:24px auto;padding:18px;font-family:system-ui,Segoe UI,Roboto,Arial;">
+  <h3 style="margin:0 0 12px">Attention diagram — "it" attends to earlier tokens</h3>
+  <svg viewBox="0 0 900 220" width="100%" height="220" aria-label="Simple attention diagram">
+    <!-- Background -->
+    <rect x="0" y="0" width="900" height="220" fill="transparent"></rect>
+
+    <!-- Token boxes -->
+    <!-- positions for tokens -->
+    <!-- We'll place tokens horizontally -->
+    <g font-family="Segoe UI, Roboto, Arial" font-size="14" fill="#111">
+      <!-- token rectangles -->
+      <rect x="20"  y="140" width="110" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="75"  y="165" text-anchor="middle" fill="#0f172a">The</text>
+
+      <rect x="145" y="140" width="140" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"/>
+      <text x="215" y="165" text-anchor="middle" fill="#92400e">chicken</text>
+
+      <rect x="295" y="140" width="140" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="365" y="165" text-anchor="middle" fill="#0f172a">didn’t</text>
+
+      <rect x="445" y="140" width="120" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="505" y="165" text-anchor="middle" fill="#0f172a">cross</text>
+
+      <rect x="580" y="140" width="100" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="630" y="165" text-anchor="middle" fill="#0f172a">the</text>
+
+      <rect x="695" y="140" width="120" height="36" rx="6" fill="#fff8e1" stroke="#f59e0b"/>
+      <text x="755" y="165" text-anchor="middle" fill="#92400e">road</text>
+
+      <rect x="20"  y="60"  width="110" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="75"  y="85"  text-anchor="middle" fill="#0f172a">because</text>
+
+      <rect x="145" y="60"  width="140" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="215" y="85"  text-anchor="middle" fill="#0f172a">it</text>
+
+      <rect x="295" y="60"  width="140" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="365" y="85"  text-anchor="middle" fill="#0f172a">was</text>
+
+      <rect x="445" y="60"  width="120" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="505" y="85"  text-anchor="middle" fill="#0f172a">too</text>
+
+      <rect x="580" y="60"  width="160" height="36" rx="6" fill="#f3f4f6" stroke="#cbd5e1"/>
+      <text x="660" y="85"  text-anchor="middle" fill="#0f172a"> wide</text>
+    </g>
+
+    <!-- Attention arrows from "it" (at 215,85 center) to earlier tokens -->
+    <!-- We'll draw curved paths with stroke-width proportional to weight -->
+    <!-- Weight example: chicken 0.6, road 0.3, others small 0.05 -->
+    <defs>
+      <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="6" refY="3"
+              orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L6,3 L0,6 z" fill="#0ea5e9"></path>
+      </marker>
+      <g id="legend">
+        <rect x="740" y="10" width="140" height="72" rx="6" fill="#ffffff" stroke="#e6e9ef"/>
+        <text x="752" y="30" fill="#0f172a" font-size="13" font-weight="600">Legend</text>
+        <line x1="752" y1="44" x2="792" y2="44" stroke="#0ea5e9" stroke-width="6" stroke-linecap="round"/>
+        <text x="800" y="48" fill="#334155" font-size="12">strong attention</text>
+        <line x1="752" y1="58" x2="792" y2="58" stroke="#0ea5e9" stroke-width="3" stroke-linecap="round"/>
+        <text x="800" y="62" fill="#334155" font-size="12">weaker attention</text>
+      </g>
+    </defs>
+
+    <!-- Strong attention: it -> chicken -->
+    <path d="M215,75 C200,40 220,20 215,165" fill="none" stroke="#0ea5e9" stroke-linecap="round"
+          stroke-width="3.5" opacity="0.95" marker-end="url(#arrowhead)"/>
+    <!-- Annotate weight -->
+    <text x="180" y="45" fill="#0f172a" font-size="12" font-family="Segoe UI, Roboto, Arial">0.30</text>
+
+    <!-- Medium attention: it -> road -->
+    <path d="M215,75 C330,30 430,30 755,140" fill="none" stroke="#0ea5e9" stroke-linecap="round"
+          stroke-width="6" opacity="0.9" marker-end="url(#arrowhead)"/>
+    <text x="500" y="30" fill="#0f172a" font-size="12">0.60</text>
+
+    <!-- Small attention: it -> 'the' (example small) -->
+    <path d="M215,75 C225,90 630,120 640,160" fill="none" stroke="#0ea5e9" stroke-linecap="round"
+          stroke-width="1.2" opacity="0.6" marker-end="url(#arrowhead)"/>
+    <text x="590" y="120" fill="#475569" font-size="11">0.05</text>
+
+    <!-- Place legend -->
+    <use href="#legend" x="0" y="0"/>
+  </svg>
+
+  <p style="margin:10px 0 0;color:#334155;font-size:14px;">
+    The diagram above shows how the token <strong>it</strong> (upper row) assigns attention to earlier tokens.
+    Thickness of the arrow indicates attention weight (stronger → thicker). Here <em>chicken</em> receives the
+    highest attention (0.60), <em>road</em> gets some attention (0.30), and other nearby tokens receive small weights.
+  </p>
+</div>
+
+  <h3>⏳ Example 2: Reading step by step</h3>
+  <p>
+    When reading left to right:
+  </p>
+  <p><i>The chicken didn’t cross the road because it...</i></p>
+  <p>
+    At this moment, we <b>don’t yet know</b> if “it” refers to chicken or road.  
+    So the model may <b>pay attention to both</b> until the next word (“tired” or “wide”) makes it clear.
+  </p>
+
+  <h3>🔑 Example 3: Grammar & Meaning</h3>
+  <ol>
+    <li>
+      <i>The keys to the cabinet are on the table.</i><br>
+      Subject = <b>keys</b> (plural).<br>
+      Verb = <b>are</b> (plural).<br>
+      Attention helps the model connect <b>keys</b> with <b>are</b>, even though <b>cabinet</b> is closer.
+    </li>
+    <li>
+      <i>I walked along the pond, and noticed one of the trees along the bank.</i><br>
+      “bank” here means <b>river bank</b>, not <b>financial bank</b>.<br>
+      The model knows this because of nearby words like <b>pond</b> and <b>trees</b>.
+    </li>
+  </ol>
+
+  <h3>🎯 How Attention Works</h3>
+  <p>
+    At each <b>layer</b> of the transformer:
+  </p>
+  <ul>
+    <li>The model takes a word (say “it”)</li>
+    <li>Looks at <b>all other words</b> in the sentence</li>
+    <li>Assigns <b>attention weights</b> (higher = more important)</li>
+    <li>Builds a new <b>contextual meaning</b> for “it”</li>
+  </ul>
+  <p>
+    In the diagram, the word <b>“it”</b> attends strongly to <b>chicken</b> and <b>road</b> because these are the most likely references.
+  </p>
+
+  <h3>✅ In short:</h3>
+  <ul>
+    <li>Transformers don’t just see a word → they <b>look at all other words</b> to guess its meaning.</li>
+    <li>That’s why “it” can mean chicken in one case and road in another.</li>
+    <li>This is called <b>self-attention</b>: each word attends to others in the sentence.</li>
+  </ul>
+
+
+    <section>
+      <h2>What attention computes</h2>
+      <p><b><i>“When I’m looking at the current word, which earlier words should I pay more attention to, and by how much?”</p>
+
+      <p>It does this by giving weights (importance values) to all the earlier words and then combining them into a new representation.</i></b></p>
+      <p>
+        At a given layer of a transformer, attention builds a new vector representation for each token by selectively combining information from earlier tokens. For token position <span class="math">i</span>, attention takes the current representation <code>x<sub>i</sub></code> and a set of prior representations <code>x<sub>1</sub>, …, x<sub>i</sub></code> and produces a new vector <code>a<sub>i</sub></code> that summarizes the context most relevant to <code>x<sub>i</sub></code>.
+      </p>
+
+      <p>
+        In causal (left-to-right) language models the context for position <em>i</em> is the tokens up to and including position <em>i</em> (no future tokens). Attention is computed independently at every position, so a self-attention layer maps the full input sequence <code>(x₁,…,xₙ)</code> to an output sequence <code>(a₁,…,aₙ)</code> of the same length.
+      </p>
+    </section>
+
+    <section>
+      <h2>Intuition</h2>
+      <p>
+        Attention answers the question: <em>“Given the current token, which earlier tokens are most useful for understanding it?”</em>  
+        It does so by (1) scoring how similar each earlier token is to the current token, (2) turning those scores into normalized weights (probabilities), and (3) computing a weighted sum of the earlier token vectors using those weights.
+      </p>
+    </section>
+
+    <section>
+      <h2>Step-by-step — the simplified attention formula</h2>
+
+      <h3>Step 1 — inputs</h3>
+      <p>
+        We assume token vectors <code>x₁, x₂, …, xₙ</code>. For the current position <em>i</em> we will produce <code>a<sub>i</sub></code>, the attention output for position <em>i</em>.
+      </p>
+
+      <h3>Step 2 — raw similarity scores (dot product)</h3>
+      <p>
+        For each earlier position <code>j ≤ i</code> compute a scalar score measuring similarity between <code>x<sub>i</sub></code> and <code>x<sub>j</sub></code>. The simplest choice is the dot product:
+      </p>
+      <pre><code class="math">score(x_i, x_j) = x_i · x_j</code></pre>
+      <p>
+        Intuition: if two vectors point in similar directions, their dot product is large — that suggests the earlier token <code>x<sub>j</sub></code> is relevant to <code>x<sub>i</sub></code>.
+      </p>
+
+      <h3>Step 3 — normalize scores to weights (softmax)</h3>
+      <p>
+        Raw scores can be any real numbers. We convert them into a probability distribution over the earlier tokens so the values become interpretable as "how much to use each token". This is done with the softmax:
+      </p>
+      <pre><code class="math">a_{ij} = softmax_j( score(x_i, x_j) )  for j ≤ i</code></pre>
+      <p>
+        The result <code>a<sub>ij</sub></code> is nonnegative and the weights for all <code>j ≤ i</code> sum to 1. Typically the weight on <code>j = i</code> (the token itself) is large, but other tokens may also receive substantial weight if they are similar to <code>x<sub>i</sub></code>.
+      </p>
+
+      <h3>Step 4 — weighted sum</h3>
+      <p>
+        Use the weights to combine the earlier vectors into the attention output:
+      </p>
+      <pre><code class="math">a_i = Σ_{j ≤ i} a_{ij} · x_j</code></pre>
+      <p>
+        In words: multiply each prior vector <code>x<sub>j</sub></code> by its attention weight <code>a<sub>ij</sub></code> and add them up. The result <code>a<sub>i</sub></code> is a new contextualized vector for position <em>i</em>.
+      </p>
+    </section>
+
+    <section>
+      <h2>Why these steps make sense</h2>
+      <ol>
+        <li><strong>Dot product → similarity:</strong> vectors that are similar point in similar directions; the dot product is a direct measure of that.</li>
+        <li><strong>Softmax → normalized importance:</strong> exponent + normalization produces positive weights that sum to one, so the model forms a convex combination (a weighted average) of prior vectors.</li>
+        <li><strong>Weighted sum → contextual vector:</strong> the output <code>a<sub>i</sub></code> is a blended vector that pulls information from the tokens that matter most for the current position.</li>
+      </ol>
+
+      <p>
+        In language, this lets a token's representation incorporate information from words that might be far away in the sentence: pronoun resolution, agreement (subject ↔ verb), and disambiguating word senses are all examples where attention helps.
+      </p>
+    </section>
+
+    <section>
+      <h2>Summary</h2>
+      <p>
+        Attention converts raw similarity scores between the current token and each prior token into a probability distribution (softmax), then builds a context-aware vector as the weighted sum of prior vectors. This simple mechanism—score, normalize, mix—repeats at every layer and every position, and is the key building block that lets transformers form rich contextualized token embeddings.
+      </p>
+    </section>
+
+
+<!-- Detailed Step-by-Step Attention Diagram -->
+<div style="max-width:820px;margin:22px auto;font-family:system-ui,Segoe UI,Roboto,Arial;line-height:1.6;color:#0f172a;">
+  <h2 style="margin:0 0 12px;">Attention — A Step-by-Step Example</h2>
+
+  <p>
+    Let’s carefully walk through how <b>self-attention</b> works inside a transformer. 
+    We’ll use a short sentence: <i>“The cat sat”</i>.  
+    Our focus will be on the token <b>“sat”</b> (x₃), and how the model builds its new 
+    representation <b>a₃</b> by looking back at earlier tokens (<b>x₁ = “the”</b>, 
+    <b>x₂ = “cat”</b>, and itself).
+  </p>
+
+  <!-- The original SVG diagram -->
+  <svg viewBox="0 0 820 320" width="100%" height="320" aria-label="Step-by-step attention diagram">
+    <defs>
+      <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4"
+              orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L8,4 L0,8 z" fill="#0ea5e9"></path>
+      </marker>
+      <style>
+        .tok { fill:#fff8e1; stroke:#f59e0b; stroke-width:1.2; rx:8; }
+        .tok-text { font-size:14px; fill:#92400e; font-weight:600; }
+        .label { font-size:13px; fill:#0f172a; }
+        .small { font-size:12px; fill:#334155; }
+        .box { fill:#f8fafc; stroke:#e6eef6; stroke-width:1; rx:8; }
+      </style>
+    </defs>
+
+    <!-- Token row (context) -->
+    <g>
+      <rect x="80"  y="50" width="120" height="40" class="tok"></rect>
+      <text x="140" y="78" text-anchor="middle" class="tok-text">x₁ — the</text>
+
+      <rect x="260" y="50" width="120" height="40" class="tok"></rect>
+      <text x="320" y="78" text-anchor="middle" class="tok-text">x₂ — cat</text>
+
+      <rect x="440" y="50" width="120" height="40" class="tok"></rect>
+      <text x="500" y="78" text-anchor="middle" class="tok-text">x₃ — sat</text>
+    </g>
+
+    <!-- Current token (position i) shown below -->
+    <g>
+      <rect x="440" y="190" width="120" height="40" fill="#eef2ff" stroke="#60a5fa" rx="8"></rect>
+      <text x="500" y="218" text-anchor="middle" class="label">current: xᵢ = x₃ (sat)</text>
+    </g>
+
+    <!-- Example raw scores (dot products) -->
+    <!-- scores chosen: [1.0, 3.0, 2.0] -->
+    <!-- stroke widths proportional to softmax weights [0.09, 0.67, 0.24] -->
+
+    <!-- arrow to x1 (weak) -->
+    <path d="M500,210 C420,170 300,140 160,90"
+          fill="none" stroke="#0ea5e9" stroke-linecap="round"
+          stroke-width="1.3" opacity="0.9" marker-end="url(#arrow)"/>
+    <text x="360" y="140" class="small">score = 1.00</text>
+    <text x="330" y="155" class="small">weight ≈ 0.09</text>
+
+    <!-- arrow to x2 (strong) -->
+    <path d="M500,210 C440,150 360,125 320,90"
+          fill="none" stroke="#0ea5e9" stroke-linecap="round"
+          stroke-width="9.3" opacity="0.95" marker-end="url(#arrow)"/>
+    <text x="420" y="130" class="small">score = 3.00</text>
+    <text x="420" y="145" class="small">weight ≈ 0.67</text>
+
+    <!-- arrow to x3 (medium/self) -->
+    <path d="M500,210 C520,170 520,120 500,90"
+          fill="none" stroke="#0ea5e9" stroke-linecap="round"
+          stroke-width="3.4" opacity="0.95" marker-end="url(#arrow)"/>
+    <text x="525" y="125" class="small">score = 2.00</text>
+    <text x="525" y="140" class="small">weight ≈ 0.24</text>
+
+    <!-- Softmax box (right) -->
+    <g>
+      <rect x="610" y="40" width="180" height="120" class="box"></rect>
+      <text x="700" y="64" text-anchor="middle" class="label">softmax</text>
+      <text x="690" y="92" text-anchor="middle" class="small">softmax([1.0, 3.0, 2.0])</text>
+      <text x="690" y="112" text-anchor="middle" class="small">→ [0.09, 0.67, 0.24]</text>
+    </g>
+
+    <!-- Result box: weighted sum -->
+    <g>
+      <rect x="260" y="240" width="300" height="44" rx="8" fill="#f1f5f9" stroke="#cbd5e1"></rect>
+      <text x="410" y="269" text-anchor="middle" class="label">
+        aᵢ = 0.09·x₁ + 0.67·x₂ + 0.24·x₃
+      </text>
+    </g>
+
+    <!-- small explanatory footnote -->
+    <text x="16" y="300" class="small">Step 1: compute dot scores (similarity). Step 2: softmax → weights. Step 3: weighted sum → aᵢ.</text>
+  </svg>
+
+  <p style="margin:10px 0 0;color:#334155;font-size:14px;">
+    This diagram shows one token (current xᵢ = <b>sat</b>) attending to earlier tokens x₁, x₂, x₃.
+    Raw dot-product scores (1.0, 3.0, 2.0) are normalized by softmax to weights (~0.09, 0.67, 0.24),
+    then the output aᵢ is the weighted sum of the earlier vectors.
+  </p>
+
+  <!-- Expanded explanation below the diagram -->
+  <h3>Step 1 — Compare with earlier tokens</h3>
+  <p>
+    The current word <b>“sat”</b> (x₃) is compared with each token before it 
+    (including itself). These comparisons are done using the 
+    <b>dot product</b>. For our example, the similarity scores come out as:
+  </p>
+  <ul>
+    <li>x₃ with x₁ (“the”): 1.0 → weak similarity</li>
+    <li>x₃ with x₂ (“cat”): 3.0 → strong similarity</li>
+    <li>x₃ with x₃ (“sat”): 2.0 → medium similarity</li>
+  </ul>
+
+  <h3>Step 2 — Convert scores into probabilities</h3>
+  <p>
+    Raw scores can be large or negative, so we normalize them using the 
+    <b>softmax function</b>. This turns the scores into probabilities 
+    that always add up to 1:
+  </p>
+  <pre style="background:#f8fafc;padding:8px;border-radius:6px;">
+    softmax([1.0, 3.0, 2.0]) → [0.09, 0.67, 0.24]
+  </pre>
+  <p>
+    Meaning: the word “sat” attends mostly to “cat” (67%), some to itself (24%), 
+    and very little to “the” (9%).
+  </p>
+
+  <h3>Step 3 — Build the new representation</h3>
+  <p>
+    Finally, we compute the new output vector a₃ by taking a 
+    <b>weighted sum</b> of all the inputs:
+  </p>
+  <pre style="background:#f8fafc;padding:8px;border-radius:6px;">
+    a₃ = 0.09·x₁ + 0.67·x₂ + 0.24·x₃
+  </pre>
+  <p>
+    This means the new meaning of “sat” now strongly includes information about 
+    “cat” (the subject), making it easier for the model to understand 
+    <i>who did the action</i>.
+  </p>
+
+  <h3>✅ Key takeaway</h3>
+  <p>
+    Attention doesn’t just look at the current word in isolation. Instead, it asks: 
+    <i>“Which earlier words matter most for understanding this one?”</i>.  
+    The answer is encoded in the attention weights, and the new vector aᵢ 
+    is built from a blend of those important words.
+  </p>
+</div>
+
+
+<h3> Understanding a Single Attention Head</h3>
+
+
+<p>
+The concept of <strong>attention</strong> lies at the very heart of the Transformer architecture. In this chapter, we will explore step by step how a single attention head works. Rather than thinking of it as an abstract equation, we will break it down into an intuitive process. Imagine that every word in a sentence has the ability to ask: <em>“Whom should I pay attention to, and by how much?”</em>
+</p>
+
+
+<h2>Step 1: Input Representation</h2>
+<p>
+We begin with an input embedding for each token in the sequence. If the model dimension is <em>d</em>, each token is represented as a vector:
+</p>
+<div class="equation">
+x<sub>i</sub> ∈ ℝ<sup>1 × d</sup>
+</div>
+<p>
+Here, <em>x<sub>i</sub></em> is the embedding of the <em>i</em>-th word.
+</p>
+
+
+<h2>Step 2: Creating Queries, Keys, and Values</h2>
+<p>
+From each input vector, the model creates three different projections: a <strong>Query (Q)</strong>, a <strong>Key (K)</strong>, and a <strong>Value (V)</strong>. These are obtained by multiplying the input with learned weight matrices:
+</p>
+<div class="equation">
+q<sub>i</sub> = x<sub>i</sub> W<sub>Q</sub>, &nbsp;
+k<sub>i</sub> = x<sub>i</sub> W<sub>K</sub>, &nbsp;
+v<sub>i</sub> = x<sub>i</sub> W<sub>V</sub>
+</div>
+<p>
+The role of these projections is to allow the same word to play different parts in the attention process: the <em>query</em> asks the question, the <em>key</em> provides the address to be matched, and the <em>value</em> carries the information to be retrieved.
+</p>
+
+
+<h2>Step 3: Matching Queries with Keys</h2>
+<p>
+Once we have queries and keys, we can measure how strongly a word should attend to others. This is done by taking the dot product between a query and a key, scaled by the dimension of the key vectors:
+</p>
+<div class="equation">
+score(x<sub>i</sub>, x<sub>j</sub>) = (q<sub>i</sub> · k<sub>j</sub>) / √d<sub>k</sub>
+</div>
+<p>
+If the dot product is large, the query and key are similar, which means the word <em>x<sub>i</sub></em> should pay closer attention to <em>x<sub>j</sub></em>.
+</p>
+
+
+<h2>Step 4: From Scores to Attention Weights</h2>
+<p>
+These raw scores are then normalized using the <strong>softmax</strong> function. This ensures that the attention weights form a probability distribution:
+</p>
+<div class="equation">
+a<sub>ij</sub> = softmax(score(x<sub>i</sub>, x<sub>j</sub>))
+</p>
+
+
+  <p>
+    Attention is a key concept in modern deep learning architectures such as the Transformer.
+    At its core, the attention mechanism allows each token in a sequence to look at, or “attend to,”
+    other tokens in order to build a more context-aware representation.
+  </p>
+
+  <p>
+    Let us break down the process step by step. Suppose we have an input sequence of tokens.
+    Each token <em>x<sub>i</sub></em> is first projected into three different spaces:
+    a Query (Q), a Key (K), and a Value (V). These are obtained through learned linear transformations.
+  </p>
+
+  <p>
+    The Query of the current token is compared with the Keys of all tokens. This comparison is done
+    by taking dot products, which produce similarity scores. These scores measure how much focus
+    should be given to each token relative to the current one.
+  </p>
+
+  <p>
+    The similarity scores are then normalized using the <strong>softmax</strong> function,
+    converting them into attention weights. These weights represent how strongly each token contributes
+    to the final representation of the current token.
+  </p>
+
+  <p>
+    Using these attention weights, we take a weighted sum of the Value vectors. This results in
+    a new vector representation for the current token — one that incorporates contextual information
+    from the entire sequence.
+  </p>
+
+  <p>
+    Finally, this output is passed through another learned linear transformation, represented
+    by <em>W<sub>O</sub></em>, to bring it back into the same dimension as the input embeddings.
+  </p>
+
+  <div class="diagram-container">
+    <svg viewBox="0 0 1280 380" role="img" aria-label="Block diagram of a single attention head">
+      <!-- Input -->
+      <rect x="20" y="150" width="100" height="50" fill="#a3c9f1" stroke="#333" rx="6"/>
+      <text x="70" y="180" text-anchor="middle" font-size="14" fill="#000">Input xᵢ</text>
+
+      <!-- Q, K, V projections -->
+      <rect x="180" y="50" width="100" height="40" fill="#f9d29d" stroke="#333" rx="6"/>
+      <text x="230" y="75" text-anchor="middle" font-size="14">Query (Q)</text>
+
+      <rect x="180" y="150" width="100" height="40" fill="#f9d29d" stroke="#333" rx="6"/>
+      <text x="230" y="175" text-anchor="middle" font-size="14">Key (K)</text>
+
+      <rect x="180" y="250" width="100" height="40" fill="#f9d29d" stroke="#333" rx="6"/>
+      <text x="230" y="275" text-anchor="middle" font-size="14">Value (V)</text>
+
+      <!-- Arrows from input -->
+      <line x1="120" y1="175" x2="180" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="120" y1="175" x2="180" y2="170" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="120" y1="175" x2="180" y2="270" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Dot product -->
+      <rect x="340" y="50" width="120" height="40" fill="#d1f7c4" stroke="#333" rx="6"/>
+      <text x="400" y="75" text-anchor="middle" font-size="14">Q · Kᵀ</text>
+      <line x1="280" y1="70" x2="340" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="280" y1="170" x2="340" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Softmax -->
+      <rect x="500" y="50" width="120" height="40" fill="#ffd6e0" stroke="#333" rx="6"/>
+      <text x="560" y="75" text-anchor="middle" font-size="14">Softmax</text>
+      <line x1="460" y1="70" x2="500" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Weighted sum -->
+      <rect x="680" y="150" width="140" height="40" fill="#e0c7ff" stroke="#333" rx="6"/>
+      <text x="750" y="175" text-anchor="middle" font-size="14">Σ (weights × V)</text>
+      <line x1="620" y1="70" x2="680" y2="170" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="280" y1="270" x2="680" y2="170" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Output -->
+      <rect x="900" y="150" width="120" height="50" fill="#a3f1d1" stroke="#333" rx="6"/>
+      <text x="960" y="180" text-anchor="middle" font-size="14">Output</text>
+      <line x1="820" y1="170" x2="900" y2="175" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Arrow marker -->
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  
+    <img src="./images/attention.png" 
+       alt="attention" 
+       width="700">
+	   
+	<img src="./images/attention2.png" 
+       alt="attention" 
+       width="700">
+
+  <div class="card" role="article" aria-labelledby="summary-title">
+    <h3 id="summary-title">Summary — Single Attention Head</h3>
+
+    <div class="step">
+      <p><strong>Each token</strong> <em>x<sub>i</sub></em> creates three versions of itself: <strong>Query (Q)</strong>, <strong>Key (K)</strong>, and <strong>Value (V)</strong>.</p>
+    </div>
+
+    <div class="step">
+      <p><strong>Compare:</strong> The <em>query</em> of the current token is compared with the <em>keys</em> of all tokens to produce similarity scores.</p>
+    </div>
+
+    <div class="step">
+      <p><strong>Normalize:</strong> The raw similarity scores are converted into attention weights using a <strong>softmax</strong>, so they form a probability distribution (weights sum to 1).</p>
+    </div>
+
+    <div class="step">
+      <p><strong>Mix:</strong> These attention weights are used to compute a weighted sum of the <em>value</em> vectors, producing a new contextual representation (the attended output).</p>
+    </div>
+
+    <div class="step">
+      <p><strong>Project back:</strong> The head output is reshaped back to the model dimension using the output matrix <span class="math">W<sub>O</sub></span>, so the final output has the same size as the original token vector.</p>
+    </div>
+
+    <p class="note">In compact form: each x<sub>i</sub> → (Q,K,V) → scores via Q·K → softmax → weights → weighted sum of V → final projection with <span class="math">W<sub>O</sub></span>.</p>
+  </div>
+  
+  
+    <h1>Multi-Head Attention</h1>
+	
+	<h2>Intuition</h2>
+    <p>
+      Multi-head attention enriches the model’s representation by allowing it to examine
+      the context from several different perspectives simultaneously. While one head may
+      align strongly with semantically related words, another may emphasize positional
+      structure, and another may attend to rare but important connections. The combination
+      of all these heads, followed by a projection back to the model space, gives the
+      transformer both breadth and depth in capturing dependencies across a sequence.
+    </p>
+
+    <p>
+      A transformer does not rely on a single attention mechanism. Instead, it uses
+      <strong>multiple parallel attention heads</strong> within the same layer. The idea is
+      that each head can focus on a different aspect of the context. One head may capture
+      short-range dependencies, another may focus on long-distance relationships, while
+      yet another may specialize in syntactic or semantic cues. By combining these heads,
+      the model gains a richer and more flexible representation of the input sequence.
+    </p>
+
+    <h2>Head-Specific Projections</h2>
+    <p>
+      Each attention head has its own set of learnable parameters. Given an input vector
+      <code>xᵢ</code> at position <code>i</code>, the model projects it into separate
+      <em>query</em>, <em>key</em>, and <em>value</em> vectors for each head. For head
+      <code>c</code>, this is written as:
+    </p>
+    <pre><code>qᶜᵢ = xᵢ · W_Qᶜ
+kᶜⱼ = xⱼ · W_Kᶜ
+vᶜⱼ = xⱼ · W_Vᶜ</code></pre>
+    <p>
+      Here, <code>W_Qᶜ</code>, <code>W_Kᶜ</code>, and <code>W_Vᶜ</code> are parameter
+      matrices of dimensions <code>d × d_k</code>, <code>d × d_k</code>, and
+      <code>d × d_v</code> respectively. This means every head learns its own mapping from
+      the model dimension <code>d</code> into smaller subspaces of size <code>d_k</code>
+      and <code>d_v</code>.
+    </p>
+
+    <h2>Attention Within a Head</h2>
+    <p>
+      Once queries and keys are defined, the similarity between a query at position
+      <code>i</code> and a key at position <code>j</code> is measured using the dot
+      product. To stabilize gradients, this score is scaled by the square root of
+      <code>d_k</code>:
+    </p>
+    <pre><code>scoreᶜ(xᵢ, xⱼ) = (qᶜᵢ · kᶜⱼ) / √(d_k)</code></pre>
+    <p>
+      These scores are then normalized with a softmax across all context positions to
+      obtain attention weights:
+    </p>
+    <pre><code>aᶜ_{i j} = softmax(scoreᶜ(xᵢ, xⱼ))</code></pre>
+    <p>
+      Finally, the output of head <code>c</code> for position <code>i</code> is a weighted
+      sum of the value vectors:
+    </p>
+    <pre><code>headᶜᵢ = Σⱼ aᶜ_{i j} · vᶜⱼ</code></pre>
+
+    <h2>Combining Multiple Heads</h2>
+    <p>
+      Each head produces an output vector of size <code>1 × d_v</code>. If there are
+      <code>A</code> heads, their results are concatenated to form a vector of size
+      <code>1 × (A·d_v)</code>. This combined vector is then projected back into the model
+      dimension <code>d</code> using an additional matrix <code>W_O</code>:
+    </p>
+    <pre><code>aᵢ = ( head¹ᵢ ⊕ head²ᵢ ⊕ … ⊕ headᴬᵢ ) · W_O</code></pre>
+    <p>
+      Here, ⊕ denotes concatenation. The matrix <code>W_O</code> has dimensions
+      <code>(A·d_v) × d</code>, ensuring the final multi-head output for each position
+      returns to the expected model dimension.
+    </p>
+	
+	<img src="./images/multiheadattention.png" 
+       alt="multiheadattention" 
+       width="700">
+	   
+	<img src="./images/multiheadattention2.png" 
+       alt="multiheadattention2" 
+       width="700">
+  </div>
+</body>
+</html>

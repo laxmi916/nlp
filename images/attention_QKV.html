@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Why “bank” attends to “river” — Explanation</title>
+  <style>
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      color: #1f2937;
+      background: #ffffff;
+      margin: 36px;
+      line-height: 1.65;
+    }
+    .chapter {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 26px;
+      border: 1px solid #e6eef6;
+      border-radius: 8px;
+      background: #fbfdff;
+      box-shadow: 0 8px 30px rgba(16,24,40,0.04);
+    }
+    h1 { font-size: 24px; margin: 0 0 8px; color: #0b2545; }
+    h2 { font-size: 18px; margin-top: 18px; color: #0b3b5a; }
+    p { margin: 12px 0; }
+    .math { font-family: ui-monospace, Menlo, Monaco, "Roboto Mono", monospace; background:#f1f5f9; padding:8px 10px; border-radius:6px; display:block; }
+    .note { color:#475569; font-size:0.95rem; }
+    ul { margin: 8px 0 8px 22px; }
+    .cta { margin-top:14px; padding:10px; background:#f1f8ff; border-left:4px solid #0ea5e9; border-radius:6px; color:#053b57; }
+  </style>
+</head>
+<body>
+  <article class="chapter" role="article" aria-labelledby="title">
+    <h1 id="title">Why “bank” gives high attention to “river” — a clear explanation</h1>
+
+    <p>
+      You asked: <em>How and why does the model assign a high attention score to the word
+      <strong>river</strong> when processing the word <strong>bank</strong>?</em>  
+      Below is a step-by-step, plain-language explanation followed by the exact math. This will show both the intuition and the mechanism.
+    </p>
+
+    <h2>1. Setup — tokens form Q, K, V</h2>
+    <p>
+      In a transformer each token produces three vectors: a <strong>Query (Q)</strong>, a
+      <strong>Key (K)</strong>, and a <strong>Value (V)</strong>. For our mini-sentence:
+    </p>
+    <ul>
+      <li><strong>bank</strong> has a query vector <code>Q<sub>bank</sub></code>.</li>
+      <li><strong>river</strong> has a key vector <code>K<sub>river</sub></code> and a value vector <code>V<sub>river</sub></code>.</li>
+    </ul>
+
+    <h2>2. Scoring — query · key (dot product)</h2>
+    <p>
+      The model measures similarity between <code>Q<sub>bank</sub></code> and each token's key by computing a dot product.
+      A dot product is large when two vectors point in similar directions (they are aligned). Concretely:
+    </p>
+    <div class="math">
+      score(bank, river) = Q<sub>bank</sub> · K<sub>river</sub>
+    </div>
+    <p>
+      The larger this scalar score, the more similar the query and key — and thus the more relevant the token <strong>river</strong> is to <strong>bank</strong>.
+    </p>
+
+    <h2>3. Why will Q<sub>bank</sub> align with K<sub>river</sub>?</h2>
+    <p>
+      This is learned from data. During training the model adjusts the projection matrices
+      (those that produce Q and K from token embeddings) so that tokens that are useful
+      context for each other end up with similar Q and K vectors.
+    </p>
+    <p class="note">
+      In plain terms: if "bank" often appears near "river" in training sentences describing geography,
+      the learning process nudges Q<sub>bank</sub> and K<sub>river</sub> to be closer in vector space.
+      Similarly, in financial contexts Q<sub>bank</sub> may align with K<sub>money</sub>.
+    </p>
+
+    <h2>4. Softmax — turning scores into attention weights</h2>
+    <p>
+      Raw dot-product scores are converted to positive weights that sum to 1 using softmax. For token <strong>bank</strong>:
+    </p>
+    <div class="math">
+      a<sub>bank, j</sub> = softmax<sub>j</sub>( score(bank, token<sub>j</sub>) )
+    </div>
+    <p>
+      If <code>score(bank, river)</code> is the largest among all scores, the softmax will give <strong>river</strong> the largest attention weight.
+    </p>
+
+    <h2>5. Weighted sum of values — how river influences bank</h2>
+    <p>
+      The final attended output for <strong>bank</strong> is a weighted sum of all <strong>value</strong> vectors:
+    </p>
+    <div class="math">
+      output<sub>bank</sub> = Σ<sub>j</sub> a<sub>bank,j</sub> · V<sub>j</sub>
+    </div>
+    <p>
+      If <strong>river</strong> got a high weight, then <code>V<sub>river</sub></code> strongly shapes the new representation of <strong>bank</strong>,
+      making it carry the river-related meaning.
+    </p>
+
+    <h2>6. Why training causes these alignments (intuition)</h2>
+    <p>
+      During training the model sees many example sentences. Gradients adjust the projection matrices so that:
+    </p>
+    <ul>
+      <li>When context indicates a geographical meaning, Q<sub>bank</sub> will move closer to keys of geography words (like <em>river</em>).</li>
+      <li>When context indicates a financial meaning, Q<sub>bank</sub> will move closer to keys of finance words (like <em>money</em> or <em>deposit</em>).</li>
+    </ul>
+    <p class="note">
+      In short: the model learns from context patterns in data; alignments of Q and K reflect those patterns and produce high dot-product scores where appropriate.
+    </p>
+
+    <h2>7. Exact math (compact)</h2>
+    <p>
+      With matrix notation for a whole sequence X (shape <code>[n × d]</code>), we compute:
+    </p>
+    <div class="math">
+      Q = X W<sub>Q</sub>,  K = X W<sub>K</sub>,  V = X W<sub>V</sub>
+    </div>
+    <p>
+      Scores (all pairs) and attention:
+    </p>
+    <div class="math">
+      Scores = Q Kᵀ  → Weights = softmax( Scores / √d<sub>k</sub> )  → Output = Weights · V
+    </div>
+    <p>
+      For the particular row corresponding to <strong>bank</strong>, the entry in <code>Scores</code> that pairs Q<sub>bank</sub> with K<sub>river</sub> determines how large the attention weight for <strong>river</strong> becomes after the softmax.
+    </p>
+
+    <h2>8. Short answer: in one sentence</h2>
+    <p>
+      The model assigns a high score to <strong>river</strong> because the learned projections make the <strong>query</strong> for <strong>bank</strong> align closely with the <strong>key</strong> for <strong>river</strong> (due to training on contexts where they co-occur), producing a large dot product that the softmax converts into a large attention weight.
+    </p>
+
+  <div class="card">
+    <h1>Tiny numeric toy example — how “bank” gives high attention to “river”</h1>
+
+    <p class="note">We keep vectors tiny (2D) so we can compute everything by hand. This example shows all steps: dot products, scaling, softmax, and the weighted sum of value vectors.</p>
+
+    <h2>1) Setup — vectors (toy values)</h2>
+    <p>We consider the current token <strong>bank</strong> (the query) and three context tokens: <strong>river</strong>, <strong>money</strong>, and <strong>the</strong>. For simplicity we assume the projection step (X·W) is already done and we are given Q and K vectors directly.</p>
+
+    <table>
+      <tr><th>token</th><th>key k<sub>j</sub> (d<sub>k</sub>=2)</th><th>value v<sub>j</sub> (d<sub>v</sub>=2)</th></tr>
+      <tr><td>river</td><td><code>[1.0, 0.0]</code></td><td><code>[2.0, 0.0]</code></td></tr>
+      <tr><td>money</td><td><code>[0.2, 0.1]</code></td><td><code>[0.0, 3.0]</code></td></tr>
+      <tr><td>the</td><td><code>[0.0, 0.1]</code></td><td><code>[0.1, 0.1]</code></td></tr>
+    </table>
+
+    <p>The query for <strong>bank</strong> is:</p>
+    <pre><code>q_bank = [1.0, 0.0]</code></pre>
+
+    <h2>2) Step — raw dot-product scores</h2>
+    <p>Compute score = q · k for each context key:</p>
+    <pre><code>score(bank, river) = q_bank · k_river
+ = [1.0, 0.0] · [1.0, 0.0]
+ = 1.0*1.0 + 0.0*0.0
+ = 1.0
+
+score(bank, money) = [1.0,0.0] · [0.2,0.1]
+ = 1.0*0.2 + 0.0*0.1
+ = 0.2
+
+score(bank, the) = [1.0,0.0] · [0.0,0.1]
+ = 1.0*0.0 + 0.0*0.1
+ = 0.0
+</code></pre>
+
+So raw scores vector is: `<code>[1.0, 0.2, 0.0]</code>`.
+
+---
+
+<h2>3) Scale scores (divide by √d<sub>k</sub>)</h2>
+<p>We scale by √d<sub>k</sub>. Here d<sub>k</sub>=2, so √2 ≈ 1.4142135624.</p>
+
+<pre><code>scaled_score_river = 1.0 / 1.4142135624 ≈ 0.70710678
+scaled_score_money = 0.2 / 1.4142135624 ≈ 0.141421356
+scaled_score_the = 0.0 / 1.4142135624 = 0.0
+
+scaled scores ≈ [0.70710678, 0.14142136, 0.0]
+</code></pre>
+
+(Scaling keeps numbers in a stable range for softmax.)
+
+---
+
+<h2>4) Softmax — convert to attention weights</h2>
+<p>Softmax(row) = exp(score) / sum_j exp(score_j). We compute exponentials of the scaled scores and the normalized weights.</p>
+
+<pre><code>exp(0.70710678) ≈ 2.0281149816474726
+exp(0.14142136) ≈ 1.1518489319246118
+exp(0.0)         = 1.0
+
+sum = 2.0281149816474726 + 1.1518489319246118 + 1.0
+    ≈ 4.179963913572085
+
+weights:
+ w_river = 2.0281149816474726 / 4.179963913572085 ≈ 0.4853
+ w_money = 1.1518489319246118 / 4.179963913572085 ≈ 0.2755
+ w_the   = 1.0 / 4.179963913572085               ≈ 0.2392
+
+Rounded weights ≈ [0.4853, 0.2755, 0.2392]
+</code></pre>
+
+**Interpretation:** river receives the largest weight (~0.485), because its scaled score was the largest.
+
+---
+
+<h2>5) Weighted sum of values → attended vector (head)</h2>
+<p>Now multiply each value by its weight and sum component-wise. Values:</p>
+
+<pre><code>v_river = [2.0, 0.0]
+v_money = [0.0, 3.0]
+v_the   = [0.1, 0.1]
+</code></pre>
+
+Compute each component:
+
+<pre><code>head_x = w_river * 2.0 + w_money * 0.0 + w_the * 0.1
+       ≈ 0.4853 * 2.0 + 0 + 0.2392 * 0.1
+       ≈ 0.9706 + 0 + 0.02392
+       ≈ 0.99452
+
+head_y = w_river * 0.0 + w_money * 3.0 + w_the * 0.1
+       ≈ 0 + 0.2755 * 3.0 + 0.2392 * 0.1
+       ≈ 0.8265 + 0.02392
+       ≈ 0.85042
+
+head  ≈ [0.9945, 0.8504]
+</code></pre>
+
+---
+
+<h2>6) (Optional) Output projection</h2>
+<p>If the model uses an output projection W<sub>O</sub>, we would multiply head (1×d<sub>v</sub>) by W<sub>O</sub> to return to model dimension d. For this toy example assume W<sub>O</sub> = I (identity), so final output ≈ head.</p>
+
+---
+
+<h2>7) Why this shows "high attention to river"</h2>
+<ul>
+  <li>The dot product <code>q_bank · k_river</code> = <strong>1.0</strong> was much larger than the dot products with other keys (0.2 and 0.0).</li>
+  <li>After scaling and softmax, <strong>river</strong> received the largest normalized weight (~0.485), so its value vector contributed most to the final head.</li>
+  <li>Thus the new representation for <em>bank</em> becomes heavily influenced by <em>river</em>, which is how attention resolves the sense “river bank.”</li>
+</ul>
+
+<h2>8) Short recap (one sentence)</h2>
+<p>Because Q<sub>bank</sub> and K<sub>river</sub> are closely aligned (high dot product), the softmax gives river a large attention weight, so river's value dominates the weighted-sum and the resulting representation of "bank" reflects the river meaning.</p>
+
+<div class="note">Want me to run a slightly different toy where the context is financial (e.g., we change K<sub>money</sub> to align more with Q<sub>bank</sub>) so you can see the weights flip? I can show that next.</div>
+  </div>
+
+  </article>
+</body>
+</html>
