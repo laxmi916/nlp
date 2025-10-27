@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi-Task Learning</title>
+  <style>
+    :root{ --bg:#f8fafc; --card:#ffffff; --muted:#6b7280; --accent:#0ea5a4; --mono:SFMono-Regular,Menlo,Monaco,Roboto Mono,monospace; }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:var(--bg); color:#0f172a}
+    .wrap{max-width:900px;margin:36px auto;padding:28px}
+    header{display:flex;align-items:baseline;gap:16px}
+    header h1{margin:0;font-size:1.6rem}
+    header p{margin:0;color:var(--muted)}
+    .card{background:var(--card);border-radius:12px;padding:20px;margin-top:20px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    h2{margin-top:0}
+    ul{line-height:1.6}
+    pre{background:#0b1220;color:#e6eef6;padding:12px;border-radius:8px;overflow:auto;font-family:var(--mono);font-size:0.9rem}
+    code{padding:0 6px;border-radius:4px;font-family:var(--mono)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:700px){.grid{grid-template-columns:1fr}}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid #e6eef6;padding:8px;text-align:left}
+    th{background:#f1f5f9}
+    footer{color:var(--muted);font-size:0.9rem;margin-top:18px}
+    .tag{display:inline-block;background:#eef2f1;color:#064e4d;padding:6px 8px;border-radius:999px;font-weight:600;font-size:0.8rem}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Multi-Task Learning</h1>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>1. Introduction</h2>
+      <p>Multi-Task Learning (MTL) is a machine learning approach where a model is trained to perform <strong>multiple related tasks simultaneously</strong>, rather than training separate models for each task. In NLP, this approach helps the model learn shared linguistic features such as syntax, semantics, and context, improving generalization and performance across all tasks.</p>
+
+      <h3>Example</h3>
+      <p>A single model might be trained to handle:</p>
+      <ul>
+        <li><strong>Sentiment Analysis</strong> – classifying a text as positive, negative, or neutral.</li>
+        <li><strong>Named Entity Recognition (NER)</strong> – identifying entities like names, places, or organizations.</li>
+        <li><strong>Part-of-Speech (POS) Tagging</strong> – labeling each word with its grammatical category.</li>
+      </ul>
+      <p>By sharing parameters among these tasks, the model gains a deeper understanding of language structures.</p>
+    </section>
+
+    <section class="card">
+      <h2>2. Why Multi-Task Learning?</h2>
+
+      <h3>Advantages</h3>
+      <ul>
+        <li><strong>Improved Generalization</strong>: Learning multiple tasks prevents overfitting on one.</li>
+        <li><strong>Efficient Use of Data</strong>: Related tasks act as additional supervision.</li>
+        <li><strong>Reduced Training Time</strong>: Shared representations cut computational redundancy.</li>
+        <li><strong>Better Contextual Understanding</strong>: Shared features strengthen the language understanding of the model.</li>
+      </ul>
+
+      <h3>When to Use</h3>
+      <ul>
+        <li>When tasks share linguistic or semantic relationships.</li>
+        <li>When some tasks have limited labeled data.</li>
+        <li>When you want a compact model for multiple NLP applications.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>3. Multi-Task Learning Architectures</h2>
+
+      <h3>(a) Hard Parameter Sharing</h3>
+      <p>Most common approach — the model shares the same encoder for all tasks, while having separate output (head) layers for each task.</p>
+      <pre>&#x2F;* Visual (ASCII) schematic *&#x2F;
+          ┌──────────────┐
+          │ Shared Encoder│
+          └──────┬───────┘
+                 │
+        ┌────────┼─────────┐
+        ▼                  ▼
+   Sentiment Head      NER Head
+      </pre>
+
+      <h3>(b) Soft Parameter Sharing</h3>
+      <p>Each task has its own model, but their parameters are regularized to remain similar.</p>
+    </section>
+
+    <section class="card">
+      <h2>4. Example — Multi-Task NLP Model in PyTorch</h2>
+      <p>Here’s a minimal example showing MTL for <strong>sentiment classification</strong> and <strong>NER</strong> using a shared encoder.</p>
+
+      <pre><code>import torch
+import torch.nn as nn
+from transformers import AutoModel, AutoTokenizer
+
+# Shared encoder (e.g., BERT)
+class MultiTaskModel(nn.Module):
+    def __init__(self, model_name, num_sentiment_labels, num_ner_labels):
+        super(MultiTaskModel, self).__init__()
+        self.encoder = AutoModel.from_pretrained(model_name)
+        self.sentiment_head = nn.Linear(self.encoder.config.hidden_size, num_sentiment_labels)
+        self.ner_head = nn.Linear(self.encoder.config.hidden_size, num_ner_labels)
+
+    def forward(self, input_ids, attention_mask, task="sentiment"):
+        outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
+        last_hidden_state = outputs.last_hidden_state
+        pooled_output = last_hidden_state[:, 0, :]  # CLS token for classification
+
+        if task == "sentiment":
+            return self.sentiment_head(pooled_output)
+        elif task == "ner":
+            return self.ner_head(last_hidden_state)
+
+# Example usage
+model_name = "distilbert-base-uncased"
+model = MultiTaskModel(model_name, num_sentiment_labels=3, num_ner_labels=9)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+# Input example
+text = ["John works at Google and loves his job!"]
+inputs = tokenizer(text, padding=True, truncation=True, return_tensors="pt")
+
+# Sentiment prediction
+sentiment_logits = model(**inputs, task="sentiment")
+print("Sentiment logits:", sentiment_logits.shape)
+
+# NER prediction
+ner_logits = model(**inputs, task="ner")
+print("NER logits:", ner_logits.shape)
+</code></pre>
+    </section>
+
+    <section class="card">
+      <h2>5. How It Works</h2>
+      <ol>
+        <li><strong>Shared Encoder</strong> learns general language features (e.g., using BERT).</li>
+        <li><strong>Task-Specific Heads</strong> specialize those features for individual tasks.</li>
+        <li>During training, the model alternates batches for each task.</li>
+        <li>A combined loss (sum or weighted average) is minimized:</li>
+      </ol>
+      <pre><code>total_loss = sentiment_loss + 0.5 * ner_loss</code></pre>
+    </section>
+
+    <section class="card">
+      <h2>6. Evaluation</h2>
+      <p>Each head is evaluated separately:</p>
+      <ul>
+        <li><strong>Sentiment Accuracy</strong> for sentiment classification.</li>
+        <li><strong>F1-Score</strong> for NER tagging.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>7. Applications</h2>
+      <ul>
+        <li><strong>Chatbots</strong>: Intent detection + entity extraction.</li>
+        <li><strong>Information Extraction</strong>: Relation classification + NER.</li>
+        <li><strong>Document Analysis</strong>: Summarization + topic classification.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>8. Summary</h2>
+      <table>
+        <thead>
+          <tr><th>Aspect</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Goal</strong></td><td>Train one model for multiple related tasks</td></tr>
+          <tr><td><strong>Key Idea</strong></td><td>Share encoder, separate task-specific heads</td></tr>
+          <tr><td><strong>Benefits</strong></td><td>Better generalization, efficiency, contextual understanding</td></tr>
+          <tr><td><strong>Use Cases</strong></td><td>Sentiment + NER, POS + Dependency Parsing, etc.</td></tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:12px;"><strong>In essence</strong>, Multi-Task Learning enables more intelligent and versatile NLP systems that understand and perform multiple language-related tasks with shared understanding and fewer resources.</p>
+    </section>
+
+  </div>
+</body>
+</html>
