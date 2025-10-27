@@ -1,0 +1,166 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Text Summarization using T5 Model Tutorial</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; max-width: 900px; color: #111; }
+    pre { background: #f6f8fa; padding: 12px; border-radius: 6px; overflow-x: auto; }
+    h1, h2 { color: #1f2937; }
+    code { background: #f3f4f6; padding: 2px 4px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<h1>🧠 Text Summarization using T5 Transformer</h1>
+
+<p>This tutorial explains how to use the <strong>T5 (Text-to-Text Transfer Transformer)</strong> model from the Hugging Face <code>transformers</code> library to summarize long text into concise meaningful sentences. The <strong>T5 model</strong> treats every NLP task as a text-to-text problem — meaning both the input and output are plain text.</p>
+
+<hr>
+
+<h2>📘 Step 1: Import Libraries</h2>
+
+<p>Import the required modules for loading the tokenizer and model.</p>
+
+<pre><code>from transformers import T5Tokenizer, T5ForConditionalGeneration
+</code></pre>
+
+<p>The <code>T5Tokenizer</code> converts text into numerical tokens, and <code>T5ForConditionalGeneration</code> is the pre-trained sequence-to-sequence model used for generating summaries.</p>
+
+<hr>
+
+<h2>⚙️ Step 2: Load Pretrained Model and Tokenizer</h2>
+
+<pre><code>model_name = "t5-small"  # or "google/flan-t5-base" for better quality
+tokenizer = T5Tokenizer.from_pretrained(model_name)
+model = T5ForConditionalGeneration.from_pretrained(model_name)
+</code></pre>
+
+<ul>
+  <li><code>t5-small</code> is a lightweight version suitable for quick testing.</li>
+  <li><code>google/flan-t5-base</code> provides better quality summaries but is slightly heavier.</li>
+</ul>
+
+<hr>
+
+<h2>📝 Step 3: Input Text</h2>
+
+<p>We’ll summarize a paragraph describing a university’s vision and mission. The text is long and detailed, making it a perfect use case for summarization.</p>
+
+<pre><code>text = """
+Vision:
+The vision of the University is to provide quality engineering education to meritorious rural youth deprived of this opportunity, through an innovative blend of modern computer assisted, learner-centric instructional methodology along with rigorous traditional teaching in a world class ambiance. This vision is driven by the main causes that most of the talented rural youth wishing to pursue higher education
+Have no access to renowned and world class institutions and facilities
+Come from economically impoverished background that severely inhibits their choices and passions.
+It is in the light of this background that the University envisages to provide the requisite high quality education to these students and thus enable them
+To experience educational standards in Engineering education that are of world-class
+To enroll in a top technical University that provides free education to the deserving 1% of the creamy layer of students who have passed out of the X class.
+Mission:
+To create a Knowledge Hub for producing qualified manpower possessing Post Graduate and Doctoral qualification in different branches of Engineering.
+To develop the campus as a highly research-centric institute.
+To promote and propagate innovative teaching and research programs and create specialized centers of Learning/Training.
+To help the students launch on a path of self discovery.
+"""</code></pre>
+
+<hr>
+
+<h2>🧩 Step 4: Add Summarization Prompt</h2>
+
+<p>T5 requires a specific prompt that defines the task. For summarization, prepend <code>summarize:</code> to the text.</p>
+
+<pre><code>input_text = "summarize: " + text</code></pre>
+
+<hr>
+
+<h2>🪄 Step 5: Tokenize the Input</h2>
+
+<p>Convert the text into tokens the model can process. We also apply truncation to fit the model’s maximum length.</p>
+
+<pre><code>inputs = tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True)</code></pre>
+
+<ul>
+  <li><code>return_tensors=\"pt\"</code> returns PyTorch tensors.</li>
+  <li><code>max_length=512</code> ensures long text is truncated appropriately.</li>
+</ul>
+
+<hr>
+
+<h2>🚀 Step 6: Generate the Summary</h2>
+
+<p>Now we use the model to generate the summarized version of the text. We can control the output length, beam search, and length penalty.</p>
+
+<pre><code>summary_ids = model.generate(
+    inputs,
+    max_length=80,
+    min_length=20,
+    length_penalty=2.0,
+    num_beams=4,
+    early_stopping=True
+)
+</code></pre>
+
+<ul>
+  <li><code>max_length</code>: maximum number of tokens in the summary.</li>
+  <li><code>min_length</code>: minimum number of tokens.</li>
+  <li><code>num_beams</code>: number of beams for beam search (higher gives better summaries).</li>
+  <li><code>length_penalty</code>: controls the balance between brevity and completeness.</li>
+</ul>
+
+<hr>
+
+<h2>🧾 Step 7: Decode the Summary</h2>
+
+<p>Finally, convert the generated token IDs back into text.</p>
+
+<pre><code>summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+print(summary)
+</code></pre>
+
+<hr>
+
+<h2>✅ Example Output</h2>
+
+<pre><code>The university aims to provide quality engineering education to talented rural youth through innovative teaching and research, offering free education to deserving students while fostering a research-centric environment.</code></pre>
+
+<hr>
+
+<h2>📋 Full Code</h2>
+
+<pre><code>from transformers import T5Tokenizer, T5ForConditionalGeneration
+
+model_name = "t5-small"  # or "google/flan-t5-base" for better quality
+tokenizer = T5Tokenizer.from_pretrained(model_name)
+model = T5ForConditionalGeneration.from_pretrained(model_name)
+
+text = \"\"\"Vision:
+The vision of the University is to provide quality engineering education to meritorious rural youth deprived of this opportunity, through an innovative blend of modern computer assisted, learner-centric instructional methodology along with rigorous traditional teaching in a world class ambiance. ...
+Mission:
+To create a Knowledge Hub for producing qualified manpower possessing Post Graduate and Doctoral qualification in different branches of Engineering.
+\"\"\"
+
+input_text = \"summarize: \" + text
+inputs = tokenizer.encode(input_text, return_tensors=\"pt\", max_length=512, truncation=True)
+
+summary_ids = model.generate(inputs, max_length=80, min_length=20, length_penalty=2.0, num_beams=4, early_stopping=True)
+
+summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+print(summary)
+</code></pre>
+
+<hr>
+
+<h2>🧭 Summary of Steps</h2>
+<ol>
+  <li>Load the <code>T5</code> model and tokenizer.</li>
+  <li>Prepare your input text with a <code>summarize:</code> prefix.</li>
+  <li>Tokenize the text with truncation.</li>
+  <li>Generate the summary using beam search.</li>
+  <li>Decode the tokens to readable text.</li>
+</ol>
+
+<p>This is the simplest way to summarize long passages using the T5 model from Hugging Face.</p>
+
+</body>
+</html>
