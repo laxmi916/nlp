@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gemini API Prompting</title>
+  <style>
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; line-height: 1.6; max-width: 900px; margin: 32px auto; padding: 0 20px; color: #0f172a; }
+    pre { background:#f8fafc; padding:14px; border-radius:8px; overflow:auto; border:1px solid #e6eef6; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace; }
+    h1,h2 { color:#0b1220 }
+    .line { display:block; padding:6px 0; }
+    .explain { color:#334155; margin:6px 0 18px 0; }
+    .note { background:#fffbeb; border-left:4px solid #f59e0b; padding:10px; border-radius:6px; }
+  </style>
+</head>
+<body>
+
+<h1>Gemini API Prompting</h1>
+
+<p>This short tutorial shows a minimal Python example that sends a text prompt to the Gemini (Google GenAI) API using the <code>google-genai</code> SDK. Each code line is explained to help students understand what is happening.</p>
+
+<hr>
+
+<h2>Full example code</h2>
+
+<pre><code>
+# Install SDK
+# pip install google-genai
+
+from google import genai
+
+# ✅ Initialize client with your API key
+client = genai.Client(api_key="YOUR_GEMINI_API_KEY")
+
+# Prepare prompt
+model_name = "gemini-2.0-flash"
+prompt_text = "Write a short note on RGUKT Basar."
+
+# Generate response
+response = client.models.generate_content(
+    model=model_name,
+    contents=prompt_text
+)
+
+# Print output
+print(response.text)
+
+</code></pre>
+
+<hr>
+
+<div class="line"><strong>1–2:</strong>
+<pre><code># Install SDK if needed:
+# pip install google-genai</code></pre>
+<div class="explain">These are comment lines reminding you how to install the required SDK. Run the <code>pip install</code> command once in your environment to add the <code>google-genai</code> package.</div>
+</div>
+
+<div class="line"><strong>4:</strong>
+<pre><code>from google import genai</code></pre>
+<div class="explain">This imports the <code>genai</code> module from the <code>google</code> package provided by the SDK. The <code>genai</code> module contains the client and helpers you use to call Gemini models.</div>
+</div>
+
+<div class="line"><strong>6:</strong>
+<pre><code># Initialize client
+client = genai.Client(api_key="YOUR_GEMINI_API_KEY")code></pre>
+<div class="explain">Creates a client instance for communicating with the Gemini service. By default this call looks for credentials in your environment (for example an API key passed when creating the client, or environment variables). If you want to pass an API key explicitly you can use <code>genai.Client(api_key="YOUR_KEY")</code>.</div>
+</div>
+
+<div class="line"><strong>9–10:</strong>
+<pre><code># Prepare a prompt
+model_name = "gemini-2.5-flash"
+prompt_text = "Write a short note on RGUKT Basar."</code></pre>
+<div class="explain">Here we define two variables:
+<ul>
+  <li><code>model_name</code> — a string identifying which Gemini model to use. Different models have different capabilities and costs.</li>
+  <li><code>prompt_text</code> — the natural-language instruction (the prompt) you want the model to complete. In this sample, it asks for a short note on RGUKT Basar.</li>
+</ul>
+These values can be adjusted depending on the task and model you choose.</div>
+</div>
+
+<div class="line"><strong>13–17:</strong>
+<pre><code># Call the API to generate content
+response = client.models.generate_content(
+    model=model_name,
+    contents=prompt_text
+)</code></pre>
+<div class="explain">This block sends the prompt to the Gemini model and stores the model's response in <code>response</code>.
+
+<ul>
+  <li><code>client.models.generate_content</code> is the SDK method that triggers content generation.</li>
+  <li><code>model=</code> selects the model to use.</li>
+  <li><code>contents=</code> supplies the prompt text. The SDK accepts other options too (like temperature, max output tokens, examples for few-shot prompting), but this minimal call focuses on required fields.</li>
+</ul>
+The method returns an object (often with attributes for the generated text, metadata, etc.). The exact structure may vary by SDK version — use <code>print(dir(response))</code> if you want to inspect available fields.</div>
+</div>
+
+<div class="line"><strong>20:</strong>
+<pre><code># Print the result
+print(response.text)</code></pre>
+<div class="explain">Prints the generated text to standard output. Many SDK response objects expose a <code>.text</code> or similar property containing the final generated string. If the SDK version you use returns a different field, inspect the response to find the appropriate attribute (e.g., <code>response.output[0].content</code>).</div>
+</div>
+
+<hr>
+
+<h2 class="note">Note about authentication</h2>
+
+<p class="explain">The example uses <code>genai.Client()</code> without an explicit API key — this works only when credentials are available via environment variables or default application credentials. If you do not have credentials configured, create the client with an API key like this:</p>
+
+<pre><code>client = genai.Client(api_key="YOUR_GEMINI_API_KEY")</code></pre>
+
+<p class="explain">Replace <code>"YOUR_GEMINI_API_KEY"</code> with your actual key, or prefer using environment variables for better security.</p>
+
+<hr>
+
+<h2>Quick tips</h2>
+<ul>
+  <li>Keep prompts clear and specific; the model follows the instruction you give it.</li>
+  <li>Use short test prompts while developing, then scale up once your code works.</li>
+  <li>Inspect the full response object during learning to see usage metadata (tokens used, latency, etc.).</li>
+  <li>Handle exceptions (network errors, rate limits) in production code.</li>
+</ul>
+
+</body>
+</html>
