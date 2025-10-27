@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Machine Translation</title>
+  <style>
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; line-height: 1.6; padding: 24px; max-width: 900px; margin: auto; }
+    pre { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace; }
+    h1,h2,h3 { color:#111827 }
+    table { border-collapse: collapse; width: 100%; }
+    table, th, td { border: 1px solid #d1d5db; }
+    th, td { padding: 8px; }
+  </style>
+</head>
+<body>
+
+<h1>🌍 Machine Translation</h1>
+
+<p>Machine Translation (MT) is the process of automatically translating text from one language to another using machine learning models.<br>
+In this tutorial, we’ll use <strong>Hugging Face’s MarianMT model</strong> — a popular neural machine translation model developed by the <strong>Helsinki-NLP group</strong>.</p>
+
+<hr>
+
+<h2>🧠 1. What is MarianMT?</h2>
+
+<p><strong>MarianMT</strong> (Marian Machine Translation) models are part of the <strong>Marian NMT framework</strong>, designed for efficient multilingual neural translation.<br>
+Each model (like <code>Helsinki-NLP/opus-mt-en-fr</code>) is trained on parallel corpora to translate between specific language pairs — here <strong>English (en)</strong> → <strong>French (fr)</strong>.</p>
+
+<hr>
+
+<h2>⚙️ 2. Install Required Libraries</h2>
+
+<p>Make sure you have the <code>transformers</code> and <code>torch</code> libraries installed.</p>
+
+<pre><code>pip install transformers torch</code></pre>
+
+<hr>
+
+<h2>🧩 3. Load Model and Tokenizer</h2>
+
+<p>The <strong>tokenizer</strong> converts text into model-readable tokens.<br>
+The <strong>model</strong> performs the actual translation.</p>
+
+<pre><code>from transformers import MarianMTModel, MarianTokenizer
+
+# Load model for English → French translation
+model_name = "Helsinki-NLP/opus-mt-en-fr"
+
+# Load tokenizer and model
+tokenizer = MarianTokenizer.from_pretrained(model_name)
+model = MarianMTModel.from_pretrained(model_name)</code></pre>
+
+<p>✅ <strong>Explanation</strong><br>
+- <code>MarianTokenizer</code> handles encoding (text → tokens) and decoding (tokens → text).<br>
+- <code>MarianMTModel</code> loads the pre-trained neural network for translation.</p>
+
+<hr>
+
+<h2>💬 4. Prepare Input Text</h2>
+
+<p>We’ll translate a simple English sentence.</p>
+
+<pre><code>text = ["Hello, how are you?"]</code></pre>
+
+<p>&gt; The model supports <strong>batch translation</strong>, so the input must be a list of sentences.</p>
+
+<hr>
+
+<h2>🔡 5. Tokenize Input Text</h2>
+
+<p>Convert the text into numerical tensors that the model understands.</p>
+
+<pre><code>inputs = tokenizer(text, return_tensors="pt", padding=True)</code></pre>
+
+<p>✅ <strong>Explanation</strong><br>
+- <code>return_tensors="pt"</code> → returns PyTorch tensors.<br>
+- <code>padding=True</code> → pads the input to equal length (useful for batch processing).</p>
+
+<hr>
+
+<h2>🚀 6. Generate Translation</h2>
+
+<p>Now we use the model to generate translated tokens.</p>
+
+<pre><code>translated = model.generate(**inputs)</code></pre>
+
+<p>✅ <strong>Explanation</strong><br>
+- <code>model.generate()</code> performs autoregressive decoding to predict the translated sequence.<br>
+- <code>**inputs</code> unpacks the dictionary into arguments (<code>input_ids</code>, <code>attention_mask</code>).</p>
+
+<hr>
+
+<h2>🧾 7. Decode Translated Tokens</h2>
+
+<p>Convert the token IDs back into human-readable French text.</p>
+
+<pre><code>translated_text = tokenizer.batch_decode(translated, skip_special_tokens=True)
+print(translated_text)</code></pre>
+
+<p>✅ <strong>Output</strong></p>
+
+<pre><code>['Bonjour, comment allez-vous ?']</code></pre>
+
+<hr>
+
+<h2>🧠 8. Full Code Example</h2>
+
+<pre><code>from transformers import MarianMTModel, MarianTokenizer
+
+# Load model and tokenizer
+model_name = "Helsinki-NLP/opus-mt-en-fr"
+tokenizer = MarianTokenizer.from_pretrained(model_name)
+model = MarianMTModel.from_pretrained(model_name)
+
+# Input text
+text = ["Hello, how are you?"]
+
+# Tokenize and translate
+inputs = tokenizer(text, return_tensors="pt", padding=True)
+translated = model.generate(**inputs)
+
+# Decode and print
+translated_text = tokenizer.batch_decode(translated, skip_special_tokens=True)
+print(translated_text)</code></pre>
+
+<p><strong>Output:</strong></p>
+
+<pre><code>['Bonjour, comment allez-vous ?']</code></pre>
+
+<hr>
+
+<h2>🌐 9. Translate Multiple Sentences</h2>
+
+<p>You can easily translate multiple sentences at once:</p>
+
+<pre><code>texts = [
+    "Good morning!",
+    "I love learning new languages.",
+    "This model works very well."
+]
+
+inputs = tokenizer(texts, return_tensors="pt", padding=True)
+translated = model.generate(**inputs)
+translated_texts = tokenizer.batch_decode(translated, skip_special_tokens=True)
+
+for src, tgt in zip(texts, translated_texts):
+    print(f"{src} → {tgt}")</code></pre>
+
+<hr>
+
+<h2>🧩 10. Tips and Variations</h2>
+
+<ul>
+  <li>For <strong>French → English</strong>, use <code>Helsinki-NLP/opus-mt-fr-en</code></li>
+  <li>For other pairs (like English → Hindi), replace model name with <code>Helsinki-NLP/opus-mt-en-hi</code></li>
+</ul>
+
+<hr>
+
+<h2>🧭 Summary</h2>
+
+<table>
+  <tr><th>Step</th><th>Description</th></tr>
+  <tr><td>1</td><td>Install libraries</td></tr>
+  <tr><td>2</td><td>Load model and tokenizer</td></tr>
+  <tr><td>3</td><td>Prepare text</td></tr>
+  <tr><td>4</td><td>Tokenize input</td></tr>
+  <tr><td>5</td><td>Generate translation</td></tr>
+  <tr><td>6</td><td>Decode output</td></tr>
+</table>
+
+<hr>
+<h1>🌍 English → German Translation using T5</h1>
+
+
+<p>Now Let us use the <strong>T5 (Text-to-Text Transfer Transformer)</strong> model for translating English text into German using the <code>transformers</code> library.</p>
+
+
+<h2>📘 Code Example</h2>
+
+
+<pre><code>from transformers import T5ForConditionalGeneration, T5Tokenizer
+
+
+model_name = "t5-small"
+tokenizer = T5Tokenizer.from_pretrained(model_name)
+model = T5ForConditionalGeneration.from_pretrained(model_name)
+
+
+# T5 expects a text-to-text task prompt
+text = "translate English to German: How are you?"
+inputs = tokenizer(text, return_tensors="pt")
+
+
+outputs = model.generate(**inputs)
+print(tokenizer.decode(outputs[0], skip_special_tokens=True))</code></pre>
+
+
+<h2>🧠 Explanation</h2>
+<ul>
+<li><code>T5Tokenizer</code> converts input text into model tokens.</li>
+<li><code>T5ForConditionalGeneration</code> generates the translated text.</li>
+<li><code>text</code> includes the task prompt: <em>"translate English to German"</em>.</li>
+<li><code>model.generate()</code> produces the translated output sequence.</li>
+<li><code>tokenizer.decode()</code> converts tokens back into readable German text.</li>
+</ul>
+
+
+<h2>✅ Sample Output</h2>
+<pre><code>Wie geht es dir?</code></pre>
+
+
+</body>
+</html>
