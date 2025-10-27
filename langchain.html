@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LangChain Tutorial for Beginners</title>
+  <style>
+    body {font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; margin: 0; padding: 0;}
+    .container {max-width: 900px; margin: auto; padding: 30px;}
+    h1, h2, h3 {color: #0f172a;}
+    pre {background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 0.9rem;}
+    code {padding: 2px 6px; border-radius: 4px;}
+    .card {background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-top: 20px;}
+    ul {line-height: 1.6;}
+    table {border-collapse: collapse; width: 100%; margin-top: 10px;}
+    th, td {border: 1px solid #e2e8f0; padding: 8px; text-align: left;}
+    th {background: #f8fafc;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>LangChain Tutorial — Building LLM Applications</h1>
+
+    <div class="card">
+      <h2>1. Introduction</h2>
+      <p><strong>LangChain</strong> is a framework for developing applications powered by <strong>Large Language Models (LLMs)</strong> such as GPT, Claude, or Gemini. It simplifies connecting LLMs with external data sources, APIs, and logical components like memory, tools, and agents.</p>
+      <p>LangChain makes it easy to build complex AI systems such as chatbots, question answering systems, and reasoning agents by chaining together multiple steps.</p>
+
+      <h3>Core Idea:</h3>
+      <p>Instead of using a single prompt → response, LangChain helps you build a <strong>chain</strong> of prompts, reasoning, and tools to achieve more sophisticated goals.</p>
+    </div>
+
+    <div class="card">
+      <h2>2. Why Use LangChain?</h2>
+      <ul>
+        <li><strong>Modularity</strong> – Each component (prompt, model, memory, tool) is modular and can be reused.</li>
+        <li><strong>Composability</strong> – Combine components into powerful “chains.”</li>
+        <li><strong>Integration</strong> – Works with APIs, databases, and other services easily.</li>
+        <li><strong>Memory</strong> – Store and recall information across interactions.</li>
+        <li><strong>Tool Use</strong> – Integrate LLMs with calculators, search engines, or external knowledge bases.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>3. LangChain Architecture</h2>
+      <p>LangChain applications are typically composed of these main components:</p>
+      <ul>
+        <li><strong>LLMs</strong>: The base models like GPT-4 or LLaMA.</li>
+        <li><strong>Prompts</strong>: Templates that structure how the model receives input.</li>
+        <li><strong>Chains</strong>: Logical sequences connecting multiple components.</li>
+        <li><strong>Agents</strong>: LLMs that decide which tool to use and when.</li>
+        <li><strong>Memory</strong>: Keeps track of past interactions or context.</li>
+      </ul>
+
+      <pre>
+LLM ↔ PromptTemplate → Chain → Agent → Tool → Memory
+      </pre>
+    </div>
+
+    <div class="card">
+      <h2>4. Getting Started with LangChain</h2>
+
+      <h3>Installation</h3>
+      <pre><code>pip install langchain openai</code></pre>
+
+      <h3>Setting up OpenAI API Key</h3>
+      <pre><code>export OPENAI_API_KEY="your-api-key"</code></pre>
+
+      <h3>Simple Example — Text Generation Chain</h3>
+      <pre><code>from langchain.llms import OpenAI
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+
+# 1. Define the LLM
+llm = OpenAI(model_name="gpt-3.5-turbo", temperature=0.7)
+
+# 2. Create a prompt template
+template = """You are a helpful assistant. Write a short poem about {topic}."""
+prompt = PromptTemplate(template=template, input_variables=["topic"])
+
+# 3. Build the chain
+chain = LLMChain(llm=llm, prompt=prompt)
+
+# 4. Run it
+response = chain.run({"topic": "the beauty of AI"})
+print(response)
+</code></pre>
+
+      <p>This code defines a simple LangChain pipeline where an LLM generates a poem about a given topic.</p>
+    </div>
+
+    <div class="card">
+      <h2>5. Using Memory in LangChain</h2>
+      <p>Memory lets your chatbot or system remember previous interactions — similar to ChatGPT’s ability to maintain context.</p>
+
+      <pre><code>from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
+
+llm = OpenAI(model_name="gpt-3.5-turbo")
+memory = ConversationBufferMemory()
+
+conversation = ConversationChain(
+    llm=llm,
+    memory=memory,
+    verbose=True
+)
+
+conversation.predict(input="Hello, who won the 2022 World Cup?")
+conversation.predict(input="And where was it held?")
+</code></pre>
+
+      <p>The model remembers the first question and can connect contextually when answering the next.</p>
+    </div>
+
+    <div class="card">
+      <h2>6. Example — LangChain Agent with Tools</h2>
+      <p>LangChain Agents decide which tools to use based on the user query. For example, an agent can use a calculator or search API to enhance responses.</p>
+
+      <pre><code>from langchain.agents import load_tools, initialize_agent
+from langchain.llms import OpenAI
+
+llm = OpenAI(temperature=0)
+tools = load_tools(["serpapi", "llm-math"], llm=llm)
+
+agent = initialize_agent(tools, llm, agent="zero-shot-react-description", verbose=True)
+
+agent.run("What is the square root of 144 times the current population of France?")
+</code></pre>
+
+      <p>This example shows an agent using both a search API and math tool dynamically to answer the query.</p>
+    </div>
+
+    <div class="card">
+      <h2>7. Advanced Concepts</h2>
+      <ul>
+        <li><strong>Retrieval-Augmented Generation (RAG)</strong>: Combine LLMs with custom datasets or document retrieval.</li>
+        <li><strong>Vector Databases</strong>: Use FAISS, Chroma, or Pinecone to store embeddings for context retrieval.</li>
+        <li><strong>Custom Chains</strong>: Create multi-step reasoning processes involving multiple LLM calls.</li>
+        <li><strong>Evaluation</strong>: Use LangChain’s built-in evaluation tools to measure response quality and latency.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>8. Applications</h2>
+      <ul>
+        <li>AI Chatbots with memory and context</li>
+        <li>Document question answering systems</li>
+        <li>Automated report generation</li>
+        <li>Data-to-text generation for analytics</li>
+        <li>Intelligent research assistants</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>9. Summary</h2>
+      <table>
+        <tr><th>Feature</th><th>Description</th></tr>
+        <tr><td>Framework</td><td>LangChain connects LLMs, tools, memory, and prompts</td></tr>
+        <tr><td>Core Components</td><td>LLMs, Prompts, Chains, Memory, Agents</td></tr>
+        <tr><td>Key Benefit</td><td>Build multi-step, intelligent LLM applications</td></tr>
+        <tr><td>Best Use Cases</td><td>Chatbots, QA systems, RAG pipelines</td></tr>
+      </table>
+
+      <p><strong>In essence</strong>, LangChain is the backbone for creating powerful, context-aware AI applications that combine reasoning, memory, and real-world data access — all orchestrated through large language models.</p>
+    </div>
+  </div>
+</body>
+</html>
