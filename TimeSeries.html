@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Time Series & Models — AR, MA, ARMA, ARIMA (Tutorial)</title>
+  <style>
+    :root{
+      --bg:#f7fafc;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --border:#e6e9ee;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    body{
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:var(--bg);
+      color:#111827;
+      line-height:1.55;
+      margin:0;
+      padding:32px;
+    }
+    .container{
+      max-width:900px;
+      margin:0 auto;
+    }
+    header{
+      display:flex;
+      gap:16px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    header h1{
+      font-size:1.6rem;
+      margin:0;
+    }
+    header p{ margin:0; color:var(--muted); }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:20px;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.04);
+      margin-bottom:18px;
+    }
+    h2{ color:#0f172a; margin-top:0; }
+    h3{ color:#0b1220; font-size:1.05rem; margin-bottom:6px; }
+    p.lead{ color:var(--muted); margin-top:4px; }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin:12px 0;
+    }
+    th, td{
+      text-align:left;
+      padding:8px;
+      border-bottom:1px solid #eef2f7;
+    }
+    th{ background:#fbfdff; font-weight:600; }
+    pre, code{
+      font-family: var(--mono);
+      background:#0f172a10;
+      padding:8px;
+      border-radius:6px;
+      overflow:auto;
+      font-size:0.95rem;
+    }
+    .equation{ background:#0f172a08; padding:10px; border-radius:6px; display:block; margin:10px 0; }
+    ul{ margin:8px 0 8px 20px; }
+    .badge{ display:inline-block; padding:6px 10px; border-radius:999px; background:var(--accent); color:white; font-weight:600; font-size:0.8rem; }
+    footer{ color:var(--muted); font-size:0.9rem; margin-top:18px; text-align:center; }
+    .examples{ display:grid; grid-template-columns: 1fr; gap:12px; }
+    @media(min-width:720px){ .examples{ grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Time Series & Models — AR, MA, ARMA, ARIMA</h1>
+    </header>
+
+    <section class="card" id="what-is">
+      <h2>1. What is a Time Series?</h2>
+      <p>A <strong>time series</strong> is a sequence of observations recorded over time (usually at equal intervals): daily, monthly, yearly, etc.</p>
+
+      <h3>Example</h3>
+      <table>
+        <thead><tr><th>Year</th><th>Sales</th></tr></thead>
+        <tbody>
+          <tr><td>2020</td><td>1000</td></tr>
+          <tr><td>2021</td><td>1200</td></tr>
+          <tr><td>2022</td><td>1300</td></tr>
+          <tr><td>2023</td><td>1250</td></tr>
+          <tr><td>2024</td><td>1400</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="components">
+      <h2>2. Components of a Time Series</h2>
+      <p>Most time series can be decomposed into:</p>
+      <table>
+        <thead><tr><th>Component</th><th>Meaning</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Trend (T)</strong></td><td>Long-term increase or decrease</td><td>Sales rising over years</td></tr>
+          <tr><td><strong>Seasonal (S)</strong></td><td>Repeating pattern over a fixed period</td><td>Higher sales every December</td></tr>
+          <tr><td><strong>Cyclical (C)</strong></td><td>Long-term ups & downs (irregular period)</td><td>Business cycles over several years</td></tr>
+          <tr><td><strong>Irregular (I)</strong></td><td>Random/noise</td><td>Sudden drop due to strikes</td></tr>
+        </tbody>
+      </table>
+
+      <p>Compact model form:</p>
+      <pre class="equation">Y<sub>t</sub> = T<sub>t</sub> + S<sub>t</sub> + C<sub>t</sub> + I<sub>t</sub></pre>
+    </section>
+
+    <section class="card" id="models">
+      <h2>3. Time Series Models</h2>
+      <p>When forecasting, we try to capture past patterns. The main statistical models are:</p>
+      <ul>
+        <li><strong>AR</strong> (Auto-Regressive)</li>
+        <li><strong>MA</strong> (Moving Average)</li>
+        <li><strong>ARMA</strong> (Auto-Regressive Moving Average)</li>
+        <li><strong>ARIMA</strong> (Auto-Regressive Integrated Moving Average)</li>
+      </ul>
+
+      <hr />
+
+      <h3>AR — Auto-Regressive Model</h3>
+      <p>The current value depends on <em>past values</em> of the series.</p>
+      <pre class="equation">
+Y_t = c + φ₁ Y_{t-1} + φ₂ Y_{t-2} + ... + φ_p Y_{t-p} + ε_t
+      </pre>
+      <p>Where:</p>
+      <ul>
+        <li><code>Y_t</code> = current value</li>
+        <li><code>φ_i</code> = AR coefficients</li>
+        <li><code>ε_t</code> = white noise (error)</li>
+      </ul>
+      <p><strong>Example (AR(1)):</strong></p>
+      <pre>Y_t = 0.6 Y_{t-1} + ε_t</pre>
+
+      <hr />
+
+      <h3>MA — Moving Average Model</h3>
+      <p>The current value depends on <em>past error terms</em> (shocks).</p>
+      <pre class="equation">
+Y_t = μ + ε_t + θ₁ ε_{t-1} + θ₂ ε_{t-2} + ... + θ_q ε_{t-q}
+      </pre>
+      <p>Where <code>θ_i</code> are MA coefficients.</p>
+      <p><strong>Example (MA(1)):</strong></p>
+      <pre>Y_t = μ + ε_t + 0.5 ε_{t-1}</pre>
+
+      <hr />
+
+      <h3>ARMA — Combined Model</h3>
+      <p>Used when the series is <strong>stationary</strong>. It combines AR and MA parts:</p>
+      <pre class="equation">
+Y_t = c + φ₁ Y_{t-1} + ... + φ_p Y_{t-p} + ε_t + θ₁ ε_{t-1} + ... + θ_q ε_{t-q}
+      </pre>
+      <p>This models both dependence on past values and past shocks.</p>
+
+      <hr />
+
+      <h3>ARIMA — For Non-Stationary Series</h3>
+      <p>ARIMA is used when the series has a trend or is non-stationary. The <em>I</em> stands for <strong>Integrated</strong> (differencing to make the series stationary):</p>
+      <p><strong>ARIMA(p, d, q)</strong></p>
+      <ul>
+        <li><strong>p</strong>: order of AR part</li>
+        <li><strong>d</strong>: number of differences (integration)</li>
+        <li><strong>q</strong>: order of MA part</li>
+      </ul>
+      <p>Example workflow when series has an upward trend:</p>
+      <ol>
+        <li>Take first difference: <code>Y'_t = Y_t - Y_{t-1}</code></li>
+        <li>Fit an ARMA model on the differenced data.</li>
+      </ol>
+      <pre class="equation">(1 - φ₁ B - ... - φ_p B^p)(1 - B)^d Y_t = (1 + θ₁ B + ... + θ_q B^q) ε_t</pre>
+      <p>(Here <code>B</code> is the backshift operator: <code>B Y_t = Y_{t-1}</code>.)</p>
+    </section>
+
+    <section class="card" id="summary">
+      <h2>4. Summary Table (Quick reference)</h2>
+      <table>
+        <thead><tr><th>Model</th><th>Uses</th><th>Stationary?</th><th>Short Intuition</th></tr></thead>
+        <tbody>
+          <tr><td>AR(p)</td><td>Past values</td><td>Yes</td><td>Today depends on past results</td></tr>
+          <tr><td>MA(q)</td><td>Past errors</td><td>Yes</td><td>Today depends on past surprises</td></tr>
+          <tr><td>ARMA(p,q)</td><td>Values + errors</td><td>Yes</td><td>Both past results & surprises matter</td></tr>
+          <tr><td>ARIMA(p,d,q)</td><td>Differenced values + errors</td><td>No, can handle trend</td><td>Remove trend (d), then use ARMA</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" id="intuition">
+      <h2>5. Intuitive Recap</h2>
+      <ul>
+        <li><strong>AR:</strong> "Today depends on yesterday's result."</li>
+        <li><strong>MA:</strong> "Today depends on yesterday's surprise (error)."</li>
+        <li><strong>ARMA:</strong> "Today depends on both yesterday's result and surprise."</li>
+        <li><strong>ARIMA:</strong> "If data trends, first remove trend via differencing, then use ARMA."</li>
+      </ul>
+    </section>
+
+  </div>
+</body>
+</html>
