@@ -1,0 +1,313 @@
+ <head>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; line-height:1.5; margin: 24px; color:#111; }
+    header { margin-bottom:18px; }
+    h1 { font-size: 1.6rem; margin:0 0 6px 0; }
+    p.lead { margin:0; color:#444; }
+    .card { border:1px solid #e6e6e6; padding:14px; border-radius:10px; box-shadow: 0 6px 18px rgba(20,20,20,0.03); margin:14px 0; }
+    table { border-collapse: collapse; width:100%; margin-top:8px; }
+    th, td { border:1px solid #eee; padding:8px 10px; text-align:left; }
+    th { background:#fafafa; }
+    .metric-title { font-weight:700; margin:6px 0; }
+    .formula { background:#f7f7ff; padding:8px; border-radius:6px; display:inline-block; font-family: "Courier New", monospace; }
+    .example { font-size:0.95rem; color:#222; }
+    .note { font-size:0.9rem; color:#555; margin-top:8px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width:700px) { .grid { grid-template-columns: 1fr; } }
+    footer { color:#666; font-size:0.85rem; margin-top:18px; }
+  </style>
+</head>
+
+<h2>Classification</h2>
+<p>
+  In machine learning and statistics, classification is the problem of identifying to which of a set of categories (sub-populations) a new observation belongs, on the basis of a training set of data containing observations (or instances) whose category membership is known.
+</p>
+<p> Example is assigning a given email to the "spam" or "non-spam" class</p>
+<p>An algorithm that implements classification, especially in a concrete implementation, is known as a classifier. The term "classifier" sometimes also refers to the mathematical function, implemented by a classification algorithm, that maps input data to a category. </p>
+<h3>Regression</h3>
+Regression is used to explain the relationship between one dependent variable and one or more independent variables. In  regression dependent variable must be measured on a continuous measurement scale (e.g. 0-100 test score)
+<p>So regression can't be directly used for classifcation problems because classification problems expect its out as set of categories not continuous values</p>
+<p>We can use both regression and standard logistic function to solve classifcation problems</p>
+
+<p><b>Standard Logistic function</b></p>
+<p>In order to map predicted values to probabilities, we use the Standard Logistic(sigmoid) function. The function maps any real value into another value between 0 and 1.</p>
+<p>
+  &sigma;(y) = 1/(1+e<sup>-y</sup>)
+</p>
+<p>Here
+<ul>
+  <li>&sigma;(y) = output between 0 and 1 (probability estimate)</li>
+<li>y = input to the function (your algorithm's prediction e.g. b<sub>0</sub>+b<sub>1</sub>x)</li>
+<li>e = base of natural log</li>
+</ul>
+</p>
+
+<h3>Logistic Regression</h3>
+<p>
+  <b>Logistic regression</b> is a classification algorithm used to assign observations to a discrete set of classes. Unlike regression which outputs continuous number values, logistic regression transforms its output into probability by applying logistic function which can then be mapped to two or more discrete classes.
+</p>
+
+<h3>Binary Logistic Regression</h3>
+<p><b>Binary Logistic regression</b> predicts the probability of an outcome that can only have two values</p>
+
+<p>logistic regression produces a logistic curve, by using sigmoid function which limits values between 0 and 1.</p>
+<p>
+  <img src="./images/LogReg_1.png" alt="logisticRegression image">
+</p>
+<p>In the logistic regression the constant (b<sub>0</sub>) moves the curve left and right and the slope (b<sub>1</sub>) defines the steepness of the curve.</p>
+<p>logistic regression can handle any number of numerical and/or categorical variables.</p>
+<p><img src="/home/laxmi/Web Dev/images/LogReg_eq.png" alt="logisticRegression equation"></p>
+<p><b>Decision Boundary</b></p>
+<p>
+  Our current prediction function returns a probability score between 0 and 1. In order to map this to a discrete class (true/false, cat/dog), we select a threshold value above which we will classify values into class 1 and below which we classify values into class 2.
+</p>
+<p>p>=0.5,class=1</p>
+<p>p<0.5,class=0</p>
+<p><b>Loss function</b></p>
+<p>
+  We can't use Mean Squared Error, we use a cost function called Cross-Entropy, also known as Log Loss.
+</p>
+<p>
+  <ol>
+    <li>  In binary classification, where the number of classes M equals 2, cross-entropy can be calculated as:<br>
+    <p>-(ylog(p)+(1-y)log(1-p))</li></p>
+    <li>If M>2 (i.e. multiclass classification), we calculate a separate loss for each class label per observation and sum the result.</li><br>
+    - <b>&Sigma;</b><sup>M</sup><sub>c=1</sub> y<sub>o, c</sub>log(p<sub>o, c</sub>)
+  </ol>
+  <p>
+    Here
+    <ul>
+      <li>M - number of classes (dog, cat, fish)</li>
+      <li>log - the natural log</li>
+      <li>y - binary indicator (0 or 1) if class label c is the correct classification for observation o</li>
+      <li>p - predicted probability observation o is of class c</li>
+    </ul>
+  </p>
+</p>
+<p><b><h3>Example</h3></b></p>
+<p><b>Probability of passing an exam versus hours of study</b></p>
+<p>
+  Suppose we wish to answer the following question:
+</p><p style = "padding-left:40px">
+<b>A group of 20 students spend between 0 and 6 hours studying for an exam. How does the number of hours spent studying affect the probability that the student will pass the exam?
+</b></p><p >
+The reason for using logistic regression for this problem is that the values of the dependent variable, pass and fail, while represented by "1" and "0", are not cardinal numbers. If the problem was changed so that pass/fail was replaced with the grade 0 - 100 (cardinal numbers), then simple regression analysis could be used.
+</p><p>
+The table shows the number of hours each student spent studying, and whether they passed (1) or failed (0).
+</p>
+<p>
+  <table border="4px" style = "border-collapse: collapse;">
+
+<tbody><tr>
+<th>Hours
+</th>
+<td>0.50</td>
+<td>0.75</td>
+<td>1.00</td>
+<td>1.25</td>
+<td>1.50</td>
+<td>1.75</td>
+<td>1.75</td>
+<td>2.00</td>
+<td>2.25</td>
+<td>2.50</td>
+<td>2.75</td>
+<td>3.00</td>
+<td>3.25</td>
+<td>3.50</td>
+<td>4.00</td>
+<td>4.25</td>
+<td>4.50</td>
+<td>4.75</td>
+<td>5.00</td>
+<td>5.50
+</td></tr>
+<tr>
+<th>Pass
+</th>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1
+</td></tr></tbody></table>
+</p>
+<p><b><h3>Making predictions</h3></b></p>
+<p>Let's use the same simple linear regression equation from our linear regression tutorial.</p>
+          <p>y = &beta;<sub>0</sub>+&beta;<sub>1</sub>Hours</p>
+          <p>&beta;<sub>0</sub> =  -0.27577401851260774
+          </p>
+          <p>
+            &beta;<sub>1</sub> = 0.25662305
+          </p>
+          <p> for Hours = [5, 0.75, 5.5]</p>
+          <p>respective y =[1.00734, -0.0833067, 1.13565]</p>
+<p>This time however we will transform the output(y) using the sigmoid function to return a probability(p) value between 0 and 1.</p>
+          <p>p=1/1+e<sup>-y</sup></p>
+          <p>After applying sigmoid to y</p>
+          <p> p =[0.73, 0.48, 0.76]</p>
+
+<p>If the model returns .73 it believes there is a 73% chance of passing. If our decision boundary was .5(can be varied), we would categorize this observation as 1.
+</p>
+<p> final class label =[1, 0, 1]</p>
+<p>
+  <table border="4px" style = "border-collapse: collapse;">
+    <tr><th>Hours of study</th><th>Pass Probability</th><th>Predicted Label</th></tr>
+    <tr><td>5</td><td>0.73</td><td>1</td></tr>
+    <tr><td>.75</td><td>0.48</td><td>0</td></tr>
+    <tr><td>5.5</td><td>0.76</td><td>1</td></tr>
+  </table>
+</p>
+
+<p>
+  <pre><code class="language-python">
+    #importing libraries
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import pandas as pd
+
+    # Independent variable
+    X = np.array([0.50,0.75,1.00,1.25,1.50,1.75,1.75,2.00,2.25,2.50,2.75,3.00,3.25,3.50,4.00,4.25,4.50,4.75,5.00,5.50])
+
+    # Dependent variable
+    y = np.array([0,0,0,0,0,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1])
+
+    # Reshape X to 2D array scikit-learn will accept 2D input only
+    X = X.reshape(-1,1)
+
+    #split dataset into train , test
+    from sklearn.model_selection import train_test_split
+    X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.25, random_state = 0)
+
+    #importing LogisticRegression
+    from sklearn.linear_model import LogisticRegression
+
+    #create logisticRegression object
+    log_reg = LogisticRegression()
+
+    #train model
+    log_reg.fit(X_train,y_train)
+
+    #test model
+    y_pred = log_reg.predict(X_test)
+
+    # finding accuracy of the constructed model
+    from sklearn.metrics import accuracy_score
+    accuarcy = accuracy_score(y_test, y_pred)
+  </code></pre>
+</p>
+<h3>Evaluating a Classification Model</h3>
+<p>
+Evaluating a classification model is a critical step in machine learning to assess its performance and generalization ability on unseen data. Several metrics can be used for this purpose, depending on the specific problem and requirements.</p>
+<section class="card">
+    <h2 style="margin-top:0">Confusion Matrix (binary)</h2>
+    <p>A compact table showing true vs predicted class counts.</p>
+    <table aria-label="Confusion Matrix">
+      <thead>
+        <tr><th></th><th>Predicted Positive</th><th>Predicted Negative</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>Actual Positive</th><td><strong>TP</strong> = True Positive</td><td><strong>FN</strong> = False Negative</td></tr>
+        <tr><th>Actual Negative</th><td><strong>FP</strong> = False Positive</td><td><strong>TN</strong> = True Negative</td></tr>
+      </tbody>
+    </table>
+    <p class="note">All other metrics below are computed from TP, FP, FN, TN.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="metric-title">Accuracy</div>
+      <div class="formula">Accuracy = (TP + TN) / (TP + TN + FP + FN)</div>
+      <p class="note">Fraction of total predictions that are correct. Useful for balanced datasets; misleading when classes are imbalanced.</p>
+    </section>
+
+    <section class="card">
+      <div class="metric-title">Precision (Positive Predictive Value)</div>
+      <div class="formula">Precision = TP / (TP + FP)</div>
+      <p class="note">Of predicted positives, how many are actually positive. Use when false positives are costly (e.g., spam filter incorrectly marking good mail).</p>
+    </section>
+
+    <section class="card">
+      <div class="metric-title">Recall (Sensitivity / True Positive Rate)</div>
+      <div class="formula">Recall = TP / (TP + FN)</div>
+      <p class="note">Of actual positives, how many did we correctly detect. Use when missing positives is costly (e.g., disease screening).</p>
+    </section>
+
+    <section class="card">
+      <div class="metric-title">F1 Score</div>
+      <div class="formula">F1 = 2 × (Precision × Recall) / (Precision + Recall)</div>
+      <p class="note">Harmonic mean of precision and recall — balances the two. Good for imbalanced datasets where both false positives and false negatives matter.</p>
+    </section>
+
+    <section class="card">
+      <div class="metric-title">Specificity (True Negative Rate)</div>
+      <div class="formula">Specificity = TN / (TN + FP)</div>
+      <p class="note">Of actual negatives, how many are correctly identified. Often reported alongside recall to show performance on the negative class.</p>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Worked example (step-by-step)</h2>
+    <p class="example">Suppose a binary classifier produced the following counts:</p>
+
+    <table>
+      <thead><tr><th>Count</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>True Positive (TP)</td><td>50</td></tr>
+        <tr><td>False Positive (FP)</td><td>10</td></tr>
+        <tr><td>False Negative (FN)</td><td>5</td></tr>
+        <tr><td>True Negative (TN)</td><td>35</td></tr>
+        <tr><th>Total</th><th>100</th></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-bottom:6px">Compute each metric</h3>
+    <ol>
+      <li><strong>Accuracy</strong><br/>
+        Calculation: (TP + TN) / Total = (50 + 35) / 100 = 85 / 100 = <strong>0.85</strong> (85%).</li>
+
+      <li style="margin-top:8px"><strong>Precision</strong><br/>
+        Calculation: TP / (TP + FP) = 50 / (50 + 10) = 50 / 60 = <strong>0.8333</strong> (≈83.33%).</li>
+
+      <li style="margin-top:8px"><strong>Recall</strong><br/>
+        Calculation: TP / (TP + FN) = 50 / (50 + 5) = 50 / 55 = <strong>0.9091</strong> (≈90.91%).</li>
+
+      <li style="margin-top:8px"><strong>F1 Score</strong><br/>
+        First compute precision (P) = 0.833333..., recall (R) = 0.9090909...
+        <br/>F1 = 2 × (P × R) / (P + R) = 2 × (0.8333333 × 0.9090909) / (0.8333333 + 0.9090909)
+        <br/>= 2 × 0.7575757 / 1.7424242 = 1.5151514 / 1.7424242 = <strong>0.8696</strong> (≈86.96%).</li>
+
+      <li style="margin-top:8px"><strong>Specificity</strong><br/>
+        Calculation: TN / (TN + FP) = 35 / (35 + 10) = 35 / 45 = <strong>0.7778</strong> (≈77.78%).</li>
+    </ol>
+
+    <p class="note">Summary of results for the example: <strong>Accuracy = 0.85</strong>, <strong>Precision = 0.8333</strong>, <strong>Recall = 0.9091</strong>, <strong>F1 = 0.8696</strong>, <strong>Specificity = 0.7778</strong>.</p>
+  </section>
+
+  <section class="card">
+    <h3 style="margin-top:0">Quick guidance — which metric to use?</h3>
+    <ul>
+      <li><strong>Accuracy</strong> — quick overall check; beware of class imbalance.</li>
+      <li><strong>Precision</strong> — when false positives are costly (low false alarms desired).</li>
+      <li><strong>Recall</strong> — when false negatives are costly (don't miss positives).</li>
+      <li><strong>F1 Score</strong> — when you want a single number balancing precision & recall.</li>
+      <li><strong>Specificity</strong> — complements recall; shows true negative performance.</li>
+    </ul>
+    <p class="note">For many real problems, report at least Precision, Recall, F1 and either Accuracy or Specificity depending on whether negative-class performance matters.</p>
+  </section>
+
