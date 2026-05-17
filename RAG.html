@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Building a RAG System with Gemini API</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+            color: #222;
+        }
+        header {
+            background: #1a73e8;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+        }
+        h1, h2, h3 {
+            color: #1a73e8;
+        }
+        code {
+            background: #f1f1f1;
+            padding: 10px;
+            display: block;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-size: 15px;
+        }
+        pre {
+            white-space: pre-wrap;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        footer {
+            margin-top: 40px;
+            background: #1a73e8;
+            padding: 15px;
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Building a Retrieval-Augmented Generation (RAG) System Using Gemini API</h1>
+</header>
+
+<div class="container">
+
+    <p>
+        Here is a step-by-step tutorial for building a <b>Retrieval-Augmented Generation (RAG)</b> system using the Gemini API.
+        <br><br>
+        A RAG system allows you to ground the Gemini model in specific, external knowledge (like a document or a webpage)
+        so it can answer questions accurately without hallucinating.
+    </p>
+
+    <hr>
+
+    <div class="section">
+        <h2>Building a RAG System with Gemini</h2>
+
+        <h3>1. Install Dependencies</h3>
+        <p>
+            First, ensure you have the correct SDK installed. We will also use <code>chromadb</code> 
+            as a lightweight, in-memory vector database to store and retrieve our document chunks.
+        </p>
+
+        <code>pip install google-genai chromadb</code>
+    </div>
+
+    <div class="section">
+        <h3>2. Set Up the Client</h3>
+
+<code>
+import os
+from google import genai
+from google.genai import types
+import chromadb
+
+# Initialize the Gemini Client
+# It is best practice to use os.environ["GEMINI_API_KEY"]
+api_key = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
+
+# Initialize a local, in-memory Vector Database
+chroma_client = chromadb.Client()
+collection = chroma_client.create_collection(name="rag_knowledge_base")
+</code>
+    </div>
+
+    <div class="section">
+        <h3>3. Embed and Store Documents</h3>
+
+<code>
+# 1–5: Define the source knowledge data
+documents = [
+    "Gemini 2.5 Flash is highly optimized for high-frequency tasks where speed is paramount.",
+    "The standard Gemini API rate limit for free tier users is 15 requests per minute.",
+    "Retrieval-Augmented Generation (RAG) improves LLM accuracy by fetching external context.",
+]
+
+# 8–18: Generate embeddings and store them
+for i, text in enumerate(documents):
+    # Call the API to generate embeddings for each document
+    response = client.models.embed_content(
+        model="text-embedding-004",
+        contents=text
+    )
+    
+    # Extract the vector embedding values
+    embedding = response.embeddings[0].values
+    
+    # Add the text and its corresponding vector into the database
+    collection.add(
+        ids=[f"doc_{i}"],
+        embeddings=[embedding],
+        documents=[text]
+    )
+
+print(f"Successfully embedded and indexed {len(documents)} documents.")
+</code>
+
+        <p><b>Code Breakdown:</b></p>
+        <ul>
+            <li><code>client.models.embed_content</code>: Triggers Gemini's <code>text-embedding-004</code> model to convert text into vector embeddings.</li>
+            <li><code>collection.add</code>: Stores both the text and its vector representation for fast retrieval.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>4. Query the Vector Database</h3>
+
+<code>
+# 1–2: User Query
+user_query = "What is the speed-optimized model in the Gemini family?"
+
+# 5–9: Embed the query text
+query_embedding_resp = client.models.embed_content(
+    model="text-embedding-004",
+    contents=user_query
+)
+query_embedding = query_embedding_resp.embeddings[0].values
+
+# 12–15: Retrieve the top 1 most relevant document snippet
+results = collection.query(
+    query_embeddings=[query_embedding],
+    n_results=1
+)
+
+retrieved_context = results['documents'][0][0]
+print(f"Retrieved Context: {retrieved_context}")
+</code>
+    </div>
+
+    <div class="section">
+        <h3>5. Generate the Answer (RAG)</h3>
+
+<code>
+# 1–6: Construct a grounded prompt
+rag_prompt = f"""
+You are a helpful assistant. Answer the user question strictly using only the provided context.
+If you do not know the answer based on the context, say 'I cannot find the answer.'
+
+Context: {retrieved_context}
+Question: {user_query}
+Answer:
+"""
+
+# 9–13: Call the API to generate content
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents=rag_prompt
+)
+
+# 16: Print the grounded result
+print("\n--- Gemini RAG Output ---")
+print(response.text)
+</code>
+
+        <p><b>Code Breakdown:</b></p>
+        <ul>
+            <li><code>rag_prompt</code>: Combines context + question into a controlled prompt.</li>
+            <li><code>client.models.generate_content</code>: Generates a response grounded entirely in the retrieved document.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h3>Note about Authentication & Production</h3>
+
+        <ul>
+            <li><b>API Key Security</b>: Use environment variables instead of hardcoding keys.</li>
+            <li><b>Production Scaling</b>: ChromaDB is good for local usage; use cloud vector DBs like Vertex AI Vector Search or Pinecone for large systems.</li>
+        </ul>
+    </div>
+
+</div>
+
+<footer>
+    <p>© 2026 RAG System with Gemini API — Tutorial Page</p>
+</footer>
+
+</body>
+</html>
