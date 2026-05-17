@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Agentic AI Tutorial – HTML Version</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.7;
+            padding: 25px;
+            background: #fafafa;
+        }
+        h1, h2, h3 {
+            color: #1a73e8;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 10px;
+            display: block;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        table, th, td {
+            border: 1px solid #d0d0d0;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background: #e8f0fe;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Tutorial: Understanding and Building Agentic AI</h1>
+
+<p>
+    Unlike a standard Retrieval-Augmented Generation (RAG) pipeline—which follows a strict, predictable path of searching data and answering a question— 
+    <strong>Agentic AI</strong> represents a shift toward autonomy.
+</p>
+
+<p>
+    Instead of executing a fixed code script, an Agentic system acts as an independent entity. You provide it with a goal and a suite of "tools"
+    (Python functions, web scrapers, or calculators), and the model dynamically decides <em>which</em> tool to use,
+    <em>when</em> to use it, and <em>how</em> to evaluate if the results are sufficient to solve your request.
+</p>
+
+<hr>
+
+<h2>Key Structural Differences: RAG vs. Agents</h2>
+
+<table>
+    <tr>
+        <th>Feature</th>
+        <th>RAG (Retrieval-Augmented)</th>
+        <th>Agentic AI</th>
+    </tr>
+    <tr>
+        <td><strong>Control Flow</strong></td>
+        <td>Deterministic (Fixed steps)</td>
+        <td>Adaptive (Dynamic loops)</td>
+    </tr>
+    <tr>
+        <td><strong>Reasoning</strong></td>
+        <td>Single-turn context synthesis</td>
+        <td>Multi-turn planning, execution, and evaluation</td>
+    </tr>
+    <tr>
+        <td><strong>Action Capability</strong></td>
+        <td>Read-only (Fetches text data)</td>
+        <td>Read/Write (Executes calculations, triggers APIs)</td>
+    </tr>
+    <tr>
+        <td><strong>Success Metric</strong></td>
+        <td>Semantic search matching accuracy</td>
+        <td>Task goal achievement and problem-solving</td>
+    </tr>
+</table>
+
+<hr>
+
+<h1>Building a Currency Conversion Agent with Gemini</h1>
+
+<p>
+    We will build an AI financial agent. When a user asks a complex question like: 
+    <em>"How much is a $450 jacket in Euros if there is a 12% sales tax?"</em>, 
+    a basic LLM might hallucinate the math or use outdated conversion rates.
+</p>
+
+<p>
+    Our Agent will use <strong>Gemini's Native Function Calling</strong> to dynamically call a real local mathematical calculation tool
+    and coordinate the correct solution.
+</p>
+
+<hr>
+
+<h2>1. Install Dependencies</h2>
+
+<p>First, make sure you have the official, modern Google GenAI SDK installed:</p>
+
+<code>pip install google-genai</code>
+
+<hr>
+
+<h2>2. Define the Agent's Tools</h2>
+
+<p>
+    Tools are standard Python functions. By including clear <strong>docstrings</strong> and type hints, 
+    the Gemini model reads this metadata to understand exactly <em>what</em> the function does and 
+    <em>what</em> arguments it requires.
+</p>
+
+<code>
+def calculate_total_with_tax(price: float, tax_rate: float) -> float:
+    """
+    Calculates the final total cost of an item after applying sales tax.
+    
+    Args:
+        price: The initial base cost of the item before tax.
+        tax_rate: The tax percentage expressed as a decimal (e.g., 0.12 for 12%).
+    """
+    return price * (1 + tax_rate)
+
+
+def convert_usd_to_eur(usd_amount: float) -> float:
+    """
+    Converts a USD currency value into EUR currency values.
+    
+    Args:
+        usd_amount: The numerical amount in US Dollars.
+    """
+    # Using a fixed baseline exchange rate for this local tool context
+    exchange_rate = 0.92 
+    return usd_amount * exchange_rate
+</code>
+
+<hr>
+
+<h2>3. Initialize the Client and Bind Tools</h2>
+
+<code>
+import os
+from google import genai
+from google.genai import types
+
+# Initialize client using your Gemini API key environment variable
+api_key = os.environ.get("GEMINI_API_KEY", "YOUR_GEMINI_API_KEY")
+client = genai.Client(api_key=api_key)
+
+# Package tools so the Gemini API can recognize their schema signature
+my_agent_tools = [calculate_total_with_tax, convert_usd_to_eur]
+</code>
+
+<hr>
+
+<h2>4. Run the Agentic Execution Loop</h2>
+
+<p>The modern <code>google-genai</code> SDK supports automated function/tool execution.</p>
+
+<code>
+# User command requiring multiple distinct calculation phases
+user_prompt = "I want to buy a jacket that costs $450 USD. The local store has a 12% sales tax. How much will it cost me total in Euros?"
+
+print(f"User Request: {user_prompt}\n")
+print("--- Agent Execution Trace ---")
+
+# Execute content generation with function routing turned on
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents=user_prompt,
+    config=types.GenerateContentConfig(
+        tools=my_agent_tools,
+        temperature=0.0 # Low temperature guarantees strict logical reasoning
+    )
+)
+
+print("\n--- Final Agent Response ---")
+print(response.text)
+</code>
+
+<hr>
+
+<h2>How the Agent Solved It Behind the Scenes</h2>
+
+<ol>
+    <li><strong>Analysis:</strong> The model reads the prompt and determines it cannot solve the math directly using language alone.</li>
+    <li><strong>Step 1 (Tax Calculation):</strong> Executes 
+        <code>calculate_total_with_tax(price=450, tax_rate=0.12)</code> returning <strong>$504.0</strong>.</li>
+    <li><strong>Step 2 (Currency Conversion):</strong> Executes 
+        <code>convert_usd_to_eur(usd_amount=504.0)</code>.</li>
+    <li><strong>Synthesis:</strong> Converts results into readable assistant output.</li>
+</ol>
+
+<hr>
+
+<h2>Best Practices for Production Agents</h2>
+
+<ul>
+    <li><strong>Granular Tools:</strong> Each tool should perform one task well.</li>
+    <li><strong>Error Handling:</strong> Use <code>try/except</code> so errors can be surfaced back to the LLM.</li>
+    <li><strong>Traceability:</strong> Log tool calls and agent decisions for debugging.</li>
+    <li><strong>Security:</strong> Validate inputs before tool execution.</li>
+</ul>
+
+<hr>
+
+<p><strong>End of Tutorial.</strong></p>
+
+</body>
+</html>
