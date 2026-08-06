@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chapter 9: Text Preprocessing in NLP</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      margin: 40px;
+      line-height: 1.8;
+      background-color: #fff;
+      color: #2c3e50;
+    }
+    h1, h2, h3 {
+      color: #34495e;
+    }
+    h1 {
+      border-bottom: 2px solid #bbb;
+      padding-bottom: 0.3em;
+    }
+    code, pre {
+      background-color: #f4f4f4;
+      padding: 10px;
+      display: block;
+      overflow-x: auto;
+      font-family: Consolas, monospace;
+      margin: 1em 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #ecf0f1;
+    }
+    ul {
+      margin-left: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Chapter 9: Text Preprocessing in Natural Language Processing</h1>
+
+<h2>9.1  Why Text Preprocessing Required?</h2>
+
+<p>
+When humans read a sentence or paragraph, they can easily understand its
+<b>meaning, context, and structure</b>. Computers, however, cannot interpret text
+in the same way. <b>Machine learning models work only with numerical data</b> and
+cannot process raw text directly.
+</p>
+
+<p>
+Moreover, text collected from natural language is often
+<b>unstructured</b> and contains noise such as <b>punctuation, stop words,
+special characters, inconsistent capitalization, and spelling variations</b>.
+<b>Text preprocessing</b> removes these unnecessary elements and standardizes the
+text, producing a clean and consistent representation. The preprocessed text
+can then be converted into <b>numerical features</b> that enable machine learning
+models to learn meaningful patterns, resulting in improved
+<b>efficiency, accuracy, and overall performance</b>.
+</p>
+
+<p>
+For example, consider developing a <b>spam detection system</b>. Emails can vary
+significantly in style and content:
+</p>
+
+<ul>
+    <li><b>BUY NOW!!!</b> (written in all capital letters with excessive punctuation)</li>
+    <li><b>Fr33 monney just for yu!</b> (contains spelling mistakes and numbers replacing letters)</li>
+    <li>Emails containing <b>HTML tags, extra spaces, or inconsistent punctuation</b></li>
+</ul>
+
+<p>
+If such text is fed directly into a machine learning model, it increases
+complexity and reduces performance. For instance, the model may treat
+<b>"Buy"</b> and <b>"buy"</b> as different words, or consider
+<b>"money"</b> and <b>"money."</b> (with punctuation) as separate tokens,
+even though they have the same meaning. Through preprocessing, these
+variations are standardized, allowing the model to focus on
+<b>meaningful information rather than superficial differences</b>, thereby
+improving prediction accuracy.
+</p>
+
+<h2>9.2 Methods Used for Text Preprocessing</h2>
+
+<p>
+Text preprocessing consists of a <b>collection of techniques</b> used to <b>clean,
+normalize, and standardize textual data</b> before it is <b>transformed into
+numerical</b> features. The preprocessing steps applied depend on the
+<b>nature of the text</b> and the <b>target application</b>. For example,
+social media posts, emails, and chat messages often contain contractions,
+emojis, mentions, and URLs, whereas formal documents such as research
+articles may not require all of these preprocessing steps. Therefore,
+there is <b>no single preprocessing pipeline</b> that is suitable for every
+NLP task.
+</p>
+
+<p>
+The following are some of the commonly used text preprocessing methods:
+</p>
+
+<ul>
+    <li>Lower Casing</li>
+    <li>Removing HTML Tags</li>
+    <li>Expanding Contractions</li>
+    <li>Removing URLs</li>
+    <li>Removing Email IDs</li>
+    <li>Removing Twitter Mentions</li>
+    <li>Handling Emojis</li>
+    <li>Handling Accented Words</li>
+    <li>Removing Unicode Characters</li>
+    <li>Abbreviation and Acronym Expansion</li>
+    <li>Handling Digits and Alphanumeric Words</li>
+    <li>Removing Stop Words</li>
+    <li>Removing Extra Spaces</li>
+    <li>Stemming or Lemmatization</li>
+    <li>Spelling Correction</li>
+    <li>Correcting Compound Words</li>
+</ul>
+
+<p>
+Each of these preprocessing techniques is explained in the following
+subsections with suitable examples. Depending on the requirements of an
+application, some preprocessing steps may be included, modified, or
+omitted to obtain the most effective representation of the text.
+</p>
+
+<h2>9.3 Lowercasing</h2>
+<p>
+<strong>Lowercasing</strong> is one of the simplest yet most effective text preprocessing techniques. It converts all uppercase letters in the text to lowercase.
+</p>
+
+<h3>Why Lowercase?</h3>
+<p>
+By converting all text to lowercase, we ensure that words like "Apple," "apple," and "APPLE" are treated as the same word. This significantly reduces the vocabulary size and helps in standardizing the text, preventing the model from learning different representations for the same word due to case variations. While generally beneficial, there are niche cases (e.g., Named Entity Recognition) where preserving case might be important.
+</p>
+
+<h3>Code Example</h3>
+<pre><code>text = "Natural Language Processing Is AMAZING!"
+lower_text = text.lower()
+print(lower_text)
+# Output: "natural language processing is amazing!"
+</code></pre>
+
+<h2>9.4 Tokenization</h2>
+<p>
+Tokenization involves splitting text into smaller components called <strong>tokens</strong>. Tokens may represent words, sentences, or subword units. For example, the sentence:
+</p>
+<p><em>"I can't believe it's not butter!"</em></p>
+<p>might be tokenized as:</p>
+<p><code>["I", "ca", "n't", "believe", "it", "'s", "not", "butter", "!"]</code></p>
+
+<h3>Real-World Analogy</h3>
+<p>
+Tokenization is similar to chopping vegetables before cooking. Just as ingredients need to be properly sized for a meal, models need properly segmented text tokens for analysis.
+</p>
+
+<h3>Code Example (NLTK)</h3>
+<pre><code>from nltk.tokenize import word_tokenize, sent_tokenize
+
+text = "Natural Language Processing is amazing. Let's explore it!"
+sentences = sent_tokenize(text)
+words = word_tokenize(text)
+</code></pre>
+
+<h2>9.5 Removing Punctuation</h2>
+<p>
+Punctuation helps humans understand text, but for many NLP models, it adds little value. Removing it simplifies the vocabulary.
+</p>
+
+<h3>Why Remove It?</h3>
+<p>
+Punctuation can inflate the number of unique tokens. For instance, "hello," and "hello" may be treated as different tokens.
+</p>
+
+<h3>Code Example</h3>
+<pre><code>import string
+
+text = "Hello, world! How are you?"
+words = word_tokenize(text) # Assuming text is already lowercased and tokenized
+words_no_punct = [w for w in words if w not in string.punctuation]
+print(words_no_punct)
+# Output: ['Hello', 'world', 'How', 'are', 'you'] (if from original text)
+# Output: ['hello', 'world', 'how', 'are', 'you'] (if from lowercased text)
+</code></pre>
+
+<h2>9.6 Removing Stop Words</h2>
+<p>
+Stop words are common words like "the," "is," and "in" that typically do not carry important meaning.
+</p>
+
+<h3>Why Remove Them?</h3>
+<p>
+They occur frequently across all documents and do not help distinguish between topics or sentiments. However, care must be taken—words like "not" can be critical in sentiment analysis.
+</p>
+
+<h3>Code Example</h3>
+<pre><code>from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+text = "The quick brown fox jumps over the lazy dog."
+tokens = word_tokenize(text.lower()) # Lowercase first
+stop_words = set(stopwords.words('english'))
+filtered_words = [w for w in tokens if w not in stop_words]
+print(filtered_words)
+# Output: ['quick', 'brown', 'fox', 'jumps', 'lazy', 'dog', '.']
+</code></pre>
+
+<h2>9.7 Stemming</h2>
+<p><strong>Stemming</strong> reduces words to their root form by stripping suffixes. Examples:</p>
+<ul>
+  <li>"playing" → "play"</li>
+  <li>"flies" → "fli"</li>
+</ul>
+<p>Stemming is fast but may not produce dictionary words.</p>
+
+<h3>Caveat</h3>
+<p>
+Stemming can result in non-words like "amaz" instead of "amaze."
+</p>
+
+<h3>Code Example</h3>
+<pre><code>from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+
+text = "running runs runner walked"
+tokens = word_tokenize(text.lower())
+stemmer = PorterStemmer()
+stemmed_words = [stemmer.stem(w) for w in tokens]
+print(stemmed_words)
+# Output: ['run', 'run', 'runner', 'walk']
+</code></pre>
+
+<h2>9.8 Lemmatization</h2>
+<p><strong>Lemmatization</strong> is a more sophisticated approach that considers word context and part of speech. It returns proper dictionary root forms.</p>
+
+<h3>Example</h3>
+<ul>
+  <li>"better" → "good" (lemma)</li>
+  <li>"better" → "better" (stem)</li>
+</ul>
+
+<h3>When to Prefer Lemmatization</h3>
+<p>Use it when:</p>
+<ul>
+  <li>You need linguistically valid words</li>
+  <li>Performing semantic or interpretable analysis</li>
+</ul>
+
+<h3>Code Example</h3>
+<pre><code>import spacy
+
+# Make sure to download the English model: python -m spacy download en_core_web_sm
+nlp = spacy.load("en_core_web_sm")
+
+text = "The quick brown foxes are running, and they have better chances."
+doc = nlp(text.lower()) # Lowercase first
+lemmatized_words = [token.lemma_ for token in doc]
+print(lemmatized_words)
+# Output: ['the', 'quick', 'brown', 'fox', 'be', 'run', ',', 'and', 'they', 'have', 'good', 'chance', '.']
+</code></pre>
+
+<h2>9.9 Removing Numbers</h2>
+<p>
+Numbers may be useful in some domains (e.g., prices, dates) but irrelevant in others (e.g., topic modeling).
+</p>
+
+<h3>When to Keep Numbers</h3>
+<ul>
+  <li>When numbers have semantic or predictive importance</li>
+</ul>
+
+<h3>Code Example</h3>
+<pre><code>import re
+
+words_with_numbers = ['the', 'meeting', 'is', 'on', '2023', 'at', '5pm', 'item-42']
+words_no_numbers = [w for w in words_with_numbers if not w.isdigit() and not re.match(r'.*\d.*', w)]
+print(words_no_numbers)
+# Output: ['the', 'meeting', 'is', 'on', 'at']
+</code></pre>
+
+<h2>9.10 Whitespace Normalization</h2>
+<p>
+Text often includes inconsistent whitespace from user input, web scraping, or OCR. Removing extra spaces improves consistency.
+</p>
+
+<h3>Code Example</h3>
+<pre><code>text = "  This   is an   example with    irregular   spaces. "
+cleaned_text = " ".join(text.split())
+</code></pre>
+
+<h2>9.11 Summary: When to Use Each Technique</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Technique</th>
+      <th>Purpose</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Lowercasing</td>
+      <td>Standardizes text, reduces vocabulary size</td>
+      <td>Crucial for consistency; may lose info for NER</td>
+    </tr>
+    <tr>
+      <td>Tokenization</td>
+      <td>Splits text into components</td>
+      <td>Fundamental for all NLP tasks</td>
+    </tr>
+    <tr>
+      <td>Punctuation Removal</td>
+      <td>Reduces noise</td>
+      <td>May affect emotional tone or structure</td>
+    </tr>
+    <tr>
+      <td>Stop Word Removal</td>
+      <td>Removes frequent non-informative words</td>
+      <td>Avoid removing sentiment words like "not"</td>
+    </tr>
+    <tr>
+      <td>Stemming</td>
+      <td>Normalizes to base form quickly</td>
+      <td>May reduce words too aggressively; not dictionary words</td>
+    </tr>
+    <tr>
+      <td>Lemmatization</td>
+      <td>Refines to dictionary root</td>
+      <td>More accurate, context-aware; generally preferred over stemming</td>
+    </tr>
+    <tr>
+      <td>Number Removal</td>
+      <td>Reduces irrelevant digits</td>
+      <td>Keep numbers if semantically meaningful</td>
+    </tr>
+    <tr>
+      <td>Whitespace Cleaning</td>
+      <td>Enhances text consistency</td>
+      <td>Useful for text parsing and general tidiness</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>9.12 Conclusion</h2>
+<p>
+Text preprocessing transforms unstructured text into clean, structured, and meaningful representations suitable for modeling. By thoughtfully applying these techniques, practitioners can significantly improve NLP performance. Each method serves a purpose, and understanding their roles allows for building robust, efficient, and accurate NLP pipelines. The practical example demonstrates how these steps are chained together to prepare raw text for downstream NLP tasks.
+</p>
+
+
+<h2>Practical Application: Preprocessing a Real Data</h2>
+
+
+<p>Let's apply these techniques to a sample text data, simulating a small real-world dataset. For simplicity, we'll use a list of sentences as our "dataset."
+</p>
+<p><b>Setup</b></p>
+
+<p>First, ensure you have the necessary NLTK data and spaCy model downloaded:</p>
+
+<h3>Example</h3>
+<pre><code>import nltk
+import spacy
+import string
+import re
+
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet') # For Lemmatization (NLTK's WordNetLemmatizer)
+
+#For spaCy, run: python -m spacy download en_core_web_sm
+
+nlp = spacy.load("en_core_web_sm")
+# A small, simulated dataset
+documents = [
+    "I love Natural Language Processing! It's truly amazing and I'm learning a lot.",
+    "The quick brown fox jumps over the lazy dog 123 times a day.",
+    "BUY NOW!!! This offer is too good to miss. (Limited time)",
+    "Are you still running the old version? Better update to the new one."
+]
+
+processed_documents = []
+
+for doc in documents:
+    print(f"\nOriginal: {doc}")
+
+    # 1. Lowercasing
+    text_lower = doc.lower()
+    print(f"Lowercased: {text_lower}")
+
+    # 2. Tokenization
+    tokens = word_tokenize(text_lower)
+    print(f"Tokenized: {tokens}")
+
+    # 3. Removing Punctuation
+    tokens_no_punct = [word for word in tokens if word not in string.punctuation]
+    print(f"No Punctuation: {tokens_no_punct}")
+
+    # 4. Removing Numbers (purely numeric or containing digits)
+    tokens_no_numbers = [word for word in tokens_no_punct if not word.isdigit() and not re.match(r'.*\d.*', word)]
+    print(f"No Numbers: {tokens_no_numbers}")
+
+    # 5. Removing Stop Words
+    stop_words = set(stopwords.words('english'))
+    tokens_no_stopwords = [word for word in tokens_no_numbers if word not in stop_words]
+    print(f"No Stopwords: {tokens_no_stopwords}")
+
+    # 6. Lemmatization (using spaCy for better accuracy)
+    # Join tokens back to a string for spaCy processing
+    text_for_lemmatization = " ".join(tokens_no_stopwords)
+    spacy_doc = nlp(text_for_lemmatization)
+    lemmatized_tokens = [token.lemma_ for token in spacy_doc]
+    print(f"Lemmatized: {lemmatized_tokens}")
+
+    # 7. Whitespace Normalization (applied after joining for better effect, or on initial raw text)
+    # In this pipeline, it's implicitly handled by tokenization and rejoining.
+    # If we had kept original text with irregular spaces and then applied lowercasing,
+    # it would be more explicit. Let's do a final join and normalize.
+    final_cleaned_text = " ".join(lemmatized_tokens)
+    final_cleaned_text = " ".join(final_cleaned_text.split()) # Redundant here, but for explicit whitespace clean
+    print(f"Final Cleaned Text: {final_cleaned_text}")
+
+    processed_documents.append(final_cleaned_text)
+
+print("\n--- All Documents Processed ---")
+for i, doc in enumerate(processed_documents):
+    print(f"Document {i+1}: {doc}")
+```</pre>
