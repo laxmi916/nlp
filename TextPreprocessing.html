@@ -3,39 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <title>Chapter 9: Text Preprocessing in NLP</title>
-<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"
+/>
   <style>
     body {
-      font-family: Georgia, serif;
-      margin: 40px;
-      line-height: 1.8;
-      background-color: #fff;
-      color: #2c3e50;
+        font-family: Georgia, serif;
+        margin: 40px;
+        line-height: 1.8;
+        background-color: #fff;
+        color: #2c3e50;
     }
+
     h1, h2, h3 {
-      color: #34495e;
+        color: #34495e;
     }
+
     h1 {
-      border-bottom: 2px solid #bbb;
-      padding-bottom: 0.3em;
+        border-bottom: 2px solid #bbb;
+        padding-bottom: 0.3em;
     }
+
+    /* Do NOT style code and pre globally */
+    pre[class*="language-"] {
+        margin: 1em 0;
+        overflow-x: auto;
+        border-radius: 6px;
+    }
+
+    code[class*="language-"],
+    pre[class*="language-"] {
+        font-family: Consolas, Monaco, "Courier New", monospace;
+    }
+
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
     }
+
     th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: left;
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
     }
+
     th {
-      background-color: #ecf0f1;
+        background-color: #ecf0f1;
     }
+
     ul {
-      margin-left: 20px;
+        margin-left: 20px;
     }
-  </style>
+</style>
 </head>
 <body>
 
@@ -426,7 +447,7 @@ for doc in documents:
 print("\n--- All Documents Processed ---")
 for i, doc in enumerate(processed_documents):
     print(f"Document {i+1}: {doc}")
-</pre>
+</code></pre>
 <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
 </body>
 </html>
