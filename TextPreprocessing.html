@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Chapter 9: Text Preprocessing in NLP</title>
+  <!-- Prism Theme -->
+<link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
   <style>
     body {
       font-family: Georgia, serif;
@@ -46,9 +48,9 @@
 </head>
 <body>
 
-<h1>Chapter 9: Text Preprocessing in Natural Language Processing</h1>
+<h1>Text Preprocessing in Natural Language Processing</h1>
 
-<h2>9.1  Why Text Preprocessing Required?</h2>
+<h2>1  Why Text Preprocessing Required?</h2>
 
 <p>
 When humans read a sentence or paragraph, they can easily understand its
@@ -90,7 +92,7 @@ variations are standardized, allowing the model to focus on
 improving prediction accuracy.
 </p>
 
-<h2>9.2 Methods Used for Text Preprocessing</h2>
+<h2>2 Methods Used for Text Preprocessing</h2>
 
 <p>
 Text preprocessing consists of a <b>collection of techniques</b> used to <b>clean,
@@ -134,7 +136,7 @@ application, some preprocessing steps may be included, modified, or
 omitted to obtain the most effective representation of the text.
 </p>
 
-<h2>9.3 Lowercasing</h2>
+<h2>3 Lowercasing</h2>
 <p>
 <strong>Lowercasing</strong> is one of the simplest yet most effective text preprocessing techniques. It converts all uppercase letters in the text to lowercase.
 </p>
@@ -151,7 +153,7 @@ print(lower_text)
 # Output: "natural language processing is amazing!"
 </code></pre>
 
-<h2>9.4 Tokenization</h2>
+<h2>4 Tokenization</h2>
 <p>
 Tokenization involves splitting text into smaller components called <strong>tokens</strong>. Tokens may represent words, sentences, or subword units. For example, the sentence:
 </p>
@@ -172,7 +174,7 @@ sentences = sent_tokenize(text)
 words = word_tokenize(text)
 </code></pre>
 
-<h2>9.5 Removing Punctuation</h2>
+<h2>5 Removing Punctuation</h2>
 <p>
 Punctuation helps humans understand text, but for many NLP models, it adds little value. Removing it simplifies the vocabulary.
 </p>
@@ -193,7 +195,7 @@ print(words_no_punct)
 # Output: ['hello', 'world', 'how', 'are', 'you'] (if from lowercased text)
 </code></pre>
 
-<h2>9.6 Removing Stop Words</h2>
+<h2>6 Removing Stop Words</h2>
 <p>
 Stop words are common words like "the," "is," and "in" that typically do not carry important meaning.
 </p>
@@ -215,7 +217,7 @@ print(filtered_words)
 # Output: ['quick', 'brown', 'fox', 'jumps', 'lazy', 'dog', '.']
 </code></pre>
 
-<h2>9.7 Stemming</h2>
+<h2>7 Stemming</h2>
 <p><strong>Stemming</strong> reduces words to their root form by stripping suffixes. Examples:</p>
 <ul>
   <li>"playing" → "play"</li>
@@ -240,7 +242,7 @@ print(stemmed_words)
 # Output: ['run', 'run', 'runner', 'walk']
 </code></pre>
 
-<h2>9.8 Lemmatization</h2>
+<h2>8 Lemmatization</h2>
 <p><strong>Lemmatization</strong> is a more sophisticated approach that considers word context and part of speech. It returns proper dictionary root forms.</p>
 
 <h3>Example</h3>
@@ -269,7 +271,7 @@ print(lemmatized_words)
 # Output: ['the', 'quick', 'brown', 'fox', 'be', 'run', ',', 'and', 'they', 'have', 'good', 'chance', '.']
 </code></pre>
 
-<h2>9.9 Removing Numbers</h2>
+<h2>9 Removing Numbers</h2>
 <p>
 Numbers may be useful in some domains (e.g., prices, dates) but irrelevant in others (e.g., topic modeling).
 </p>
@@ -288,7 +290,7 @@ print(words_no_numbers)
 # Output: ['the', 'meeting', 'is', 'on', 'at']
 </code></pre>
 
-<h2>9.10 Whitespace Normalization</h2>
+<h2>10 Whitespace Normalization</h2>
 <p>
 Text often includes inconsistent whitespace from user input, web scraping, or OCR. Removing extra spaces improves consistency.
 </p>
@@ -298,7 +300,7 @@ Text often includes inconsistent whitespace from user input, web scraping, or OC
 cleaned_text = " ".join(text.split())
 </code></pre>
 
-<h2>9.11 Summary: When to Use Each Technique</h2>
+<h2>11 Summary: When to Use Each Technique</h2>
 <table>
   <thead>
     <tr>
@@ -351,7 +353,7 @@ cleaned_text = " ".join(text.split())
   </tbody>
 </table>
 
-<h2>9.12 Conclusion</h2>
+<h2>12 Conclusion</h2>
 <p>
 Text preprocessing transforms unstructured text into clean, structured, and meaningful representations suitable for modeling. By thoughtfully applying these techniques, practitioners can significantly improve NLP performance. Each method serves a purpose, and understanding their roles allows for building robust, efficient, and accurate NLP pipelines. The practical example demonstrates how these steps are chained together to prepare raw text for downstream NLP tasks.
 </p>
@@ -433,4 +435,11 @@ for doc in documents:
 print("\n--- All Documents Processed ---")
 for i, doc in enumerate(processed_documents):
     print(f"Document {i+1}: {doc}")
-```</pre>
+</pre>
+  <!-- Prism JS Core -->
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+
+<!-- Python Syntax Highlighting -->
+<script src="https://jsdelivr.net"></script>
+</body>
+</html>
