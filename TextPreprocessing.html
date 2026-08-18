@@ -15,6 +15,106 @@
         background-color: #fff;
         color: #2c3e50;
     }
+    /* =========================================
+   Python Code Blocks
+   ========================================= */
+
+pre[class*="language-"] {
+    background: #f8f9fb !important;
+    color: #24292f !important;
+
+    padding: 22px 24px;
+    margin: 20px 0;
+
+    border: 1px solid #e1e4e8;
+    border-left: 5px solid #6c63ff;
+
+    border-radius: 8px;
+
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.06);
+
+    font-family:
+        "Consolas",
+        "Monaco",
+        "Courier New",
+        monospace;
+
+    font-size: 15px;
+    line-height: 1.7;
+
+    overflow-x: auto;
+}
+
+/* Code inside the block */
+code[class*="language-"] {
+    background: transparent !important;
+    color: #24292f !important;
+    font-family:
+        "Consolas",
+        "Monaco",
+        "Courier New",
+        monospace;
+}
+
+/* Python comments */
+.token.comment {
+    color: #6a737d !important;
+    font-style: italic;
+}
+
+/* Python keywords:
+   import, from, for, in, if, else, return */
+.token.keyword {
+    color: #8250df !important;
+    font-weight: 600;
+}
+
+/* Strings */
+.token.string {
+    color: #0a7b42 !important;
+}
+
+/* Functions */
+.token.function {
+    color: #0969da !important;
+}
+
+/* Numbers */
+.token.number {
+    color: #cf222e !important;
+}
+
+/* Operators */
+.token.operator {
+    color: #57606a !important;
+}
+
+/* Built-in classes / constants */
+.token.class-name {
+    color: #953800 !important;
+}
+
+/* Boolean values */
+.token.boolean {
+    color: #cf222e !important;
+}
+
+/* Python decorators */
+.token.decorator {
+    color: #8250df !important;
+}
+
+/* Punctuation */
+.token.punctuation {
+    color: #57606a !important;
+}
+
+/* Selection */
+pre[class*="language-"]::selection,
+pre[class*="language-"] *::selection {
+    background: #dbeafe !important;
+}
 
     h1, h2, h3 {
         color: #34495e;
