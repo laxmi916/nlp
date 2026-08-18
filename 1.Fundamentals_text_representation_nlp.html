@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundamentals of Text Representation in NLP</title>
+<style>
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f5f7fb;color:#202124;line-height:1.75}
+.container{max-width:1100px;margin:auto;padding:30px 20px 60px}
+.hero{background:linear-gradient(135deg,#174ea6,#673ab7);color:white;padding:10px 40px;border-radius:18px;margin-bottom:28px}
+.hero h1{margin:0 0 12px;font-size:2.4rem;line-height:1.2}
+section{background:white;border-radius:14px;padding:30px;margin-bottom:25px;box-shadow:0 3px 14px rgba(0,0,0,.06)}
+h2{color:#174ea6;border-bottom:2px solid #e8eef8;padding-bottom:10px}
+h3{color:#333;margin-top:30px}
+.info,.success,.warning,.question,.note{padding:17px 20px;border-radius:9px;margin:20px 0}
+.info{background:#e8f0fe;border-left:5px solid #1a73e8}
+.success{background:#e6f4ea;border-left:5px solid #34a853}
+.warning{background:#fff4d6;border-left:5px solid #f9ab00}
+.question{background:#fff;border:2px solid #673ab7}
+.note{background:#f3e8fd;border-left:5px solid #673ab7}
+.vector,.codebox{background:#f1f3f4;border:1px solid #dadce0;border-radius:8px;padding:14px 18px;font-family:"Courier New",monospace;overflow-x:auto;margin:16px 0}
+.formula{background:#fafafa;border:1px solid #ddd;border-radius:8px;padding:18px;text-align:center;font-size:1.08rem;margin:20px 0}
+.flow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;margin:25px 0}
+.flowbox{background:#e8f0fe;border:2px solid #1a73e8;border-radius:10px;padding:13px 17px;text-align:center;font-weight:bold}
+.arrow{font-size:1.6rem;color:#666}
+table{width:100%;border-collapse:collapse;margin:20px 0 28px}
+th{background:#174ea6;color:white;padding:11px;text-align:left}
+td{padding:10px;border-bottom:1px solid #ddd;vertical-align:top}
+tr:nth-child(even){background:#f8f9fa}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{border:1px solid #ddd;border-radius:10px;padding:20px}
+.card h3{margin-top:0}
+.takeaway{background:linear-gradient(135deg,#eef4ff,#f7efff);border:1px solid #d7cced;border-radius:12px;padding:24px}
+@media(max-width:700px){.two{grid-template-columns:1fr}.hero h1{font-size:1.9rem}section{padding:22px}.arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+<h1>Fundamentals of Text Representation in NLP</h1>
+<p>From feature vectors and one-hot encoding to dense representations and word embeddings.</p>
+</div>
+
+<section>
+<h2>1 Why Do We Need Representation?</h2>
+<p>Natural Language Processing works with human language, while machine-learning algorithms operate on numerical data. A computer can receive the word <strong>cat</strong> as text, but mathematical operations require numbers.</p>
+<p>Therefore, we need a way to convert language into numerical representations while retaining information that is useful for the task.</p>
+<div class="flow"><div class="flowbox">Human Language</div><div class="arrow">→</div><div class="flowbox">Numerical Representation</div><div class="arrow">→</div><div class="flowbox">Machine Learning Model</div></div>
+<div class="info"><strong>Central question:</strong> We are not merely asking how to replace words by numbers. We are asking what numerical representation preserves useful information about the data.</div>
+</section>
+
+<section>
+<h2>2 From Real-World Objects to Feature Vectors</h2>
+<p>Before discussing text, consider this simple dataset.</p>
+<table><tr><th>Person</th><th>Height</th><th>Weight</th><th>Age</th></tr>
+<tr><td>Suraj</td><td>97</td><td>14</td><td>3</td></tr>
+<tr><td>Akshara</td><td>130</td><td>22</td><td>7</td></tr>
+<tr><td>Charan</td><td>155</td><td>45</td><td>16</td></tr>
+<tr><td>Laxman</td><td>175</td><td>60</td><td>25</td></tr>
+<tr><td>Venkey</td><td>180</td><td>74</td><td>40</td></tr>
+<tr><td>Benny</td><td>60</td><td>8</td><td>1</td></tr></table>
+<p>A <strong>feature vector</strong> is a numerical vector used to represent an observation using selected features.</p>
+
+<h3>2.1 One Feature → 1D</h3>
+<p>Start with only <strong>Weight</strong>.</p>
+<div class="vector">Suraj → [14]<br>Akshara → [22]<br>Charan → [45]<br>Laxman → [60]<br>Venkey → [74]<br>Benny → [8]</div>
+<p>Each person is a point in a one-dimensional feature space. The only coordinate represents weight.</p>
+<div class="formula">Distance(Suraj, Akshara) = |14 − 22| = 8</div>
+<div class="success"><strong>What does the vector tell us?</strong> It tells the model about weight, but nothing about height or age.</div>
+
+<h3>2.2 Two Features → 2D</h3>
+<p>Add <strong>Height</strong>. The vector now contains two coordinates.</p>
+<div class="vector">Suraj → [97, 14]<br>Akshara → [130, 22]<br>Charan → [155, 45]<br>Laxman → [175, 60]<br>Venkey → [180, 74]<br>Benny → [60, 8]</div>
+<div class="info"><strong>Weight only:</strong> [14] gives one type of information. <strong>Height + Weight:</strong> [97,14] gives two types of information.</div>
+
+<h3>2.3 Three Features → 3D</h3>
+<p>Add <strong>Age</strong>.</p>
+<div class="vector">Suraj → [97, 14, 3]<br>Akshara → [130, 22, 7]<br>Charan → [155, 45, 16]<br>Laxman → [175, 60, 25]<br>Venkey → [180, 74, 40]<br>Benny → [60, 8, 1]</div>
+<div class="flow"><div class="flowbox">Height</div><div class="flowbox">Weight</div><div class="flowbox">Age</div><div class="flowbox">→ 3D Feature Vector</div></div>
+<p>Suraj is represented by the point <strong>(97,14,3)</strong>. The three coordinates simultaneously describe height, weight, and age.</p>
+
+<h3>2.4 More Features → Richer Representation</h3>
+<table><tr><th>Features</th><th>Example Vector</th><th>Dimensions</th><th>Information</th></tr>
+<tr><td>Weight</td><td>[14]</td><td>1</td><td>Weight</td></tr>
+<tr><td>Height + Weight</td><td>[97,14]</td><td>2</td><td>Height and weight</td></tr>
+<tr><td>Height + Weight + Age</td><td>[97,14,3]</td><td>3</td><td>Three measurable characteristics</td></tr></table>
+<div class="warning"><strong>More dimensions do not automatically mean better.</strong> Added features should be relevant. Irrelevant features may add noise.</div>
+</section>
+
+<section>
+<h2>3 What Happens When a Feature Is Categorical?</h2>
+
+<h3>3.1 Numerical vs Categorical Features</h3>
+<table><tr><th>Feature</th><th>Type</th><th>Example</th></tr>
+<tr><td>Height</td><td>Numerical</td><td>130</td></tr>
+<tr><td>Weight</td><td>Numerical</td><td>22</td></tr>
+<tr><td>Age</td><td>Numerical</td><td>7</td></tr>
+<tr><td>Person Name</td><td>Categorical</td><td>Akshara</td></tr></table>
+<p>We should not arbitrarily assign <code>Suraj=1</code>, <code>Akshara=2</code>, and <code>Charan=3</code>. Such numbers would introduce an artificial ordering and numerical distance.</p>
+
+<h3>3.2 One-Hot Encoding</h3>
+<p>One-hot encoding creates one position for each category and places a 1 at the position corresponding to the observed category.</p>
+<table><tr><th>Person</th><th>One-Hot Vector</th></tr>
+<tr><td>Suraj</td><td>[1,0,0,0,0,0]</td></tr>
+<tr><td>Akshara</td><td>[0,1,0,0,0,0]</td></tr>
+<tr><td>Charan</td><td>[0,0,1,0,0,0]</td></tr>
+<tr><td>Laxman</td><td>[0,0,0,1,0,0]</td></tr>
+<tr><td>Venkey</td><td>[0,0,0,0,1,0]</td></tr>
+<tr><td>Benny</td><td>[0,0,0,0,0,1]</td></tr></table>
+<div class="success"><strong>One-hot does its job:</strong> it tells the model which category is present without imposing an artificial numerical ordering.</div>
+
+<h3>3.3 The Geometry of One-Hot Vectors</h3>
+<p>Now compare Suraj and Akshara.</p>
+<div class="vector">Suraj = [1,0,0,0,0,0]<br>Akshara = [0,1,0,0,0,0]</div>
+<div class="formula">d(Suraj,Akshara) = √((1−0)²+(0−1)²) = √2</div>
+<p>Compare Suraj and Venkey.</p>
+<div class="vector">Suraj = [1,0,0,0,0,0]<br>Venkey = [0,0,0,0,1,0]</div>
+<div class="formula">d(Suraj,Venkey) = √2</div>
+<p>Thus every pair of distinct one-hot vectors of the same length has Euclidean distance √2.</p>
+
+<h3>3.4 Identity vs Similarity</h3>
+<div class="two">
+<div class="card"><h3>One-hot represents identity</h3><p>It answers: <strong>Which category is this?</strong></p></div>
+<div class="card"><h3>But not degrees of similarity</h3><p>It does not inherently say that one category is more similar to another under ordinary Euclidean geometry.</p></div>
+</div>
+<div class="info"><strong>Important:</strong> One-hot encoding is not a bad technique. It is appropriate when category identity is what the model needs. Its limitation matters when we want the representation to express relationships among categories.</div>
+</section>
+
+<section>
+<h2>4 Why This Matters for Text</h2>
+
+<h3>4.1 Words Are Categorical Symbols</h3>
+<p>A vocabulary is a collection of discrete word types. For example:</p>
+<div class="vector">cat, dog, kitten, puppy, fish, car</div>
+<p>We can assign each word an ID, but the ID is only an identifier. ID 0 does not mean "closer" to ID 1 in a semantic sense.</p>
+
+<h3>4.2 One-Hot Representation of Words</h3>
+<table><tr><th>Word</th><th>One-Hot Vector</th></tr>
+<tr><td>cat</td><td>[1,0,0,0,0,0]</td></tr>
+<tr><td>dog</td><td>[0,1,0,0,0,0]</td></tr>
+<tr><td>kitten</td><td>[0,0,1,0,0,0]</td></tr>
+<tr><td>puppy</td><td>[0,0,0,1,0,0]</td></tr>
+<tr><td>fish</td><td>[0,0,0,0,1,0]</td></tr>
+<tr><td>car</td><td>[0,0,0,0,0,1]</td></tr></table>
+
+<h3>4.3 Why One-Hot Is Not Enough for Language</h3>
+<p>Language contains relationships that category identity alone does not encode.</p>
+<div class="question"><strong>Would we expect cat to be more closely related to kitten than to car?</strong></div>
+<p>Conceptually, yes. But the one-hot vectors themselves do not express this distinction:</p>
+<div class="formula">d(cat,kitten) = d(cat,dog) = d(cat,car) = √2</div>
+<div class="success"><strong>This motivates learned word representations:</strong> we want vectors whose geometry can reflect useful relationships learned from language data.</div>
+</section>
+
+<section>
+<h2>5 Traditional Text Representation Techniques</h2>
+<table><tr><th>Technique</th><th>Main Idea</th><th>Primary Information</th></tr>
+<tr><td>One-Hot</td><td>One position identifies a word</td><td>Identity</td></tr>
+<tr><td>Bag-of-Words</td><td>Count vocabulary words in a document</td><td>Word occurrence</td></tr>
+<tr><td>N-grams</td><td>Represent adjacent word sequences</td><td>Local patterns</td></tr>
+<tr><td>TF-IDF</td><td>Weight words by frequency and rarity</td><td>Word importance</td></tr></table>
+<h3>5.1 One-Hot Encoding</h3>
+<p>Each word is represented by a binary vector with one element set to 1 and the rest 0.</p>
+<p><strong>Example:</strong><br>
+
+<p><strong>Sentences:</strong></p>
+<ol>
+  <li>I love NLP</li>
+  <li>NLP loves me</li>
+</ol>
+
+<p><strong>Vocabulary:</strong> ["I", "love", "NLP", "loves", "me"]</p>
+
+<table>
+  <tr><th>Word</th><th>Index</th></tr>
+  <tr><td>I</td><td>0</td></tr>
+  <tr><td>love</td><td>1</td></tr>
+  <tr><td>NLP</td><td>2</td></tr>
+  <tr><td>loves</td><td>3</td></tr>
+  <tr><td>me</td><td>4</td></tr>
+</table>
+
+<h3>Sentence 1: "I love NLP"</h3>
+<table>
+  <tr><th>Word</th><th>One-Hot Vector</th></tr>
+  <tr><td>I</td><td>[1, 0, 0, 0, 0]</td></tr>
+  <tr><td>love</td><td>[0, 1, 0, 0, 0]</td></tr>
+  <tr><td>NLP</td><td>[0, 0, 1, 0, 0]</td></tr>
+</table>
+
+<h3>Sentence 2: "NLP loves me"</h3>
+<table>
+  <tr><th>Word</th><th>One-Hot Vector</th></tr>
+  <tr><td>NLP</td><td>[0, 0, 1, 0, 0]</td></tr>
+  <tr><td>loves</td><td>[0, 0, 0, 1, 0]</td></tr>
+  <tr><td>me</td><td>[0, 0, 0, 0, 1]</td></tr>
+</table>
+<p><strong>✅ Easy to implement</strong><br>
+<strong>❌ No similarity captured;</strong><br>
+<strong>❌ High dimensionality</strong></p>
+
+<h3>5.2 Count Vectorizer (Bag-of-Words)</h3>
+<p>Represents documents by counting how many times each word appears, ignoring grammar and order.</p>
+<p><strong>Example:</strong><br>
+<p><strong>Sentences:</strong></p>
+<ol>
+  <li>I love NLP</li>
+  <li>NLP loves me</li>
+</ol>
+
+<p><strong>Vocabulary:</strong> ["i", "love", "nlp", "loves", "me"]</p>
+
+<table>
+  <tr>
+    <th>Word</th>
+    <th>Sentence 1 ("I love NLP")</th>
+    <th>Sentence 2 ("NLP loves me")</th>
+  </tr>
+  <tr><td>i</td><td>1</td><td>0</td></tr>
+  <tr><td>love</td><td>1</td><td>0</td></tr>
+  <tr><td>nlp</td><td>1</td><td>1</td></tr>
+  <tr><td>loves</td><td>0</td><td>1</td></tr>
+  <tr><td>me</td><td>0</td><td>1</td></tr>
+</table>
+
+<h3>Vector Representation</h3>
+<ul>
+  <li><strong>Sentence 1:</strong> [1, 1, 1, 0, 0]</li>
+  <li><strong>Sentence 2:</strong> [0, 0, 1, 1, 1]</li>
+</ul>
+
+<p>This representation is called the <strong>Bag-of-Words</strong> model, where we count the number of times each word appears in a document.</p>
+
+<p><strong>✅ Simple and effective</strong><br>
+<strong>❌ Ignores order and meaning</strong></p>
+
+<h3>5.3 N-grams</h3>
+<p>Captures short sequences of adjacent words to include some sense of context.</p>
+<p><strong>Example:</strong><br>
+<p><strong>Sentences:</strong></p>
+<ol>
+  <li>I love NLP</li>
+  <li>NLP loves me</li>
+</ol>
+
+<h3>Step 1: Extracted Bigrams</h3>
+<ul>
+  <li><code>I love NLP</code> → "I love", "love NLP"</li>
+  <li><code>NLP loves me</code> → "NLP loves", "loves me"</li>
+</ul>
+
+<h3>Step 2: Bigram Vocabulary</h3>
+<p>["I love", "love NLP", "NLP loves", "loves me"]</p>
+
+<h3>Step 3: Vector Representation</h3>
+
+<table>
+  <tr>
+    <th>Bigram</th>
+    <th>Sentence 1 ("I love NLP")</th>
+    <th>Sentence 2 ("NLP loves me")</th>
+  </tr>
+  <tr><td>I love</td><td>1</td><td>0</td></tr>
+  <tr><td>love NLP</td><td>1</td><td>0</td></tr>
+  <tr><td>NLP loves</td><td>0</td><td>1</td></tr>
+  <tr><td>loves me</td><td>0</td><td>1</td></tr>
+</table>
+
+<h3>Final Vectors</h3>
+<ul>
+  <li><strong>Sentence 1:</strong> [1, 1, 0, 0]</li>
+  <li><strong>Sentence 2:</strong> [0, 0, 1, 1]</li>
+</ul>
+
+<p>This representation captures the sequence of two consecutive words, making it more informative than single-word models.</p>
+
+<p><strong>✅ Captures local patterns</strong><br>
+<strong>❌ Rapid vocabulary growth with larger 'n'</strong></p>
+
+<h3>5.4 TF-IDF(Term Frequency–Inverse Document Frequency)</h3>
+<p>Enhances Count Vectorizer by weighing words based on importance.</p>
+<ul>
+  <li><strong>TF (Term Frequency):</strong> Frequency of the word in the document</li>
+  <div class="formula">
+    <strong>
+        TF(t,d) =
+        <span style="display:inline-block; vertical-align:middle; text-align:center;">
+            <span style="display:block; border-bottom:1px solid #333; padding:0 8px;">
+                Number of times <em>t</em> occurs in <em>d</em>
+            </span>
+            <span style="display:block; padding:0 8px;">
+                Total number of terms in <em>d</em>
+            </span>
+        </span>
+    </strong>
+</div>
+<p>
+    TF only looks at <strong>one document</strong>.
+    But we also want to know whether the word is common or rare
+    across the entire collection of documents.
+</p>
+  <li><strong>IDF (Inverse Document Frequency):</strong> Rarity of the word across documents</li>
+  <div class="formula">
+    <strong>
+        IDF(t) = ln(N / df(t))
+        </span>
+    </strong>
+</div>
+
+<p>where:</p>
+
+<ul>
+    <li><strong>N</strong> = total number of documents</li>
+    <li><strong>df(t)</strong> = number of documents containing term <strong>t</strong></li>
+</ul>
+<li><strong>TF-IDF combines term frequency and inverse document frequency:</strong></li>
+<div class="formula"><strong>TF-IDF(t,d) = TF(t,d) × IDF(t)</strong></div>
+</ul>
+
+<p><strong>Example:</strong><br>
+<p><strong>Sentences:</strong></p>
+<ol>
+  <li>I love NLP</li>
+  <li>NLP loves me</li>
+</ol>
+
+<h3>Step 1: Vocabulary</h3>
+<p>["I", "love", "NLP", "loves", "me"]</p>
+
+<h3>Step 2: Term Frequency (TF)</h3>
+<table>
+  <tr>
+    <th>Word</th>
+    <th>Sentence 1</th>
+    <th>Sentence 2</th>
+  </tr>
+  <tr><td>I</td><td>1/3</td><td>0</td></tr>
+  <tr><td>love</td><td>1/3</td><td>0</td></tr>
+  <tr><td>NLP</td><td>1/3</td><td>1/3</td></tr>
+  <tr><td>loves</td><td>0</td><td>1/3</td></tr>
+  <tr><td>me</td><td>0</td><td>1/3</td></tr>
+</table>
+
+<h3>Step 3: Inverse Document Frequency (IDF)</h3>
+<p>Total documents (N) = 2</p>
+<table>
+  <tr>
+    <th>Word</th>
+    <th>df(t)</th>
+    <th>IDF = ln(2 / df(t))</th>
+  </tr>
+  <tr><td>I</td><td>1</td><td>0.693</td></tr>
+  <tr><td>love</td><td>1</td><td>0.693</td></tr>
+  <tr><td>NLP</td><td>2</td><td>0</td></tr>
+  <tr><td>loves</td><td>1</td><td>0.693</td></tr>
+  <tr><td>me</td><td>1</td><td>0.693</td></tr>
+</table>
+
+<h3>Step 4: TF-IDF = TF × IDF</h3>
+<table>
+  <tr>
+    <th>Word</th>
+    <th>Sentence 1 (TF-IDF)</th>
+    <th>Sentence 2 (TF-IDF)</th>
+  </tr>
+  <tr><td>I</td><td>0.231</td><td>0</td></tr>
+  <tr><td>love</td><td>0.231</td><td>0</td></tr>
+  <tr><td>NLP</td><td>0.0</td><td>0.0</td></tr>
+  <tr><td>loves</td><td>0</td><td>0.231</td></tr>
+  <tr><td>me</td><td>0</td><td>0.231</td></tr>
+</table>
+
+<h3>Final TF-IDF Vectors</h3>
+<ul>
+  <li><strong>Sentence 1:</strong> [0.231, 0.231, 0.0, 0.0, 0.0]</li>
+  <li><strong>Sentence 2:</strong> [0.0, 0.0, 0.0, 0.231, 0.231]</li>
+</ul>
+
+<p>TF-IDF emphasizes important terms in each sentence and reduces the impact of common words like "NLP", which appears in both. Means words frequent in a document but rare across the collection receive greater importance.</p>
+
+<p><strong>✅ Downplays common words</strong><br>
+<strong>❌ Still sparse; doesn’t capture meaning</strong></p>
+
+</section>
+
+<section>
+<h2>6 From Sparse Representation to Dense Representation</h2>
+<p>One-hot, Bag-of-Words, and TF-IDF commonly produce sparse vectors containing many zeros.</p>
+<div class="vector">Sparse: [0,0,0,0,1,0,0,0,0,0,...]</div>
+<p>A dense vector contains learned numerical values across most dimensions:</p>
+<div class="vector">Dense: [0.42,-0.17,0.83,0.21,-0.56,0.31,...]</div>
+<table><tr><th>Sparse</th><th>Dense</th></tr>
+<tr><td>Many zeros</td><td>Many non-zero learned values</td></tr>
+<tr><td>Often tied directly to vocabulary/features</td><td>Compact learned representation</td></tr>
+<tr><td>Can become very high-dimensional</td><td>Embedding dimension is chosen by the model designer</td></tr></table>
+<div class="question"><strong>Can we learn compact dense vectors for words in which useful relationships emerge from language data?</strong></div>
+<p>This question leads directly to word embeddings.</p>
+</section>
+
+<section>
+<h2>7 Word Embeddings</h2>
+
+<h3>7.1 What Is a Word Embedding?</h3>
+<p>A <strong>word embedding</strong> is a learned, dense numerical vector representation of a word.</p>
+<div class="vector">cat → [0.42, -0.71, 0.18, 0.63, -0.24, ...]</div>
+<div class="info"><strong>Definition:</strong> A word embedding is a learned dense vector representation in which useful relationships between words can be reflected in the geometry of the learned vector space.</div>
+
+<h3>7.2 Word Embedding as a Learned Feature Vector</h3>
+<p>Connect this with the feature-vector example from the beginning:</p>
+<div class="vector">Person: Suraj → [Height, Weight, Age] → [97,14,3]</div>
+<div class="vector">Word: cat → [learned dimension 1, learned dimension 2, ...]</div>
+<p>The first representation uses human-defined measurable features. The second is learned from training data.</p>
+<table><tr><th></th><th>Hand-designed feature vector</th><th>Learned word embedding</th></tr>
+<tr><td>Example</td><td>[97,14,3]</td><td>[0.42,-0.71,0.18,...]</td></tr>
+<tr><td>Dimensions</td><td>Height, Weight, Age</td><td>Learned latent dimensions</td></tr>
+<tr><td>Values</td><td>Measured</td><td>Learned</td></tr>
+<tr><td>Individual dimension meanings</td><td>Known</td><td>Usually not individually interpretable</td></tr></table>
+
+<h3>7.3 Word Vector Space</h3>
+<p>Once each vocabulary word has a vector, the words can be viewed as points in a high-dimensional vector space.</p>
+<div class="vector">cat → [ ... ]<br>dog → [ ... ]<br>kitten → [ ... ]<br>puppy → [ ... ]</div>
+<p>If two vectors have a useful similarity according to an appropriate measure, the corresponding words can be considered close in the learned representation.</p>
+<div class="note"><strong>Visualization:</strong> The actual embedding may have many dimensions. PCA can project the vectors into 2D or 3D for visualization. The PCA plot is a projection, not the original embedding space.</div>
+
+<h3>7.4 Similarity Between Words</h3>
+<p>One common measure for comparing word vectors is cosine similarity.</p>
+<div class="formula">cosine similarity(v₁,v₂) = (v₁ · v₂) / (||v₁|| ||v₂||)</div>
+<p>Cosine similarity compares the direction of two vectors. A value closer to 1 indicates more similar directions, while values near 0 indicate little directional similarity.</p>
+
+<h3>7.5 Vector Arithmetic</h3>
+<p>Some trained embedding spaces exhibit interesting approximate relationships such as:</p>
+<div class="formula"><strong>king − man + woman ≈ queen</strong></div>
+<p>This can be viewed as a relationship in the geometry of a particular learned embedding space.</p>
+<div class="warning"><strong>Do not treat this as a universal mathematical law.</strong> Such analogies are empirical properties of particular models and training data, and they may work well for some relationships and poorly for others.</div>
+
+<h3>7.6 What Does a Word Embedding Capture?</h3>
+<p>Consider:</p>
+<div class="vector">The cat eats fish.<br>The kitten eats fish.<br>The dog eats meat.<br>The puppy eats meat.</div>
+<p>A suitable training process can observe that some words occur in related contextual patterns. Those patterns can influence their learned vectors.</p>
+<div class="success"><strong>Key idea:</strong> The embedding does not get meaning by assigning a human-readable meaning to each dimension. It learns numerical parameters from training data and an objective.</div>
+
+<h3>7.7 Important Limitations</h3>
+<ul>
+<li>An embedding does not magically know information absent from its training data.</li>
+<li>Similar vectors do not necessarily mean that two words are exact synonyms.</li>
+<li>The training corpus strongly influences what relationships are learned.</li>
+<li>Small datasets may produce weak or unstable embeddings.</li>
+<li>Individual dimensions generally do not have simple predefined meanings.</li>
+</ul>
+</section>
+<section>
+<h3>8 Summary Table</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Method</th>
+      <th>Captures Word Order?</th>
+      <th>Captures Meaning?</th>
+      <th>Dense?</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>One-Hot</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>Introductory demos</td>
+    </tr>
+    <tr>
+      <td>BoW</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>Basic classification</td>
+    </tr>
+    <tr>
+      <td>N-grams</td>
+      <td>✅ (local)</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>Language modeling</td>
+    </tr>
+    <tr>
+      <td>TF-IDF</td>
+      <td>❌</td>
+      <td>❌ (partial)</td>
+      <td>❌</td>
+      <td>Search, retrieval</td>
+    </tr>
+    <tr>
+      <td>Word Embeddings</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>Modern NLP tasks</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+<section>
+<h2>9. Conclusion: From Tokens to Meaning</h2>
+<p>Text representation has evolved from basic binary and count-based models to sophisticated dense embeddings. While foundational techniques like One-Hot and TF-IDF are still useful in some scenarios, modern NLP systems increasingly rely on <strong>word embeddings</strong> to unlock semantic understanding.</p>
+
+<p>Techniques like <b>GloVe</b> serve as stepping stones to even more advanced methods like contextual embeddings (<strong>ELMo</strong>, <strong>BERT</strong>, <strong>GPT models</strong>), where a word’s vector changes depending on context. Understanding the basics of text representation is essential for building intelligent language systems.</p>
+</section>
+
+
+<p style="text-align:center;color:#666">Fundamentals of Text Representation in NLP</p>
+
+</div>
+</body>
+</html>
