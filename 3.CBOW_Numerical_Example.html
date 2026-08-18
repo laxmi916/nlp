@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBOW Embedding Matrices Across Training Epochs</title>
+<style>
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f7fb;
+    color: #202124;
+    line-height: 1.6;
+    margin: 0;
+}
+.container {
+    max-width: 1250px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+.hero {
+    background: linear-gradient(135deg, #174ea6, #673ab7);
+    color: white;
+    padding: 10px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+}
+.hero h1 { margin: 0 0 8px; }
+section {
+    background: white;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 13px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.07);
+}
+h2 { color: #174ea6; }
+h3 { color: #333; margin-top: 28px; }
+.info, .success, .warning {
+    padding: 15px 18px;
+    border-radius: 8px;
+    margin: 18px 0;
+}
+.info {
+    background: #e8f0fe;
+    border-left: 5px solid #1a73e8;
+}
+.success {
+    background: #e6f4ea;
+    border-left: 5px solid #34a853;
+}
+.warning {
+    background: #fce8e6;
+    border-left: 5px solid #ea4335;
+}
+.vector {
+    background: #f1f3f4;
+    border-radius: 7px;
+    padding: 12px 15px;
+    font-family: "Courier New", monospace;
+    overflow-x: auto;
+}
+.table-wrap {
+    overflow-x: auto;
+    margin: 18px 0 30px;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 1050px;
+    font-size: 13px;
+}
+th {
+    background: #174ea6;
+    color: white;
+    padding: 9px 7px;
+    position: sticky;
+    top: 0;
+}
+td {
+    border: 1px solid #ddd;
+    padding: 7px;
+    text-align: right;
+    white-space: nowrap;
+}
+td.word {
+    text-align: left;
+    font-weight: bold;
+    position: sticky;
+    left: 0;
+    background: white;
+}
+tr.cat td { background: #fff8e1; }
+tr.kitten td { background: #e8f5e9; }
+tr.dog td { background: #e3f2fd; }
+tr.puppy td { background: #f3e5f5; }
+.matrix-title {
+    margin-top: 35px;
+    padding: 12px 15px;
+    background: #eef3fb;
+    border-left: 5px solid #174ea6;
+    border-radius: 6px;
+}
+.small-table {
+    min-width: 0;
+    width: 100%;
+}
+.small-table th, .small-table td { text-align: center; }
+.highlight {
+    font-weight: bold;
+    background: #fff3cd !important;
+}
+.footer {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+<h1>CBOW Word Embeddings: Embedding Matrix at Different Epochs</h1>
+</div>
+
+<section>
+<h2>1. What Are We Looking At?</h2>
+<p>
+The vocabulary contains <strong>18 words</strong>, and the CBOW model uses an
+embedding dimension of <strong>10</strong>. Therefore, the embedding matrix
+has shape:
+</p>
+<div class="vector">18 words × 10 embedding dimensions</div>
+<p>
+Each row is one word's current learned vector. Each column is one learned
+embedding dimension. The numbers are parameters learned during CBOW training;
+they are not manually assigned semantic properties.
+</p>
+<div class="info">
+<strong>Important:</strong> The tables below reproduce the matrices at
+epochs 10, 100, 500, 1000, 1500 and 2000 using the code and settings supplied.
+</div>
+</section>
+
+<section>
+<h2 class="matrix-title">Embedding Matrix — Epoch 10</h2>
+<p><strong>Shape:</strong> 18 × 10</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr>
+</thead>
+<tbody>
+<tr class=""><td class="word">a</td><td>1.3459</td><td>2.1613</td><td>0.2336</td><td>-2.5720</td><td>1.2681</td><td>-1.7079</td><td>0.5112</td><td>-1.3740</td><td>-0.3707</td><td>2.2878</td></tr>
+<tr class=""><td class="word">big</td><td>-0.8238</td><td>-0.8488</td><td>-1.2838</td><td>-0.9891</td><td>-0.2622</td><td>0.3227</td><td>2.1258</td><td>0.0299</td><td>-0.1052</td><td>1.0167</td></tr>
+<tr class="cat"><td class="word">cat</td><td>-0.7484</td><td>1.4956</td><td>0.5989</td><td>1.4622</td><td>1.5466</td><td>1.1426</td><td>0.6619</td><td>1.3082</td><td>0.1923</td><td>0.4041</td></tr>
+<tr class="dog"><td class="word">dog</td><td>-0.2598</td><td>1.2805</td><td>-1.6076</td><td>-0.9730</td><td>0.0571</td><td>1.4305</td><td>0.4095</td><td>-0.4183</td><td>0.7641</td><td>-0.4529</td></tr>
+<tr class=""><td class="word">eats</td><td>-1.5147</td><td>0.8656</td><td>-0.8144</td><td>-0.8788</td><td>-1.3171</td><td>2.3993</td><td>-1.2100</td><td>-0.3949</td><td>-1.1842</td><td>-0.5289</td></tr>
+<tr class=""><td class="word">fish</td><td>0.2408</td><td>0.7212</td><td>-0.9826</td><td>0.9174</td><td>-0.4794</td><td>-0.7491</td><td>-1.5384</td><td>-0.0423</td><td>0.1260</td><td>1.0160</td></tr>
+<tr class=""><td class="word">food</td><td>-0.1488</td><td>2.4228</td><td>-1.7674</td><td>1.0639</td><td>1.7422</td><td>0.4289</td><td>2.7441</td><td>0.8551</td><td>0.6328</td><td>0.0031</td></tr>
+<tr class=""><td class="word">is</td><td>-1.2022</td><td>0.9968</td><td>0.0545</td><td>0.3944</td><td>-0.2536</td><td>0.9516</td><td>0.8177</td><td>-0.5437</td><td>-2.7289</td><td>-0.7894</td></tr>
+<tr class="kitten"><td class="word">kitten</td><td>-0.0516</td><td>0.1061</td><td>-1.4532</td><td>-0.7377</td><td>0.7447</td><td>0.5169</td><td>1.1531</td><td>0.0242</td><td>1.1529</td><td>-0.1127</td></tr>
+<tr class=""><td class="word">likes</td><td>-1.0952</td><td>0.4343</td><td>-1.4924</td><td>-1.1500</td><td>1.1434</td><td>0.8913</td><td>-2.5993</td><td>0.4981</td><td>0.3809</td><td>0.0831</td></tr>
+<tr class=""><td class="word">meat</td><td>0.8364</td><td>1.0017</td><td>0.8675</td><td>-0.2754</td><td>-0.1753</td><td>0.5624</td><td>0.1118</td><td>0.0437</td><td>0.8969</td><td>1.3280</td></tr>
+<tr class=""><td class="word">milk</td><td>-0.1917</td><td>0.1676</td><td>-1.1928</td><td>-0.0860</td><td>-0.7121</td><td>0.5676</td><td>0.5373</td><td>-0.1391</td><td>0.1589</td><td>0.7511</td></tr>
+<tr class=""><td class="word">need</td><td>-0.0127</td><td>0.2408</td><td>0.1325</td><td>0.7642</td><td>1.0950</td><td>0.3399</td><td>0.7200</td><td>0.4114</td><td>1.9312</td><td>1.0119</td></tr>
+<tr class=""><td class="word">pet</td><td>-2.0165</td><td>-1.6917</td><td>0.1494</td><td>2.2890</td><td>0.3281</td><td>0.2226</td><td>1.6690</td><td>0.0104</td><td>-2.3313</td><td>0.2481</td></tr>
+<tr class=""><td class="word">pets</td><td>-0.0452</td><td>1.2549</td><td>-0.6715</td><td>1.0096</td><td>-1.3104</td><td>0.9447</td><td>1.7810</td><td>1.7922</td><td>0.1583</td><td>-0.5857</td></tr>
+<tr class="puppy"><td class="word">puppy</td><td>-0.6609</td><td>0.6859</td><td>-0.0781</td><td>0.7989</td><td>-0.0501</td><td>1.1270</td><td>-2.1049</td><td>-0.2759</td><td>-0.6196</td><td>1.1864</td></tr>
+<tr class=""><td class="word">small</td><td>-2.3408</td><td>0.7325</td><td>-0.4783</td><td>-0.7115</td><td>-0.4701</td><td>-1.9315</td><td>-0.7318</td><td>-0.3702</td><td>1.0003</td><td>1.9996</td></tr>
+<tr class=""><td class="word">the</td><td>-1.4355</td><td>-1.0420</td><td>1.2828</td><td>-1.3187</td><td>0.4799</td><td>1.4734</td><td>-1.8093</td><td>-0.6081</td><td>-0.1526</td><td>1.1182</td></tr>
+
+</tbody>
+</table>
+</div>
+
+</section>
+
+<section>
+<h2 class="matrix-title">Embedding Matrix — Epoch 100</h2>
+<p><strong>Shape:</strong> 18 × 10</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr>
+</thead>
+<tbody>
+<tr class=""><td class="word">a</td><td>-0.0776</td><td>2.4919</td><td>-0.3165</td><td>-3.2107</td><td>1.9535</td><td>-2.4344</td><td>1.1251</td><td>-1.7650</td><td>-0.6022</td><td>2.7837</td></tr>
+<tr class=""><td class="word">big</td><td>-2.1835</td><td>-0.1963</td><td>-2.2713</td><td>-1.8284</td><td>0.7749</td><td>-0.7910</td><td>2.9794</td><td>-0.5670</td><td>-0.1831</td><td>1.7887</td></tr>
+<tr class="cat"><td class="word">cat</td><td>-0.0327</td><td>2.0148</td><td>0.6031</td><td>2.0844</td><td>0.9265</td><td>1.7653</td><td>0.2945</td><td>1.4317</td><td>1.0509</td><td>0.9802</td></tr>
+<tr class="dog"><td class="word">dog</td><td>0.3786</td><td>1.5848</td><td>-1.9570</td><td>-0.3462</td><td>0.0299</td><td>1.4224</td><td>-0.0124</td><td>-0.0368</td><td>1.2538</td><td>-0.0181</td></tr>
+<tr class=""><td class="word">eats</td><td>-1.4511</td><td>0.9407</td><td>-1.1929</td><td>-0.5175</td><td>-0.9149</td><td>1.8929</td><td>-0.6344</td><td>-0.1178</td><td>-1.4065</td><td>-1.0572</td></tr>
+<tr class=""><td class="word">fish</td><td>1.4591</td><td>1.0007</td><td>-2.4379</td><td>1.3004</td><td>0.3760</td><td>-1.3358</td><td>-2.7327</td><td>1.3969</td><td>0.2696</td><td>1.7295</td></tr>
+<tr class=""><td class="word">food</td><td>-1.0748</td><td>3.3120</td><td>-2.9763</td><td>0.2959</td><td>2.7324</td><td>-1.0657</td><td>4.3051</td><td>0.8246</td><td>-0.9136</td><td>-0.0324</td></tr>
+<tr class=""><td class="word">is</td><td>-1.2045</td><td>0.7633</td><td>-0.1440</td><td>0.1950</td><td>-0.4082</td><td>1.1836</td><td>0.4374</td><td>-0.1688</td><td>-2.6172</td><td>-0.8411</td></tr>
+<tr class="kitten"><td class="word">kitten</td><td>0.8363</td><td>0.6238</td><td>-1.3510</td><td>0.0587</td><td>-0.0351</td><td>1.3596</td><td>0.5876</td><td>0.3580</td><td>2.1101</td><td>0.2777</td></tr>
+<tr class=""><td class="word">likes</td><td>-1.1782</td><td>0.1600</td><td>-1.3057</td><td>-1.0142</td><td>0.7662</td><td>0.9989</td><td>-1.7831</td><td>0.5718</td><td>0.0726</td><td>-0.9167</td></tr>
+<tr class=""><td class="word">meat</td><td>1.4264</td><td>1.5970</td><td>0.7182</td><td>0.5852</td><td>-0.6693</td><td>1.0144</td><td>-0.2660</td><td>0.3119</td><td>1.7786</td><td>1.9920</td></tr>
+<tr class=""><td class="word">milk</td><td>-1.1980</td><td>0.8453</td><td>0.0284</td><td>0.4357</td><td>-2.0191</td><td>1.8844</td><td>1.7246</td><td>-1.9222</td><td>1.4194</td><td>1.3879</td></tr>
+<tr class=""><td class="word">need</td><td>-0.0127</td><td>0.2408</td><td>0.1325</td><td>0.7642</td><td>1.0950</td><td>0.3399</td><td>0.7200</td><td>0.4114</td><td>1.9312</td><td>1.0119</td></tr>
+<tr class=""><td class="word">pet</td><td>-2.5696</td><td>-3.3453</td><td>-0.8206</td><td>3.0576</td><td>-0.1025</td><td>-1.6403</td><td>2.2591</td><td>-0.2436</td><td>-2.9389</td><td>-0.8022</td></tr>
+<tr class=""><td class="word">pets</td><td>0.8062</td><td>1.8348</td><td>0.9414</td><td>1.9489</td><td>-2.1998</td><td>2.6902</td><td>1.2264</td><td>2.8300</td><td>-0.8985</td><td>-1.6316</td></tr>
+<tr class="puppy"><td class="word">puppy</td><td>-0.5982</td><td>1.4748</td><td>-0.3872</td><td>1.0852</td><td>-0.1030</td><td>0.9569</td><td>-1.6272</td><td>-0.3627</td><td>0.1209</td><td>1.7530</td></tr>
+<tr class=""><td class="word">small</td><td>-3.7912</td><td>1.1899</td><td>-1.3412</td><td>-1.4538</td><td>0.5192</td><td>-3.1280</td><td>0.0202</td><td>-0.7923</td><td>0.5162</td><td>2.6208</td></tr>
+<tr class=""><td class="word">the</td><td>-1.3785</td><td>-1.0047</td><td>1.1415</td><td>-1.5880</td><td>0.4841</td><td>1.5314</td><td>-1.9699</td><td>-0.1462</td><td>-0.2407</td><td>0.8706</td></tr>
+
+</tbody>
+</table>
+</div>
+
+</section>
+
+<section>
+<h2 class="matrix-title">Embedding Matrix — Epoch 500</h2>
+<p><strong>Shape:</strong> 18 × 10</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr>
+</thead>
+<tbody>
+<tr class=""><td class="word">a</td><td>-0.0984</td><td>2.7346</td><td>-1.0384</td><td>-3.6015</td><td>2.8283</td><td>-4.2089</td><td>2.0158</td><td>-2.6464</td><td>-0.4212</td><td>3.1650</td></tr>
+<tr class=""><td class="word">big</td><td>-0.8997</td><td>0.3896</td><td>-3.5360</td><td>-2.1494</td><td>2.1187</td><td>-3.2918</td><td>4.4119</td><td>-2.4035</td><td>0.6832</td><td>2.4485</td></tr>
+<tr class="cat"><td class="word">cat</td><td>0.5441</td><td>2.6929</td><td>0.3393</td><td>2.6967</td><td>0.6801</td><td>1.6732</td><td>0.3362</td><td>1.5714</td><td>1.6598</td><td>1.7585</td></tr>
+<tr class="dog"><td class="word">dog</td><td>0.4092</td><td>0.8886</td><td>-1.9330</td><td>-0.0484</td><td>0.0696</td><td>1.3478</td><td>-0.0784</td><td>-0.0317</td><td>1.1842</td><td>-0.3754</td></tr>
+<tr class=""><td class="word">eats</td><td>-1.3097</td><td>0.7160</td><td>-0.9461</td><td>0.3195</td><td>-0.3325</td><td>0.2932</td><td>0.3796</td><td>0.1109</td><td>-0.9790</td><td>-0.9544</td></tr>
+<tr class=""><td class="word">fish</td><td>2.7021</td><td>0.9792</td><td>-5.5868</td><td>1.4066</td><td>2.8718</td><td>-1.4660</td><td>-5.2549</td><td>5.4543</td><td>-2.0069</td><td>2.5290</td></tr>
+<tr class=""><td class="word">food</td><td>-0.9966</td><td>3.7659</td><td>-4.0505</td><td>-0.2283</td><td>3.7992</td><td>-3.2454</td><td>5.6712</td><td>0.4057</td><td>-1.2673</td><td>-0.0965</td></tr>
+<tr class=""><td class="word">is</td><td>-1.5244</td><td>0.7112</td><td>-0.9546</td><td>0.3009</td><td>-0.3345</td><td>0.2868</td><td>0.3825</td><td>0.1108</td><td>-1.0552</td><td>-0.9528</td></tr>
+<tr class="kitten"><td class="word">kitten</td><td>1.3732</td><td>1.1586</td><td>-1.5026</td><td>0.7089</td><td>-0.4807</td><td>1.9590</td><td>0.1331</td><td>0.9175</td><td>2.5989</td><td>1.1356</td></tr>
+<tr class=""><td class="word">likes</td><td>-1.3061</td><td>0.7167</td><td>-0.9464</td><td>0.3183</td><td>-0.3339</td><td>0.2877</td><td>0.3827</td><td>0.1090</td><td>-0.9781</td><td>-0.9528</td></tr>
+<tr class=""><td class="word">meat</td><td>1.4724</td><td>1.3226</td><td>0.7379</td><td>0.8944</td><td>-0.6918</td><td>0.9600</td><td>-0.2354</td><td>0.3002</td><td>1.8498</td><td>0.5675</td></tr>
+<tr class=""><td class="word">milk</td><td>-2.7257</td><td>1.8067</td><td>1.8967</td><td>1.3498</td><td>-3.5608</td><td>2.3388</td><td>6.2138</td><td>-6.5666</td><td>2.9980</td><td>2.1024</td></tr>
+<tr class=""><td class="word">need</td><td>-0.0127</td><td>0.2408</td><td>0.1325</td><td>0.7642</td><td>1.0950</td><td>0.3399</td><td>0.7200</td><td>0.4114</td><td>1.9312</td><td>1.0119</td></tr>
+<tr class=""><td class="word">pet</td><td>-2.9996</td><td>-4.9725</td><td>-4.1057</td><td>3.7988</td><td>-1.3141</td><td>-4.6682</td><td>2.6380</td><td>-0.7423</td><td>-2.9591</td><td>-1.2659</td></tr>
+<tr class=""><td class="word">pets</td><td>1.7555</td><td>2.3513</td><td>2.5592</td><td>2.3012</td><td>-2.5316</td><td>3.6690</td><td>0.7266</td><td>3.5117</td><td>-2.8943</td><td>-2.3852</td></tr>
+<tr class="puppy"><td class="word">puppy</td><td>-0.5511</td><td>1.9755</td><td>-0.4035</td><td>1.2192</td><td>-0.1575</td><td>0.9229</td><td>-1.5194</td><td>-0.3734</td><td>0.2893</td><td>-0.1504</td></tr>
+<tr class=""><td class="word">small</td><td>-3.6698</td><td>1.4305</td><td>-2.3105</td><td>-2.0727</td><td>1.8373</td><td>-5.8928</td><td>1.3285</td><td>-2.1935</td><td>0.7320</td><td>3.0590</td></tr>
+<tr class=""><td class="word">the</td><td>-1.5918</td><td>-0.7926</td><td>0.9121</td><td>-0.4500</td><td>0.2965</td><td>-0.2669</td><td>-0.4318</td><td>-0.0653</td><td>0.5727</td><td>0.8994</td></tr>
+
+</tbody>
+</table>
+</div>
+
+</section>
+
+<section>
+<h2 class="matrix-title">Embedding Matrix — Epoch 1000</h2>
+<p><strong>Shape:</strong> 18 × 10</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr>
+</thead>
+<tbody>
+<tr class=""><td class="word">a</td><td>-3.3981</td><td>5.3059</td><td>-1.7523</td><td>-2.8274</td><td>4.3197</td><td>-5.0097</td><td>3.4000</td><td>-3.3692</td><td>-1.1987</td><td>4.6991</td></tr>
+<tr class=""><td class="word">big</td><td>-1.9557</td><td>2.1075</td><td>-4.1572</td><td>-1.4510</td><td>2.9729</td><td>-4.0391</td><td>5.2714</td><td>-3.0716</td><td>0.5165</td><td>3.4544</td></tr>
+<tr class="cat"><td class="word">cat</td><td>-1.7834</td><td>6.1095</td><td>-0.1690</td><td>3.7268</td><td>1.5895</td><td>1.6169</td><td>1.2837</td><td>1.2861</td><td>1.1239</td><td>3.6015</td></tr>
+<tr class="dog"><td class="word">dog</td><td>0.4340</td><td>0.2891</td><td>-1.8968</td><td>-0.0423</td><td>0.1432</td><td>1.1515</td><td>-0.1144</td><td>-0.1875</td><td>1.0691</td><td>-0.4141</td></tr>
+<tr class=""><td class="word">eats</td><td>-1.0700</td><td>0.7547</td><td>-0.9204</td><td>0.3736</td><td>-0.2979</td><td>0.2600</td><td>0.3803</td><td>0.1094</td><td>-0.8438</td><td>-0.9166</td></tr>
+<tr class=""><td class="word">fish</td><td>2.0603</td><td>2.9704</td><td>-11.9894</td><td>1.4439</td><td>9.6203</td><td>-4.0277</td><td>-10.7261</td><td>8.7593</td><td>-6.2109</td><td>4.2434</td></tr>
+<tr class=""><td class="word">food</td><td>-2.7491</td><td>4.9349</td><td>-5.0264</td><td>-0.3883</td><td>5.4701</td><td>-4.1640</td><td>5.9199</td><td>0.0895</td><td>-2.7053</td><td>0.2383</td></tr>
+<tr class=""><td class="word">is</td><td>-1.2890</td><td>0.7599</td><td>-0.9282</td><td>0.3792</td><td>-0.2854</td><td>0.2545</td><td>0.3723</td><td>0.1181</td><td>-0.8365</td><td>-0.9176</td></tr>
+<tr class="kitten"><td class="word">kitten</td><td>-1.1578</td><td>4.5714</td><td>-1.8879</td><td>1.6958</td><td>0.3435</td><td>2.0629</td><td>1.1795</td><td>0.6013</td><td>2.0348</td><td>2.9649</td></tr>
+<tr class=""><td class="word">likes</td><td>-1.0724</td><td>0.7550</td><td>-0.9229</td><td>0.3741</td><td>-0.2970</td><td>0.2604</td><td>0.3803</td><td>0.1102</td><td>-0.8424</td><td>-0.9179</td></tr>
+<tr class=""><td class="word">meat</td><td>1.6042</td><td>0.4602</td><td>0.7639</td><td>0.8201</td><td>-0.6789</td><td>0.7872</td><td>-0.1541</td><td>0.2569</td><td>1.8759</td><td>0.4190</td></tr>
+<tr class=""><td class="word">milk</td><td>-5.6880</td><td>4.2944</td><td>6.9091</td><td>2.5708</td><td>-6.7489</td><td>3.9702</td><td>13.6647</td><td>-10.8186</td><td>5.3633</td><td>3.6014</td></tr>
+<tr class=""><td class="word">need</td><td>-0.0127</td><td>0.2408</td><td>0.1325</td><td>0.7642</td><td>1.0950</td><td>0.3399</td><td>0.7200</td><td>0.4114</td><td>1.9312</td><td>1.0119</td></tr>
+<tr class=""><td class="word">pet</td><td>-5.5634</td><td>1.3910</td><td>-9.0710</td><td>8.5036</td><td>-1.5108</td><td>-5.6660</td><td>4.7856</td><td>0.4826</td><td>-1.3840</td><td>1.5333</td></tr>
+<tr class=""><td class="word">pets</td><td>1.4581</td><td>4.1363</td><td>2.7467</td><td>3.3163</td><td>-2.4612</td><td>4.0416</td><td>0.5577</td><td>4.1340</td><td>-4.4730</td><td>-2.5787</td></tr>
+<tr class="puppy"><td class="word">puppy</td><td>-0.3800</td><td>1.1005</td><td>-0.4144</td><td>1.0935</td><td>-0.2021</td><td>0.8649</td><td>-1.3800</td><td>-0.2699</td><td>0.4307</td><td>-0.4048</td></tr>
+<tr class=""><td class="word">small</td><td>-5.8957</td><td>4.1421</td><td>-3.1229</td><td>-1.3700</td><td>3.5234</td><td>-7.4457</td><td>3.0606</td><td>-3.5066</td><td>-0.0893</td><td>4.7451</td></tr>
+<tr class=""><td class="word">the</td><td>-1.1848</td><td>-0.7193</td><td>0.9555</td><td>-0.3395</td><td>0.3667</td><td>-0.3205</td><td>-0.4395</td><td>-0.0604</td><td>0.8626</td><td>0.9614</td></tr>
+
+</tbody>
+</table>
+</div>
+
+</section>
+
+<section>
+<h2 class="matrix-title">Embedding Matrix — Epoch 1500</h2>
+<p><strong>Shape:</strong> 18 × 10</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr>
+</thead>
+<tbody>
+<tr class=""><td class="word">a</td><td>-5.4539</td><td>7.8320</td><td>-2.3916</td><td>-1.7724</td><td>5.3512</td><td>-5.1532</td><td>4.1285</td><td>-3.6930</td><td>-1.1516</td><td>5.8395</td></tr>
+<tr class=""><td class="word">big</td><td>-2.0999</td><td>2.4511</td><td>-4.2510</td><td>-1.2582</td><td>3.0025</td><td>-4.0223</td><td>5.3187</td><td>-3.0544</td><td>0.6056</td><td>3.6058</td></tr>
+<tr class="cat"><td class="word">cat</td><td>-6.5554</td><td>13.4925</td><td>-1.9248</td><td>6.9297</td><td>3.5516</td><td>2.6367</td><td>2.7522</td><td>0.8345</td><td>1.4075</td><td>6.5082</td></tr>
+<tr class="dog"><td class="word">dog</td><td>0.4364</td><td>0.0559</td><td>-1.8076</td><td>-0.1241</td><td>0.1904</td><td>0.9702</td><td>-0.1216</td><td>-0.2393</td><td>0.9758</td><td>-0.4103</td></tr>
+<tr class=""><td class="word">eats</td><td>-0.9457</td><td>0.7356</td><td>-0.9266</td><td>0.3524</td><td>-0.2992</td><td>0.2738</td><td>0.3866</td><td>0.1122</td><td>-0.8676</td><td>-0.9207</td></tr>
+<tr class=""><td class="word">fish</td><td>-2.6950</td><td>10.3394</td><td>-17.0254</td><td>4.9943</td><td>15.1028</td><td>-5.0620</td><td>-14.0196</td><td>8.4328</td><td>-7.5161</td><td>7.2833</td></tr>
+<tr class=""><td class="word">food</td><td>-3.9510</td><td>7.1922</td><td>-5.8816</td><td>0.6782</td><td>6.7412</td><td>-4.4376</td><td>5.8828</td><td>0.1117</td><td>-3.0832</td><td>0.6071</td></tr>
+<tr class=""><td class="word">is</td><td>-1.1335</td><td>0.7454</td><td>-0.9133</td><td>0.3616</td><td>-0.2869</td><td>0.2844</td><td>0.3945</td><td>0.1179</td><td>-0.8612</td><td>-0.9129</td></tr>
+<tr class="kitten"><td class="word">kitten</td><td>-6.0308</td><td>12.2106</td><td>-3.6886</td><td>5.0409</td><td>2.4033</td><td>2.7333</td><td>2.8934</td><td>0.0596</td><td>2.3209</td><td>6.0939</td></tr>
+<tr class=""><td class="word">likes</td><td>-0.9465</td><td>0.7382</td><td>-0.9243</td><td>0.3550</td><td>-0.2982</td><td>0.2766</td><td>0.3893</td><td>0.1122</td><td>-0.8649</td><td>-0.9198</td></tr>
+<tr class=""><td class="word">meat</td><td>1.8573</td><td>0.0502</td><td>0.7951</td><td>0.4907</td><td>-0.6586</td><td>0.6045</td><td>-0.0620</td><td>0.2390</td><td>1.9129</td><td>0.4123</td></tr>
+<tr class=""><td class="word">milk</td><td>-10.4170</td><td>10.6867</td><td>8.8689</td><td>5.0773</td><td>-7.3638</td><td>6.2581</td><td>18.7480</td><td>-11.3186</td><td>6.6190</td><td>6.0197</td></tr>
+<tr class=""><td class="word">need</td><td>-0.0127</td><td>0.2408</td><td>0.1325</td><td>0.7642</td><td>1.0950</td><td>0.3399</td><td>0.7200</td><td>0.4114</td><td>1.9312</td><td>1.0119</td></tr>
+<tr class=""><td class="word">pet</td><td>-8.6697</td><td>5.7400</td><td>-10.9148</td><td>11.7336</td><td>-0.5635</td><td>-5.9193</td><td>6.0155</td><td>0.4335</td><td>-0.5063</td><td>3.1370</td></tr>
+<tr class=""><td class="word">pets</td><td>1.4988</td><td>5.3857</td><td>2.4829</td><td>4.2393</td><td>-2.5626</td><td>4.1950</td><td>0.6163</td><td>4.5424</td><td>-4.2575</td><td>-2.5054</td></tr>
+<tr class="puppy"><td class="word">puppy</td><td>-0.0157</td><td>0.2114</td><td>-0.4708</td><td>0.4045</td><td>-0.2101</td><td>0.7780</td><td>-1.2541</td><td>-0.2393</td><td>0.5658</td><td>-0.3980</td></tr>
+<tr class=""><td class="word">small</td><td>-6.4087</td><td>5.5063</td><td>-3.5044</td><td>-0.6505</td><td>3.8188</td><td>-7.5129</td><td>3.3464</td><td>-3.6015</td><td>0.2632</td><td>5.3829</td></tr>
+<tr class=""><td class="word">the</td><td>-0.9519</td><td>-0.7477</td><td>0.9614</td><td>-0.3723</td><td>0.3642</td><td>-0.2847</td><td>-0.4165</td><td>-0.0579</td><td>0.8220</td><td>0.9615</td></tr>
+
+</tbody>
+</table>
+</div>
+
+</section>
+
+<section>
+<h2 class="matrix-title">Embedding Matrix — Epoch 2000</h2>
+<p><strong>Shape:</strong> 18 × 10</p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr>
+</thead>
+<tbody>
+<tr class=""><td class="word">a</td><td>-7.1682</td><td>7.7462</td><td>-2.3122</td><td>-2.1263</td><td>5.9338</td><td>-5.1013</td><td>4.1970</td><td>-3.9553</td><td>-1.7849</td><td>5.5080</td></tr>
+<tr class=""><td class="word">big</td><td>-2.0990</td><td>2.4577</td><td>-4.2523</td><td>-1.2534</td><td>3.0021</td><td>-4.0216</td><td>5.3187</td><td>-3.0542</td><td>0.6103</td><td>3.6083</td></tr>
+<tr class="cat"><td class="word">cat</td><td>-3.8477</td><td>15.7723</td><td>-2.9888</td><td>9.1110</td><td>2.3207</td><td>2.6535</td><td>2.2039</td><td>1.8099</td><td>3.5105</td><td>8.2485</td></tr>
+<tr class="dog"><td class="word">dog</td><td>0.4374</td><td>0.0517</td><td>-1.6669</td><td>-0.1784</td><td>0.2509</td><td>0.7368</td><td>-0.1349</td><td>-0.2367</td><td>0.8655</td><td>-0.4097</td></tr>
+<tr class=""><td class="word">eats</td><td>-0.8588</td><td>0.7228</td><td>-0.9543</td><td>0.3410</td><td>-0.3117</td><td>0.2953</td><td>0.4204</td><td>0.0904</td><td>-0.8769</td><td>-0.9235</td></tr>
+<tr class=""><td class="word">fish</td><td>1.7738</td><td>12.7802</td><td>-24.1300</td><td>7.4217</td><td>19.6807</td><td>-9.6220</td><td>-22.2941</td><td>9.5007</td><td>-9.1628</td><td>9.2076</td></tr>
+<tr class=""><td class="word">food</td><td>-5.0935</td><td>8.1746</td><td>-6.1643</td><td>0.9803</td><td>7.5896</td><td>-4.5876</td><td>5.9488</td><td>-0.1841</td><td>-3.4154</td><td>0.5676</td></tr>
+<tr class=""><td class="word">is</td><td>-1.0339</td><td>0.7279</td><td>-0.9599</td><td>0.3451</td><td>-0.3217</td><td>0.3054</td><td>0.4285</td><td>0.1017</td><td>-0.8777</td><td>-0.9143</td></tr>
+<tr class="kitten"><td class="word">kitten</td><td>-3.3886</td><td>14.4129</td><td>-4.7687</td><td>7.1220</td><td>1.3333</td><td>2.7585</td><td>2.2815</td><td>0.9761</td><td>4.2747</td><td>7.7499</td></tr>
+<tr class=""><td class="word">likes</td><td>-0.8589</td><td>0.7251</td><td>-0.9543</td><td>0.3431</td><td>-0.3144</td><td>0.2965</td><td>0.4208</td><td>0.0929</td><td>-0.8752</td><td>-0.9220</td></tr>
+<tr class=""><td class="word">meat</td><td>2.1018</td><td>-0.0574</td><td>0.8420</td><td>0.1758</td><td>-0.5961</td><td>0.3591</td><td>0.0505</td><td>0.2394</td><td>1.9110</td><td>0.3982</td></tr>
+<tr class=""><td class="word">milk</td><td>-8.7428</td><td>13.0425</td><td>14.4769</td><td>7.1651</td><td>-12.9144</td><td>9.6890</td><td>26.0391</td><td>-10.6227</td><td>11.8951</td><td>7.8776</td></tr>
+<tr class=""><td class="word">need</td><td>-0.0127</td><td>0.2408</td><td>0.1325</td><td>0.7642</td><td>1.0950</td><td>0.3399</td><td>0.7200</td><td>0.4114</td><td>1.9312</td><td>1.0119</td></tr>
+<tr class=""><td class="word">pet</td><td>-10.6496</td><td>8.5673</td><td>-12.1426</td><td>13.9344</td><td>-0.1030</td><td>-5.6489</td><td>6.2913</td><td>0.2051</td><td>0.7213</td><td>3.8483</td></tr>
+<tr class=""><td class="word">pets</td><td>1.4111</td><td>6.1788</td><td>2.3054</td><td>4.8141</td><td>-2.5879</td><td>4.4303</td><td>0.5740</td><td>4.7266</td><td>-3.9441</td><td>-2.4393</td></tr>
+<tr class="puppy"><td class="word">puppy</td><td>0.3370</td><td>0.0558</td><td>-0.5567</td><td>-0.1741</td><td>-0.1721</td><td>0.6553</td><td>-1.0931</td><td>-0.2319</td><td>0.6632</td><td>-0.4043</td></tr>
+<tr class=""><td class="word">small</td><td>-7.8705</td><td>5.4368</td><td>-3.4341</td><td>-0.9438</td><td>4.3009</td><td>-7.4632</td><td>3.4103</td><td>-3.8200</td><td>-0.2612</td><td>5.1077</td></tr>
+<tr class=""><td class="word">the</td><td>-0.7969</td><td>-0.7728</td><td>0.8997</td><td>-0.3954</td><td>0.3256</td><td>-0.2487</td><td>-0.3595</td><td>-0.0903</td><td>0.8010</td><td>0.9581</td></tr>
+
+</tbody>
+</table>
+</div>
+
+</section>
+
+<section>
+<h2>2. How Do the Vectors Change During Training?</h2>
+<p>
+The same word has a different vector at different epochs because the
+embedding matrix is updated during training. The model repeatedly predicts
+the target word from its context, computes the loss, and updates its
+parameters.
+</p>
+<div class="vector">
+context words → averaged context embedding → prediction → loss
+→ backpropagation → embedding update
+</div>
+</section>
+
+<section>
+<h2>3. Cat and Kitten Across All Epochs</h2>
+<p>
+The following table keeps the full 10-dimensional vectors for
+<strong>cat</strong> and <strong>kitten</strong> at every selected epoch.
+This makes it possible to see how their representations evolve.
+</p>
+<div class="table-wrap">
+<table class="small-table">
+<thead><tr>
+<th>Epoch</th><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr></thead>
+<tbody>
+<tr class="cat"><td>10</td><td class="word">cat</td><td>-0.7484</td><td>1.4956</td><td>0.5989</td><td>1.4622</td><td>1.5466</td><td>1.1426</td><td>0.6619</td><td>1.3082</td><td>0.1923</td><td>0.4041</td></tr><tr class="kitten"><td>10</td><td class="word">kitten</td><td>-0.0516</td><td>0.1061</td><td>-1.4532</td><td>-0.7377</td><td>0.7447</td><td>0.5169</td><td>1.1531</td><td>0.0242</td><td>1.1529</td><td>-0.1127</td></tr><tr class="cat"><td>100</td><td class="word">cat</td><td>-0.0327</td><td>2.0148</td><td>0.6031</td><td>2.0844</td><td>0.9265</td><td>1.7653</td><td>0.2945</td><td>1.4317</td><td>1.0509</td><td>0.9802</td></tr><tr class="kitten"><td>100</td><td class="word">kitten</td><td>0.8363</td><td>0.6238</td><td>-1.3510</td><td>0.0587</td><td>-0.0351</td><td>1.3596</td><td>0.5876</td><td>0.3580</td><td>2.1101</td><td>0.2777</td></tr><tr class="cat"><td>500</td><td class="word">cat</td><td>0.5441</td><td>2.6929</td><td>0.3393</td><td>2.6967</td><td>0.6801</td><td>1.6732</td><td>0.3362</td><td>1.5714</td><td>1.6598</td><td>1.7585</td></tr><tr class="kitten"><td>500</td><td class="word">kitten</td><td>1.3732</td><td>1.1586</td><td>-1.5026</td><td>0.7089</td><td>-0.4807</td><td>1.9590</td><td>0.1331</td><td>0.9175</td><td>2.5989</td><td>1.1356</td></tr><tr class="cat"><td>1000</td><td class="word">cat</td><td>-1.7834</td><td>6.1095</td><td>-0.1690</td><td>3.7268</td><td>1.5895</td><td>1.6169</td><td>1.2837</td><td>1.2861</td><td>1.1239</td><td>3.6015</td></tr><tr class="kitten"><td>1000</td><td class="word">kitten</td><td>-1.1578</td><td>4.5714</td><td>-1.8879</td><td>1.6958</td><td>0.3435</td><td>2.0629</td><td>1.1795</td><td>0.6013</td><td>2.0348</td><td>2.9649</td></tr><tr class="cat"><td>1500</td><td class="word">cat</td><td>-6.5554</td><td>13.4925</td><td>-1.9248</td><td>6.9297</td><td>3.5516</td><td>2.6367</td><td>2.7522</td><td>0.8345</td><td>1.4075</td><td>6.5082</td></tr><tr class="kitten"><td>1500</td><td class="word">kitten</td><td>-6.0308</td><td>12.2106</td><td>-3.6886</td><td>5.0409</td><td>2.4033</td><td>2.7333</td><td>2.8934</td><td>0.0596</td><td>2.3209</td><td>6.0939</td></tr><tr class="cat"><td>2000</td><td class="word">cat</td><td>-3.8477</td><td>15.7723</td><td>-2.9888</td><td>9.1110</td><td>2.3207</td><td>2.6535</td><td>2.2039</td><td>1.8099</td><td>3.5105</td><td>8.2485</td></tr><tr class="kitten"><td>2000</td><td class="word">kitten</td><td>-3.3886</td><td>14.4129</td><td>-4.7687</td><td>7.1220</td><td>1.3333</td><td>2.7585</td><td>2.2815</td><td>0.9761</td><td>4.2747</td><td>7.7499</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Cosine Similarity: Cat ↔ Kitten</h3>
+<table class="small-table">
+<thead><tr><th>Epoch</th><th>Cosine Similarity</th><th>Interpretation</th></tr></thead>
+<tbody>
+<tr><td>10</td><td>0.1150</td><td>Lower directional similarity</td></tr><tr><td>100</td><td>0.4725</td><td>Lower directional similarity</td></tr><tr><td>500</td><td>0.7128</td><td>Moderate directional similarity</td></tr><tr><td>1000</td><td>0.9192</td><td>Higher directional similarity</td></tr><tr><td>1500</td><td>0.9863</td><td>Higher directional similarity</td></tr><tr><td>2000</td><td>0.9895</td><td>Higher directional similarity</td></tr>
+</tbody>
+</table>
+<div class="success">
+<strong>Note:</strong> A learned embedding is a vector, and
+cosine similarity compares the direction of two vectors. It is more
+appropriate for discussing word-vector similarity than simply comparing
+individual dimensions one by one.
+</div>
+</section>
+
+<section>
+<h2>4. Dog and Puppy Across All Epochs</h2>
+<p>
+The same analysis can be made for <strong>dog</strong> and
+<strong>puppy</strong>.
+</p>
+<div class="table-wrap">
+<table class="small-table">
+<thead><tr>
+<th>Epoch</th><th>Word</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>D8</th><th>D9</th><th>D10</th></tr></thead>
+<tbody>
+<tr class="dog"><td>10</td><td class="word">dog</td><td>-0.2598</td><td>1.2805</td><td>-1.6076</td><td>-0.9730</td><td>0.0571</td><td>1.4305</td><td>0.4095</td><td>-0.4183</td><td>0.7641</td><td>-0.4529</td></tr><tr class="puppy"><td>10</td><td class="word">puppy</td><td>-0.6609</td><td>0.6859</td><td>-0.0781</td><td>0.7989</td><td>-0.0501</td><td>1.1270</td><td>-2.1049</td><td>-0.2759</td><td>-0.6196</td><td>1.1864</td></tr><tr class="dog"><td>100</td><td class="word">dog</td><td>0.3786</td><td>1.5848</td><td>-1.9570</td><td>-0.3462</td><td>0.0299</td><td>1.4224</td><td>-0.0124</td><td>-0.0368</td><td>1.2538</td><td>-0.0181</td></tr><tr class="puppy"><td>100</td><td class="word">puppy</td><td>-0.5982</td><td>1.4748</td><td>-0.3872</td><td>1.0852</td><td>-0.1030</td><td>0.9569</td><td>-1.6272</td><td>-0.3627</td><td>0.1209</td><td>1.7530</td></tr><tr class="dog"><td>500</td><td class="word">dog</td><td>0.4092</td><td>0.8886</td><td>-1.9330</td><td>-0.0484</td><td>0.0696</td><td>1.3478</td><td>-0.0784</td><td>-0.0317</td><td>1.1842</td><td>-0.3754</td></tr><tr class="puppy"><td>500</td><td class="word">puppy</td><td>-0.5511</td><td>1.9755</td><td>-0.4035</td><td>1.2192</td><td>-0.1575</td><td>0.9229</td><td>-1.5194</td><td>-0.3734</td><td>0.2893</td><td>-0.1504</td></tr><tr class="dog"><td>1000</td><td class="word">dog</td><td>0.4340</td><td>0.2891</td><td>-1.8968</td><td>-0.0423</td><td>0.1432</td><td>1.1515</td><td>-0.1144</td><td>-0.1875</td><td>1.0691</td><td>-0.4141</td></tr><tr class="puppy"><td>1000</td><td class="word">puppy</td><td>-0.3800</td><td>1.1005</td><td>-0.4144</td><td>1.0935</td><td>-0.2021</td><td>0.8649</td><td>-1.3800</td><td>-0.2699</td><td>0.4307</td><td>-0.4048</td></tr><tr class="dog"><td>1500</td><td class="word">dog</td><td>0.4364</td><td>0.0559</td><td>-1.8076</td><td>-0.1241</td><td>0.1904</td><td>0.9702</td><td>-0.1216</td><td>-0.2393</td><td>0.9758</td><td>-0.4103</td></tr><tr class="puppy"><td>1500</td><td class="word">puppy</td><td>-0.0157</td><td>0.2114</td><td>-0.4708</td><td>0.4045</td><td>-0.2101</td><td>0.7780</td><td>-1.2541</td><td>-0.2393</td><td>0.5658</td><td>-0.3980</td></tr><tr class="dog"><td>2000</td><td class="word">dog</td><td>0.4374</td><td>0.0517</td><td>-1.6669</td><td>-0.1784</td><td>0.2509</td><td>0.7368</td><td>-0.1349</td><td>-0.2367</td><td>0.8655</td><td>-0.4097</td></tr><tr class="puppy"><td>2000</td><td class="word">puppy</td><td>0.3370</td><td>0.0558</td><td>-0.5567</td><td>-0.1741</td><td>-0.1721</td><td>0.6553</td><td>-1.0931</td><td>-0.2319</td><td>0.6632</td><td>-0.4043</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>Cosine Similarity: Dog ↔ Puppy</h3>
+<table class="small-table">
+<thead><tr><th>Epoch</th><th>Cosine Similarity</th></tr></thead>
+<tbody>
+<tr><td>10</td><td>0.0286</td></tr><tr><td>100</td><td>0.3841</td></tr><tr><td>500</td><td>0.4637</td></tr><tr><td>1000</td><td>0.4350</td></tr><tr><td>1500</td><td>0.5765</td></tr><tr><td>2000</td><td>0.6980</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>5. Important Interpretation</h2>
+<div class="success">
+<strong>Cat ↔ kitten and dog ↔ puppy:</strong>
+If their cosine similarities are high, their vectors point in similar
+directions. This is evidence of similarity in the <em>learned
+representation</em>, not proof that an individual embedding dimension has a
+specific human-readable meaning.
+</div>
+
+<div class="warning">
+<strong>Do not say:</strong> "Dimension 1 means animal, Dimension 2 means
+size, Dimension 3 means age." In a learned word embedding, the semantic
+information is distributed across the vector dimensions.
+</div>
+
+<div class="info">
+<strong>Also remember:</strong> the corpus is very small. Therefore,
+relationships observed in this experiment should be presented as an
+illustration of the embedding-learning process, not as evidence of a
+high-quality general-purpose language embedding.
+</div>
+</section>
+
+<div class="footer">
+CBOW Embedding — Complete epoch-wise embedding matrices
+</div>
+
+</div>
+</body>
+</html>

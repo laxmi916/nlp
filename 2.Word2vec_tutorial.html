@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Word2Vec Architecture</title>
+<style>
+body{font-family:Arial,sans-serif;line-height:1.7;background:#f5f7fb;color:#202124;margin:0}
+main{max-width:1100px;margin:auto;padding:30px 20px}
+.hero{background:linear-gradient(135deg,#174ea6,#673ab7);color:white;padding:10px;border-radius:18px}
+section{background:white;padding:28px;margin:24px 0;border-radius:14px;box-shadow:0 3px 12px #ddd}
+h2{color:#174ea6;border-bottom:2px solid #e5ebf5;padding-bottom:8px}
+h3{color:#333;margin-top:28px}
+.code,.vector{font-family:monospace;background:#f1f3f4;padding:15px;border-radius:8px;overflow:auto;white-space:pre}
+.formula{text-align:center;background:#fafafa;border:1px solid #ddd;padding:15px;border-radius:8px;margin:16px 0}
+.info,.success,.warning,.question{padding:16px 20px;border-radius:8px;margin:18px 0}
+.info{background:#e8f0fe;border-left:5px solid #1a73e8}
+.success{background:#e6f4ea;border-left:5px solid #34a853}
+.warning{background:#fff4d6;border-left:5px solid #f9ab00}
+.question{border:2px solid #673ab7}
+table{border-collapse:collapse;width:100%;margin:18px 0}
+th{background:#174ea6;color:white}th,td{padding:9px;border:1px solid #ddd;text-align:left}
+tr:nth-child(even){background:#f8f9fa}
+.flow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin:20px}
+.box{padding:12px 16px;background:#e8f0fe;border:2px solid #1a73e8;border-radius:9px;font-weight:bold}
+</style>
+</head>
+<body>
+<main>
+<div class="hero">
+<h1>Word2Vec</h1>
+</div>
+
+
+<section>
+<h2>Word2Vec Architecture</h2>
+<p>
+Word2Vec is a neural-network-based method for learning dense vector
+representations of words. Instead of directly assigning semantic
+properties to words, Word2Vec learns word representations by solving
+a word-prediction task from the surrounding context.
+</p>
+<p>Word2Vec has two classical architectures:</p>
+<table>
+<tr><th>Architecture</th><th>Input</th><th>Prediction</th></tr>
+<tr><td><b>CBOW</b></td><td>Context words</td><td>Target word</td></tr>
+<tr><td><b>Skip-gram</b></td><td>Target word</td><td>Context words</td></tr>
+</table>
+<div class="flow">
+<div class="box">CBOW: Context</div><div>→</div><div class="box">Target</div>
+</div>
+<div class="flow">
+<div class="box">Skip-gram: Target</div><div>→</div><div class="box">Context</div>
+</div>
+<div class="architecture-image">
+    <img src="CBOW_architecture.jfif"
+         alt="Word2Vec CBOW architecture"
+         width="100%"
+         height="auto">
+</div>
+</section>
+
+<section>
+<h2>Training Corpus</h2>
+<div class="code">the cat eats fish
+the cat likes milk
+the cat is small
+the cat is a pet
+
+the kitten eats fish
+the kitten likes milk
+the kitten is small
+the kitten is a pet
+
+the dog eats meat
+the dog likes meat
+the dog is big
+the dog is a pet
+
+the puppy eats meat
+the puppy likes meat
+the puppy is big
+the puppy is a pet
+
+fish is food
+meat is food
+milk is food
+pets need food</div>
+
+<h3>What patterns did we intentionally create?</h3>
+<table>
+<tr><th>Words</th><th>Evidence in the corpus</th></tr>
+<tr><td>cat ↔ kitten</td><td>Both occur with eats fish, likes milk, is small, and is a pet.</td></tr>
+<tr><td>dog ↔ puppy</td><td>Both occur with eats meat, likes meat, is big, and is a pet.</td></tr>
+<tr><td>fish ↔ food</td><td>“fish is food”</td></tr>
+<tr><td>meat ↔ food</td><td>“meat is food”</td></tr>
+<tr><td>milk ↔ food</td><td>“milk is food”</td></tr>
+</table>
+<div class="info"><b>Important:</b> Word2Vec is not given these relationships explicitly. It only sees the sentences and learns from the prediction task.</div>
+</section>
+
+<section>
+<h2>Vocabulary</h2>
+<table>
+<tr><th>ID</th><th>Word</th><th>ID</th><th>Word</th></tr>
+<tr><td>0</td><td>a</td><td>9</td><td>likes</td></tr>
+<tr><td>1</td><td>big</td><td>10</td><td>meat</td></tr>
+<tr><td>2</td><td>cat</td><td>11</td><td>milk</td></tr>
+<tr><td>3</td><td>dog</td><td>12</td><td>need</td></tr>
+<tr><td>4</td><td>eats</td><td>13</td><td>pet</td></tr>
+<tr><td>5</td><td>fish</td><td>14</td><td>pets</td></tr>
+<tr><td>6</td><td>food</td><td>15</td><td>puppy</td></tr>
+<tr><td>7</td><td>is</td><td>16</td><td>small</td></tr>
+<tr><td>8</td><td>kitten</td><td>17</td><td>the</td></tr>
+</table>
+<div class="formula"><b>Vocabulary size V = 18</b></div>
+<p>The IDs are only identifiers. For example, <code>cat = 2</code> does not mean that cat is semantically “close” to dog = 3.</p>
+</section>
+
+<section>
+<h2>CBOW Architecture for our example</h2>
+
+<div class="architecture-image">
+    <img src="CBOW_arch_example.png"
+         alt="Word2Vec CBOW architecture"
+         width="100%"
+         height="auto">
+</div>
+
+<p>Consider:</p>
+<div class="vector">the cat eats fish</div>
+<p>With a context window of 1, for target <b>eats</b>:</p>
+<div class="flow"><div class="box">cat</div><div>+</div><div class="box">fish</div><div>→</div><div class="box">eats</div></div>
+<div class="question"><b>Question:</b> Given “cat” and “fish”, can the model predict “eats”?</div>
+<p>That prediction problem is what drives the learning of the vectors.</p>
+</section>
+
+<section>
+<h2>Step 1 — Word IDs and One-Hot Vectors</h2>
+<p>For our vocabulary:</p>
+<div class="vector">cat  → ID 2
+fish → ID 5
+eats → ID 4</div>
+<p>The corresponding one-hot vectors have length 18:</p>
+<div class="vector">cat  → [0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+fish → [0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]
+
+eats → [0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]</div>
+<p>In practical implementations, the integer ID is usually passed to an embedding lookup rather than explicitly multiplying a one-hot vector.</p>
+</section>
+
+<section>
+<h2>Step 2 — The 18 × 10 Embedding Matrix</h2>
+<p>Choose an embedding dimension of <b>10</b>.</p>
+<div class="formula"><b>E ∈ R<sup>18 × 10</sup></b></div>
+<p>There are 18 rows, one for each vocabulary word, and 10 learned values per row.</p>
+<p>At the beginning of training, the embedding matrix is initialized with small random values (depending on the implementation). These values do not initially encode the semantic relationships we are interested in. Training gradually adjusts them through the prediction objective</p>
+<div class="vector">
+Initial Embedding Matrix E
+
+             D1      D2      D3      ...     D10
+a         [ random   random  random   ...    random ]
+big       [ random   random  random   ...    random ]
+cat       [ random   random  random   ...    random ]
+dog       [ random   random  random   ...    random ]
+eats      [ random   random  random   ...    random ]
+fish      [ random   random  random   ...    random ]
+...
+puppy     [ random   random  random   ...    random ]
+small     [ random   random  random   ...    random ]
+the       [ random   random  random   ...    random ]
+</div>
+<div class="formula">18 × 10 = 180 input-embedding parameters</div>
+<p>For example, the current row for cat is <code>E[2]</code>; the current row for kitten is <code>E[8]</code>.</p>
+<div class="warning"><b>Do not assign human meanings to D1, D2, etc.</b> The dimensions are learned jointly.</div>
+</section>
+
+<section>
+<h2>Step 3 — Embedding Lookup</h2>
+<p>Suppose, purely for illustration, the current vectors are:</p>
+<div class="vector">E[cat]  = [0.20, 0.70, -0.10, 0.40, 0.30, -0.20, 0.10, 0.50, -0.30, 0.20]
+E[fish] = [0.50, 0.10,  0.30, 0.60, -0.20, 0.40, 0.20, -0.10, 0.30, 0.50]</div>
+<p>Then:</p>
+<div class="formula"><b>e<sub>cat</sub> = E[2]</b><br><b>e<sub>fish</sub> = E[5]</b></div>
+<p>The important distinction is:</p>
+<div class="flow"><div class="box">18-D one-hot</div><div>→</div><div class="box">lookup</div><div>→</div><div class="box">10-D dense vector</div></div>
+</section>
+
+<section>
+<h2>Step 4 — Combine the Context Vectors</h2>
+<p>For <code>[cat, fish] → eats</code>, basic CBOW averages the context vectors:</p>
+<div class="formula"><b>h = (e<sub>cat</sub> + e<sub>fish</sub>) / 2</b></div>
+<p>Using the illustrative values:</p>
+<div class="vector">h = [0.35, 0.40, 0.10, 0.50, 0.05,
+     0.10, 0.15, 0.20, 0.00, 0.35]</div>
+<p><b>h</b> is now a 10-dimensional representation of the current context.</p>
+</section>
+
+<section>
+<h2>Step 5 — Output Layer</h2>
+<p>We need one score for every one of the 18 vocabulary words.</p>
+<div class="formula"><b>W<sub>out</sub> ∈ R<sup>10 × 18</sup></b></div>
+<div class="formula"><b>z = hW<sub>out</sub> + b</b></div>
+<p>Thus:</p>
+<div class="flow"><div class="box">10-D h</div><div>→</div><div class="box">10 × 18 W<sub>out</sub></div><div>→</div><div class="box">18 logits</div></div>
+</section>
+
+<section>
+<h2>Step 6 — Softmax</h2>
+<p>Softmax converts the 18 logits into probabilities:</p>
+<div class="formula">P(w<sub>i</sub>|context) = e<sup>z<sub>i</sub></sup> / Σ<sub>j=1</sub><sup>18</sup> e<sup>z<sub>j</sub></sup></div>
+<p>For illustration, the model might produce:</p>
+<table>
+<tr><th>Word</th><th>Probability</th></tr>
+<tr><td>a</td><td>0.02</td></tr><tr><td>big</td><td>0.01</td></tr>
+<tr><td>cat</td><td>0.04</td></tr><tr><td>dog</td><td>0.03</td></tr>
+<tr><td><b>eats</b></td><td><b>0.72</b></td></tr><tr><td>fish</td><td>0.02</td></tr>
+<tr><td>food</td><td>0.01</td></tr><tr><td>...</td><td>...</td></tr>
+</table>
+<p>The correct target is <b>eats</b>.</p>
+</section>
+
+<section>
+<h2>Step 7 — Cross-Entropy Loss</h2>
+<p>For one target word:</p>
+<div class="formula"><b>L = −log P(target | context)</b></div>
+<p>If:</p>
+<div class="formula">P(eats | cat, fish) = 0.72</div>
+<p>then:</p>
+<div class="formula">L = −log(0.72) ≈ 0.329</div>
+<p>If the model predicts 0.99:</p>
+<div class="formula">L = −log(0.99) ≈ 0.010</div>
+<div class="success"><b>Correct prediction probability ↑ → loss ↓</b></div>
+</section>
+
+<section>
+<h2>Step 8 — Backpropagation and Parameter Updates</h2>
+<p>The loss is differentiated with respect to the trainable parameters:</p>
+<div class="vector">Embedding matrix E
+Output matrix W_out
+Output bias b</div>
+<p>Using gradient descent:</p>
+<div class="formula"><b>θ<sub>new</sub> = θ<sub>old</sub> − η∇<sub>θ</sub>L</b></div>
+<p>For the embedding matrix:</p>
+<div class="formula"><b>E<sub>new</sub> = E<sub>old</sub> − η ∂L/∂E</b></div>
+<p>This is the mechanism that changes the word vectors.</p>
+<div class="info"><b>Core idea:</b> the numbers inside the embedding matrix are trainable parameters. They are repeatedly changed because the model is repeatedly trying to improve its word-prediction objective.</div>
+</section>
+
+<section>
+<h2>One Complete Training Example</h2>
+<div class="vector">Sentence: the cat eats fish
+Context:  cat, fish
+Target:   eats</div>
+<div class="flow">
+<div class="box">cat + fish</div><div>→</div><div class="box">lookup</div><div>→</div>
+<div class="box">average</div><div>→</div><div class="box">10-D context</div><div>→</div>
+<div class="box">18 scores</div><div>→</div><div class="box">softmax</div><div>→</div>
+<div class="box">loss</div><div>→</div><div class="box">backprop</div><div>→</div><div class="box">update E</div>
+</div>
+</section>
+
+<section>
+<h2>Why Can Cat and Kitten Become Similar?</h2>
+<table>
+<tr><th>Cat</th><th>Kitten</th></tr>
+<tr><td>the cat eats fish</td><td>the kitten eats fish</td></tr>
+<tr><td>the cat likes milk</td><td>the kitten likes milk</td></tr>
+<tr><td>the cat is small</td><td>the kitten is small</td></tr>
+<tr><td>the cat is a pet</td><td>the kitten is a pet</td></tr>
+</table>
+<p>They occur in highly similar contexts. Therefore, during training, their vectors can receive related optimization signals.</p>
+<div class="formula"><b>Similar contexts → related training signals → potentially similar learned vectors</b></div>
+<p>There is no special rule saying <code>cat = kitten</code>. The relationship emerges from the training data and prediction objective.</p>
+</section>
+
+<section>
+<h2>Dog and Puppy</h2>
+<div class="vector">the dog eats meat
+the puppy eats meat
+
+the dog likes meat
+the puppy likes meat
+
+the dog is big
+the puppy is big
+
+the dog is a pet
+the puppy is a pet</div>
+<p>Again, dog and puppy receive related contextual signals.</p>
+<div class="formula"><b>dog ↔ related contexts ↔ puppy</b></div>
+<p>This illustrates why Word2Vec is often explained using the idea that words appearing in similar contexts can acquire similar representations.</p>
+</section>
+
+<section>
+<h2>The Embedding Matrix Across Epochs</h2>
+<p>Your later numerical tables show the embedding matrix at different training epochs. The interpretation is:</p>
+<div class="vector">Epoch 10   → current E
+Epoch 100  → updated E
+Epoch 500  → updated E
+Epoch 1000 → updated E
+Epoch 1500 → updated E
+Epoch 2000 → final/late E</div>
+<p>Each matrix still has the same shape:</p>
+<div class="formula"><b>18 × 10</b></div>
+<p>but the values can change because training updates the parameters.</p>
+<div class="success">The row for <b>cat</b> is always row 2 and the row for <b>kitten</b> is always row 8 under this vocabulary ordering. Their numerical values evolve during training.</div>
+</section>
+
+<section>
+<h2>Do Embedding Dimensions Have Meanings?</h2>
+<p>Suppose:</p>
+<div class="vector">cat → [0.42, -0.71, 0.18, 0.63, ...]</div>
+<p>Do not say:</p>
+<div class="warning">D1 = animal, D2 = size, D3 = age</div>
+<p>That is generally not correct. The useful information is distributed across dimensions and is best understood through relationships among complete vectors.</p>
+</section>
+
+<section>
+<h2>Skip-gram on the Same Corpus</h2>
+<p>For the same sentence:</p>
+<div class="vector">the cat eats fish</div>
+<p>Skip-gram reverses the prediction direction. For target <code>eats</code>, examples can include:</p>
+<div class="vector">eats → cat
+eats → fish</div>
+<p>So:</p>
+<div class="formula"><b>CBOW: context → target</b><br><b>Skip-gram: target → context</b></div>
+<table>
+<tr><th></th><th>CBOW</th><th>Skip-gram</th></tr>
+<tr><td>Input</td><td>Context words</td><td>Target word</td></tr>
+<tr><td>Output</td><td>Target</td><td>Context word(s)</td></tr>
+<tr><td>Example</td><td>cat + fish → eats</td><td>eats → cat, fish</td></tr>
+</table>
+</section>
+
+<section>
+<h2>Mathematical Summary for This Exact Dataset</h2>
+<div class="formula"><b>V = 18</b> &nbsp;&nbsp; vocabulary size</div>
+<div class="formula"><b>d = 10</b> &nbsp;&nbsp; embedding dimension</div>
+<div class="formula"><b>E ∈ R<sup>18 × 10</sup></b></div>
+<div class="formula"><b>h = (1/C) Σ e<sub>i</sub></b></div>
+<div class="formula"><b>z = hW<sub>out</sub> + b</b></div>
+<div class="formula"><b>W<sub>out</sub> ∈ R<sup>10 × 18</sup></b></div>
+<div class="formula"><b>ŷ = softmax(z)</b></div>
+<div class="formula"><b>L = −log ŷ<sub>target</sub></b></div>
+<div class="formula"><b>θ ← θ − η∇<sub>θ</sub>L</b></div>
+</section>
+
+<section>
+<h2>The Complete Learning Story</h2>
+<div class="takeaway">
+<p><b>1.</b> Words are categorical symbols.</p>
+<p><b>2.</b> Vocabulary IDs identify those words.</p>
+<p><b>3.</b> The embedding matrix assigns each word a trainable dense vector.</p>
+<p><b>4.</b> CBOW uses context words to predict a target.</p>
+<p><b>5.</b> The model produces probabilities for all 18 vocabulary words.</p>
+<p><b>6.</b> Cross-entropy measures the prediction error.</p>
+<p><b>7.</b> Backpropagation calculates gradients.</p>
+<p><b>8.</b> Gradient descent updates the embedding matrix.</p>
+<p><b>9.</b> This happens repeatedly over the corpus and epochs.</p>
+<p><b>10.</b> Because cat and kitten occur in highly related contexts, their learned representations can become similar.</p>
+<p><b>11.</b> After training, cosine similarity can be used to compare their vectors.</p>
+</div>
+</section>
+
+<footer style="text-align:center;color:#666;padding:25px">Word2Vec Architecture</footer>
+</main>
+</body>
+</html>
