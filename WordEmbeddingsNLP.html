@@ -829,7 +829,7 @@ t5_inputs = t5_tokenizer(<span class="py-string">"summarize: Text-to-text repres
                 </table>
             </section>
 
-            <section class="tutorial-section">
+            <section id="pipelines" class="section-block">
     <h2>High-Level Feature Extraction &amp; Text Generation</h2>
     
     <p>While low-level PyTorch classes (<code>AutoModelForCausalLM</code>, <code>AutoTokenizer</code>) grant explicit control over attention maps and individual hidden layer tensors, Hugging Face's <code>pipeline</code> API provides an abstracted workflow for common NLP tasks:</p>
@@ -842,7 +842,7 @@ t5_inputs = t5_tokenizer(<span class="py-string">"summarize: Text-to-text repres
     <div class="code-container">
         <div class="code-header">
             <span>Python (Hugging Face Pipelines)</span>
-            <span>pipeline_embeddings_vs_generation.py</span>
+            <span>pipeline_embeddings_and_generation.py</span>
         </div>
         <pre><code><span class="py-keyword">from</span> transformers <span class="py-keyword">import</span> pipeline
 
