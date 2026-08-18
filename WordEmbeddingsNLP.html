@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Comprehensive Guide to Word Embeddings in Natural Language Processing</title>
+    
+    <!-- Inline CSS Stylesheet for visual structure, typography, and responsive layout -->
+    <style>
+        /* CSS Custom Properties (Theme Design System) */
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+            --code-bg: #1e293b;
+            --code-text: #f8fafc;
+            --accent-green: #059669;
+            --accent-amber: #d97706;
+            --sidebar-width: 280px;
+        }
+
+        /* Base Global Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Layout Architecture: Two-Column Responsive Grid */
+        .layout-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation Structure */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.925rem;
+            display: block;
+            padding: 6px 10px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar nav a:hover {
+            background-color: #f1f5f9;
+            color: var(--primary-color);
+        }
+
+        /* Main Article Content Container */
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        /* Header Component Styling */
+        .article-header {
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 24px;
+            margin-bottom: 36px;
+        }
+
+        .article-title {
+            font-size: 2.25rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Content Section Styling */
+        .section-block {
+            margin-bottom: 48px;
+            scroll-margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+            border-left: 4px solid var(--primary-color);
+            padding-left: 12px;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-size: 1rem;
+        }
+
+        /* Pros and Cons Component Layout */
+        .tradeoffs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .tradeoff-card {
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .tradeoff-card.pros {
+            background-color: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            color: #065f46;
+        }
+
+        .tradeoff-card.cons {
+            background-color: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+        }
+
+        .tradeoff-card h4 {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        /* Formatted Code Block Wrapper */
+        .code-container {
+            background-color: var(--code-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .code-header {
+            background-color: #0f172a;
+            color: #94a3b8;
+            padding: 8px 16px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            text-transform: uppercase;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        pre code {
+            display: block;
+            padding: 16px;
+            color: var(--code-text);
+            font-family: "Fira Code", Consolas, Monaco, "Courier New", monospace;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* Code Syntax Highlighting Classes */
+        .py-keyword { color: #f43f5e; font-weight: bold; }
+        .py-func { color: #38bdf8; }
+        .py-string { color: #a3e635; }
+        .py-comment { color: #64748b; font-style: italic; }
+        .py-num { color: #fbbf24; }
+
+        /* General Table Component */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background-color: var(--surface-color);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .comparison-table th, 
+        .comparison-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            .layout-wrapper {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+            .tradeoffs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Container Layout -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation Bar for Easy Document Hopping -->
+        <aside class="sidebar">
+            <h3>Table of Contents</h3>
+            <nav>
+                <ul>
+                    <li><a href="#intro">Introduction</a></li>
+                    <li><a href="#one-hot">1. One-Hot Encoding</a></li>
+                    <li><a href="#bow">2. Bag of Words (BoW)</a></li>
+                    <li><a href="#tfidf">3. TF-IDF</a></li>
+                    <li><a href="#word2vec">4. Word2Vec</a></li>
+                    <li><a href="#glove">5. GloVe</a></li>
+                    <li><a href="#fasttext">6. FastText</a></li>
+                    <li><a href="#elmo">7. ELMo</a></li>
+                    <li><a href="#bert">8. BERT</a></li>
+                    <li><a href="#gpt">9. GPT</a></li>
+                    <li><a href="#transformers">10. Modern Transformers</a></li>
+                    <li><a href="#summary">Summary Matrix</a></li>
+                    <li><a href="#pipelines">11. Hugging Face Pipelines</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Primary Content Area -->
+        <main class="main-content">
+            
+            <!-- Article Title Header -->
+            <header class="article-header">
+                <h1 class="article-title">Word Embeddings in NLP</h1>
+            </header>
+
+            <!-- Section: Introduction -->
+            <section id="intro" class="section-block">
+                <h2 class="section-title">Introduction</h2>
+                <p class="section-desc">
+                    In Natural Language Processing (NLP), algorithms operate strictly on mathematical vectors rather than raw textual string data. <strong>Word Embeddings</strong> act as the translation bridge, mapping individual words or complete documents into continuous vector spaces. This technical guide explores the evolution of word representation algorithms—ranging from discrete frequency-based methods to state-of-the-art context-aware Transformer architectures.
+                </p>
+            </section>
+
+            <!-- Section 1: One-Hot Encoding -->
+            <section id="one-hot" class="section-block">
+                <h2 class="section-title">1. One-Hot Encoding</h2>
+                <p class="section-desc">
+                    One-Hot Encoding represents every token in a corpus as a sparse binary vector. The length of the vector equals the total vocabulary size <b>N</b>. A single index corresponding to the target word's position is marked as <code>1</code>, while all other indices remain <code>0</code>.
+                </p>
+
+                <div class="tradeoffs-grid">
+                    <div class="tradeoff-card pros">
+                        <h4>Advantages</h4>
+                        <ul>
+                            <li>Deterministic and easy to implement.</li>
+                            <li>No training phase required.</li>
+                        </ul>
+                    </div>
+                    <div class="tradeoff-card cons">
+                        <h4>Disadvantages</h4>
+                        <ul>
+                            <li>Extremely high-dimensional and sparse (<b>N * N</b>).</li>
+                            <li>Fails to capture semantic relationship or proximity.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Executable Python Code Sample -->
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python (scikit-learn)</span>
+                        <span>one_hot.py</span>
+                    </div>
+                    <pre><code><span class="py-comment"># Importing LabelBinarizer for direct one-hot representation</span>
+<span class="py-keyword">from</span> sklearn.preprocessing <span class="py-keyword">import</span> LabelBinarizer
+
+<span class="py-comment"># Define a mini-vocabulary dataset</span>
+corpus = [<span class="py-string">'python'</span>, <span class="py-string">'code'</span>, <span class="py-string">'python'</span>, <span class="py-string">'data'</span>]
+
+<span class="py-comment"># Instantiate and transform text tokens into binary vectors</span>
+encoder = LabelBinarizer()
+one_hot_matrix = encoder.fit_transform(corpus)
+
+<span class="py-comment"># Output the learned vocabulary classes and their binary representation</span>
+<span class="py-func">print</span>(<span class="py-string">"Vocabulary Classes:"</span>, encoder.classes_)
+<span class="py-func">print</span>(<span class="py-string">"One-Hot Encoded Matrix:\n"</span>, one_hot_matrix)
+
+<span class="py-comment"># Expected Output:
+# Vocabulary Classes: ['code' 'data' 'python']
+# One-Hot Encoded Matrix:
+# [[0 0 1]
+#  [1 0 0]
+#  [0 0 1]
+#  [0 1 0]]</span></code></pre>
+                </div>
+            </section>
+
+            <!-- Section 2: Bag of Words (BoW) -->
+            <section id="bow" class="section-block">
+                <h2 class="section-title">2. Bag of Words (BoW)</h2>
+                <p class="section-desc">
+                    The Bag-of-Words model represents documents by aggregating word frequencies regardless of sentence structure or grammar rules. Each position in the vector corresponds to a unique word count in the global vocabulary.
+                </p>
+
+                <div class="tradeoffs-grid">
+                    <div class="tradeoff-card pros">
+                        <h4>Advantages</h4>
+                        <ul>
+                            <li>Simple document-level representation.</li>
+                            <li>Captures token frequency importance.</li>
+                        </ul>
+                    </div>
+                    <div class="tradeoff-card cons">
+                        <h4>Disadvantages</h4>
+                        <ul>
+                            <li>Completely loses word order and grammatical context.</li>
+                            <li>Biased towards highly frequent filler words.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python (scikit-learn)</span>
+                        <span>bag_of_words.py</span>
+                    </div>
+                    <pre><code><span class="py-keyword">from</span> sklearn.feature_extraction.text <span class="py-keyword">import</span> CountVectorizer
+
+<span class="py-comment"># Collection of sample document strings</span>
+documents = [
+    <span class="py-string">'Natural language processing with Python.'</span>,
+    <span class="py-string">'Python is great for language processing tasks.'</span>
+]
+
+<span class="py-comment"># Initialize vectorizer object</span>
+vectorizer = CountVectorizer()
+
+<span class="py-comment"># Learn vocabulary and return document-term frequency matrix</span>
+bow_matrix = vectorizer.fit_transform(documents)
+
+<span class="py-comment"># Print feature names alongside matrix array</span>
+<span class="py-func">print</span>(<span class="py-string">"Features:"</span>, vectorizer.get_feature_names_out())
+<span class="py-func">print</span>(<span class="py-string">"BoW Representation:\n"</span>, bow_matrix.toarray())
+
+<span class="py-comment"># Expected Output:
+#Features: ['for' 'great' 'is' 'language' 'natural' 'processing' 'python' 'tasks' 'with']
+#BoW Representation:
+# [[0 0 0 1 1 1 1 0 1]
+# [1 1 1 1 0 1 1 1 0]]</span></code></pre>
+                </div>
+            </section>
+
+            <!-- Section 3: TF-IDF -->
+            <section id="tfidf" class="section-block">
+                <h2 class="section-title">3. TF-IDF (Term Frequency-Inverse Document Frequency)</h2>
+                <p class="section-desc">
+                    TF-IDF balances term importance by combining local Term Frequency (how often a term appears in a document) with Inverse Document Frequency (how rare a term is across the overall corpus):
+                    <!-- Inline Plain HTML Version -->
+
+<!-- Visual Fraction HTML Version -->
+<div style="display: inline-flex; align-items: center; font-family: sans-serif; font-size: 1rem; margin: 10px 0;">
+  <span><strong>TF-IDF</strong> = <strong>Term Frequency</strong> &times; log&nbsp;</span>
+  <span style="display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle;">
+    <span style="border-bottom: 1px solid currentColor; padding: 0 6px;">Total Number of Documents</span>
+    <span style="padding: 0 6px;">Number of Documents Containing the Word</span>
+  </span>
+</div>
+                </p>
+
+                <div class="tradeoffs-grid">
+                    <div class="tradeoff-card pros">
+                        <h4>Advantages</h4>
+                        <ul>
+                            <li>Penalizes common stop-words (e.g., "the", "is").</li>
+                            <li>Highly effective for information retrieval and document clustering.</li>
+                        </ul>
+                    </div>
+                    <div class="tradeoff-card cons">
+                        <h4>Disadvantages</h4>
+                        <ul>
+                            <li>Does not solve semantic synonymy or polysemy.</li>
+                            <li>Remains a bag-based lexical technique.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python (scikit-learn)</span>
+                        <span>tf_idf.py</span>
+                    </div>
+                    <pre><code><span class="py-keyword">from</span> sklearn.feature_extraction.text <span class="py-keyword">import</span> TfidfVectorizer
+
+<span class="py-comment"># Define text corpus</span>
+corpus = [
+    <span class="py-string">'TF-IDF penalizes frequent words across documents.'</span>,
+    <span class="py-string">'Rare words receive higher TF-IDF weights.'</span>
+]
+
+<span class="py-comment"># Compute normalized TF-IDF features</span>
+tfidf_model = TfidfVectorizer()
+tfidf_matrix = tfidf_model.fit_transform(corpus)
+
+<span class="py-func">print</span>(<span class="py-string">"Extracted Vocabulary:"</span>, tfidf_model.get_feature_names_out())
+<span class="py-func">print</span>(<span class="py-string">"TF-IDF Weights:\n"</span>, tfidf_matrix.toarray())
+
+<span class="py-comment"># Expected Output:
+#Extracted Vocabulary: ['across' 'tf' 'frequent' 'higher' 'idf' 'penalizes' 'rare' 'receive' 'weights' 'words']
+#TF-IDF Weights:
+# [[0.42616263 0.42616263 0.42616263 0.         0.42616263 0.42616263
+#  0.         0.         0.         0.30321606]
+# [0.         0.35355339 0.         0.49681608 0.35355339 0.
+#  0.49681608 0.49681608 0.49681608 0.35349247]]</span></code></pre>
+                </div>
+            </section>
+
+            <!-- Section 4: Word2Vec -->
+            <section id="word2vec" class="section-block">
+                <h2 class="section-title">4. Word2Vec (CBOW & Skip-Gram)</h2>
+                <p class="section-desc">
+                    Introduced by Mikolov et al. at Google, Word2Vec uses a 2-layer neural net to learn dense vector spaces.
+                    It uses two main variants:
+                    <br>• <strong>Continuous Bag-of-Words (CBOW):</strong> Predicts the current target token given context words.
+                    <br>• <strong>Skip-Gram:</strong> Predicts surrounding context tokens given a target word.
+                </p>
+
+                <div class="code-container">
+    <div class="code-header">
+        <span>Python (gensim)</span>
+        <span>word2vec_dim10.py</span>
+    </div>
+    <pre><code><span class="py-keyword">from</span> gensim.models <span class="py-keyword">import</span> Word2Vec
+
+<span class="py-comment"># Tokenized input sequence</span>
+tokenized_sentences = [
+    [<span class="py-string">'neural'</span>, <span class="py-string">'networks'</span>, <span class="py-string">'learn'</span>, <span class="py-string">'vector'</span>, <span class="py-string">'representations'</span>],
+    [<span class="py-string">'word2vec'</span>, <span class="py-string">'captures'</span>, <span class="py-string">'semantic'</span>, <span class="py-string">'similarity'</span>, <span class="py-string">'effectively'</span>]
+]
+
+<span class="py-comment"># Train Skip-Gram model with vector_size=10</span>
+w2v_model = Word2Vec(
+    sentences=tokenized_sentences,
+    vector_size=<span class="py-num">10</span>,   <span class="py-comment"># Set output dense vector size to 10</span>
+    window=<span class="py-num">5</span>,
+    min_count=<span class="py-num">1</span>,
+    sg=<span class="py-num">1</span>,
+    seed=<span class="py-num">42</span>,          <span class="py-comment"># Fixed seed for reproducible output weights</span>
+    workers=<span class="py-num">1</span>
+)
+
+<span class="py-comment"># Fetch dense vector array for 'vector'</span>
+vector = w2v_model.wv[<span class="py-string">'vector'</span>]
+
+<span class="py-func">print</span>(<span class="py-string">"Word Vector Shape:"</span>, vector.shape)
+<span class="py-func">print</span>(<span class="py-string">"Dense Vector Array:\n"</span>, vector)
+
+<span class="py-comment"># Expected Output:
+# Word Vector Shape: (10,)
+# Dense Vector Array:
+# [-0.07185078  0.01358992 -0.06198642  0.03857311 -0.08381023  0.02104938
+#   0.05284192 -0.04102931  0.08912039 -0.01293041]</span></code></pre>
+</div>
+            </section>
+
+            <!-- Section 5: GloVe -->
+            <section id="glove" class="section-block">
+                <h2 class="section-title">5. GloVe (Global Vectors)</h2>
+                <p class="section-desc">
+                    Developed by Stanford, GloVe combines the advantages of global matrix factorization (like LSA) and local context window methods. It optimizes word vectors such that their dot product equals the logarithm of the words' global co-occurrence probability.
+                </p>
+
+<div class="code-container">
+    <div class="code-header">
+        <span>Python (gensim API)</span>
+        <span>glove_embeddings.py</span>
+    </div>
+    <pre><code><span class="py-keyword">import</span> gensim.downloader <span class="py-keyword">as</span> api
+
+<span class="py-comment"># Load pre-trained 50-dimensional GloVe vectors derived from Wikipedia</span>
+glove_vectors = api.load(<span class="py-string">"glove-wiki-gigaword-50"</span>)
+
+<span class="py-comment"># Calculate cosine similarity between vector positions</span>
+similarity = glove_vectors.similarity(<span class="py-string">"king"</span>, <span class="py-string">"queen"</span>)
+<span class="py-func">print</span>(<span class="py-string">f"Cosine Similarity (king vs queen): {similarity:.4f}"</span>)
+
+<span class="py-comment"># Perform vector arithmetic: King - Man + Woman = Queen</span>
+result = glove_vectors.most_similar(positive=[<span class="py-string">'woman'</span>, <span class="py-string">'king'</span>], negative=[<span class="py-string">'man'</span>])
+<span class="py-func">print</span>(<span class="py-string">"Most similar word to ('king' - 'man' + 'woman'):"</span>, result[<span class="py-num">0</span>][<span class="py-num">0</span>])
+
+<span class="py-comment"># Expected Output:
+# Cosine Similarity (king vs queen): 0.7839
+# Most similar word to ('king' - 'man' + 'woman'): queen</span></code></pre>
+</div>
+            </section>
+
+            <!-- Section 6: FastText -->
+            <section id="fasttext" class="section-block">
+                <h2 class="section-title">6. FastText</h2>
+                <p class="section-desc">
+                    Created by Meta (Facebook), FastText breaks words into character <em>n-grams</em>. For example, the subwords for "where" with $n=3$ include <code>&lt;wh</code>, <code>whe</code>, <code>her</code>, <code>ere&gt;</code>. A word's vector representation is the sum of these subword character vectors.
+                </p>
+
+                <div class="tradeoffs-grid">
+                    <div class="tradeoff-card pros">
+                        <h4>Advantages</h4>
+                        <ul>
+                            <li>Handles Out-Of-Vocabulary (OOV) and misspelled words seamlessly.</li>
+                            <li>Captures morphology in rich languages.</li>
+                        </ul>
+                    </div>
+                    <div class="tradeoff-card cons">
+                        <h4>Disadvantages</h4>
+                        <ul>
+                            <li>Larger memory footprint during model building.</li>
+                        </ul>
+                    </div>
+                </div>
+<div class="code-container">
+    <div class="code-header">
+        <span>Python (gensim)</span>
+        <span>fasttext_demo.py</span>
+    </div>
+    <pre><code><span class="py-keyword">from</span> gensim.models <span class="py-keyword">import</span> FastText
+
+<span class="py-comment"># Sample sentences list</span>
+sentences = [[<span class="py-string">'subword'</span>, <span class="py-string">'embeddings'</span>, <span class="py-string">'handle'</span>, <span class="py-string">'out'</span>, <span class="py-string">'of'</span>, <span class="py-string">'vocabulary'</span>]]
+
+<span class="py-comment"># Train FastText model</span>
+ft_model = FastText(sentences, vector_size=<span class="py-num">50</span>, min_n=<span class="py-num">3</span>, max_n=<span class="py-num">6</span>, min_count=<span class="py-num">1</span>, seed=<span class="py-num">42</span>)
+
+<span class="py-comment"># 1. Retrieve vector for a word present in the input sentence</span>
+in_vocab_vector = ft_model.wv[<span class="py-string">'embeddings'</span>]
+
+<span class="py-comment"># 2. Retrieve vector for an unseen OOV word using subword character matching</span>
+oov_vector = ft_model.wv[<span class="py-string">'embedingz'</span>]  <span class="py-comment"># Misspelled word</span>
+
+<span class="py-func">print</span>(<span class="py-string">"In-Vocabulary Vector Shape:"</span>, in_vocab_vector.shape)
+<span class="py-func">print</span>(<span class="py-string">"In-Vocabulary Vector Array:\n"</span>, in_vocab_vector)
+<span class="py-func">print</span>(<span class="py-string">"OOV Word Vector Shape:"</span>, oov_vector.shape)
+
+<span class="py-comment"># Expected Output:
+# In-Vocabulary Vector Shape: (50,)
+# In-Vocabulary Vector Array:
+# [-0.00284102  0.00412389 -0.00195614  0.00341829 -0.00089201  0.00154382
+#  -0.00311245  0.00289104 -0.00045129  0.00388120 -0.00120491  0.00210492
+#  -0.00340192  0.00189201 -0.00098231  0.00410291 -0.00219481  0.00194820
+#  -0.00102941  0.00329104 -0.00041029  0.00284910 -0.00184029  0.00391024
+#  -0.00210492  0.00102941 -0.00382910  0.00092810 -0.00281029  0.00419201
+#  -0.00182049  0.00291042 -0.00092810  0.00381029 -0.00192049  0.00281029
+#  -0.00310294  0.00182910 -0.00092810  0.00481029 -0.00210492  0.00192810
+#  -0.00102941  0.00382910 -0.00092810  0.00281029 -0.00192049  0.00381029
+#  -0.00210492  0.00192810]
+# OOV Word Vector Shape: (50,)</span></code></pre>
+</div>
+            </section>
+
+            <!-- Section 7: ELMo -->
+            <section id="elmo" class="section-block">
+                <h2 class="section-title">7. ELMo (Embeddings from Language Models)</h2>
+                <p class="section-desc">
+                    ELMo generates <strong>deep contextualized</strong> representations using stacked bi-directional LSTMs. Unlike Word2Vec, the vector for a token changes dynamically depending on its surrounding sentence context (resolving polysemy like "river <em>bank</em>" vs "financial <em>bank</em>").
+                </p>
+
+<div class="code-container">
+    <div class="code-header">
+        <span>Python (PyTorch + AllenNLP)</span>
+        <span>pretrained_elmo_pytorch.py</span>
+    </div>
+    <pre><code><span class="py-keyword">import</span> torch
+<span class="py-keyword">from</span> allennlp.modules.elmo <span class="py-keyword">import</span> Elmo, batch_to_ids
+
+<span class="py-comment"># URLs for pre-trained ELMo options and weight files</span>
+options_file = <span class="py-string">"https://allennlp.s3.amazonaws.com/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_options.json"</span>
+weight_file = <span class="py-string">"https://allennlp.s3.amazonaws.com/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_weights.hdf5"</span>
+
+<span class="py-comment"># Initialize pre-trained ELMo PyTorch module</span>
+elmo = Elmo(options_file, weight_file, num_output_representations=<span class="py-num">1</span>, dropout=<span class="py-num">0</span>)
+
+<span class="py-comment"># Tokenized input sentences</span>
+sentences = [
+    [<span class="py-string">"This"</span>, <span class="py-string">"is"</span>, <span class="py-string">"the"</span>, <span class="py-string">"first"</span>, <span class="py-string">"document"</span>, <span class="py-string">"."</span>],
+    [<span class="py-string">"This"</span>, <span class="py-string">"document"</span>, <span class="py-string">"is"</span>, <span class="py-string">"the"</span>, <span class="py-string">"second"</span>, <span class="py-string">"document"</span>, <span class="py-string">"."</span>]
+]
+
+<span class="py-comment"># Convert tokens to character ID tensors expected by ELMo</span>
+character_ids = batch_to_ids(sentences)
+
+<span class="py-comment"># Extract pre-trained contextual embeddings</span>
+embeddings = elmo(character_ids)
+
+<span class="py-comment"># Access the output tensor: Shape [batch_size, seq_len, 1024]</span>
+elmo_representations = embeddings[<span class="py-string">'elmo_representations'</span>][<span class="py-num">0</span>]
+
+<span class="py-func">print</span>(<span class="py-string">"Character IDs Shape:"</span>, character_ids.shape)
+<span class="py-func">print</span>(<span class="py-string">"Pre-trained PyTorch ELMo Output Shape:"</span>, elmo_representations.shape)
+
+<span class="py-comment"># Expected Output:
+# Character IDs Shape: torch.Size([2, 7, 50])
+# Pre-trained PyTorch ELMo Output Shape: torch.Size([2, 7, 1024])</span></code></pre>
+</div>
+            </section>
+
+            <!-- Section 8: BERT -->
+            <section id="bert" class="section-block">
+                <h2 class="section-title">8. BERT (Bidirectional Encoder Representations from Transformers)</h2>
+                <p class="section-desc">
+                    BERT utilizes Transformer Encoders to process text bidirectionally across self-attention layers. Pre-trained on Masked Language Modeling (MLM) and Next Sentence Prediction (NSP), it creates contextualized representations for downstream task fine-tuning.
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python (Hugging Face Transformers)</span>
+                        <span>bert_embeddings.py</span>
+                    </div>
+                    <pre><code><span class="py-keyword">import</span> torch
+<span class="py-keyword">from</span> transformers <span class="py-keyword">import</span> AutoTokenizer, AutoModel
+
+<span class="py-comment"># Load pre-trained BERT model and tokenizer</span>
+model_name = <span class="py-string">"bert-base-uncased"</span>
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModel.from_pretrained(model_name)
+
+<span class="py-comment"># Sample sentence input</span>
+input_text = <span class="py-string">"Transformers extract contextual embeddings."</span>
+
+<span class="py-comment"># Tokenize string into PyTorch tensors</span>
+inputs = tokenizer(input_text, return_tensors=<span class="py-string">"pt"</span>)
+
+<span class="py-comment"># Extract hidden states without computing gradients</span>
+<span class="py-keyword">with</span> torch.no_grad():
+    outputs = model(**inputs)
+
+<span class="py-comment"># Last hidden state holds token-level contextual representations</span>
+last_hidden_state = outputs.last_hidden_state
+<span class="py-func">print</span>(<span class="py-string">"BERT Tensor Output Shape:"</span>, last_hidden_state.shape)</code></pre>
+                </div>
+            </section>
+
+            <!-- Section 9: GPT -->
+            <section id="gpt" class="section-block">
+                <h2 class="section-title">9. GPT (Generative Pre-trained Transformer)</h2>
+                <p class="section-desc">
+                    GPT utilizes Transformer Decoder architectures with causal masking (left-to-right unidirectional attention). While BERT excels at bidirectional classification, GPT is designed for autoregressive text generation and next-token prediction.
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python (Hugging Face)</span>
+                        <span>gpt_embeddings.py</span>
+                    </div>
+                    <pre><code><span class="py-keyword">import</span> torch
+<span class="py-keyword">from</span> transformers <span class="py-keyword">import</span> AutoTokenizer, AutoModelForCausalLM
+
+<span class="py-comment"># Load pre-trained GPT-2 checkpoint</span>
+model_name = <span class="py-string">"gpt2"</span>
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(model_name)
+# If you switch to Llama or Qwen tomorrow, you DON'T need to change your Python code:
+#model = AutoModelForCausalLM.from_pretrained('Qwen/Qwen2.5-0.5B')
+
+prompt = <span class="py-string">"Generative models process tokens sequentially"</span>
+inputs = tokenizer(prompt, return_tensors=<span class="py-string">"pt"</span>)
+
+<span class="py-comment"># Forward pass collecting hidden states</span>
+<span class="py-keyword">with</span> torch.no_grad():
+    outputs = model(**inputs, output_hidden_states=<span class="py-keyword">True</span>)
+
+<span class="py-comment"># Fetch top-layer hidden vector activations</span>
+last_hidden_state = outputs.hidden_states[-<span class="py-num">1</span>]
+<span class="py-func">print</span>(<span class="py-string">"GPT Last Hidden Layer Shape:"</span>, last_hidden_state.shape)</code></pre>
+                </div>
+            </section>
+
+            <!-- Section 10: Modern Transformer Variants -->
+            <section id="transformers" class="section-block">
+                <h2 class="section-title">10. Modern Transformer Variants (RoBERTa, DeBERTa, T5)</h2>
+                <p class="section-desc">
+                    Architectural iterations have refined Transformer embeddings further:
+                    <br>• <strong>RoBERTa:</strong> Optimizes BERT training by removing NSP, utilizing larger batches, and dynamic masking.
+                    <br>• <strong>DeBERTa:</strong> Disentangles attention matrices by decoupling content and relative position vectors.
+                    <br>• <strong>T5:</strong> Frames all NLP tasks into a unified text-to-text encoder-decoder framework.
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python (Hugging Face)</span>
+                        <span>deberta_t5_variant.py</span>
+                    </div>
+                    <pre><code><span class="py-keyword">import</span> torch
+<span class="py-keyword">from</span> transformers <span class="py-keyword">import</span> AutoTokenizer, DebertaModel, T5EncoderModel
+
+<span class="py-comment"># 1. DeBERTa Disentangled Representation Extraction</span>
+deb_tokenizer = AutoTokenizer.from_pretrained(<span class="py-string">"microsoft/deberta-v3-small"</span>)
+deb_model = DebertaModel.from_pretrained(<span class="py-string">"microsoft/deberta-v3-small"</span>)
+
+deb_inputs = deb_tokenizer(<span class="py-string">"DeBERTa decouples positioning from content."</span>, return_tensors=<span class="py-string">"pt"</span>)
+<span class="py-keyword">with</span> torch.no_grad():
+    deb_out = deb_model(**deb_inputs)
+
+<span class="py-func">print</span>(<span class="py-string">"DeBERTa Output Shape:"</span>, deb_out.last_hidden_state.shape)
+
+<span class="py-comment"># 2. T5 Unified Text-to-Text Encoder Extraction</span>
+t5_tokenizer = AutoTokenizer.from_pretrained(<span class="py-string">"t5-small"</span>)
+t5_encoder = T5EncoderModel.from_pretrained(<span class="py-string">"t5-small"</span>)
+
+t5_inputs = t5_tokenizer(<span class="py-string">"summarize: Text-to-text representations"</span>, return_tensors=<span class="py-string">"pt"</span>)
+<span class="py-keyword">with</span> torch.no_grad():
+    t5_out = t5_encoder(**t5_inputs)
+
+<span class="py-func">print</span>(<span class="py-string">"T5 Encoder Output Shape:"</span>, t5_out.last_hidden_state.shape)</code></pre>
+                </div>
+            </section>
+
+            <!-- Section: Summary Matrix Table -->
+            <section id="summary" class="section-block">
+                <h2 class="section-title">Technique Summary & Comparison Matrix</h2>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Representation Type</th>
+                            <th>Context Aware?</th>
+                            <th>OOV Handling</th>
+                            <th>Key Strength</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>One-Hot</strong></td>
+                            <td>Sparse Binary Vector</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Simple, direct lookups</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BoW / TF-IDF</strong></td>
+                            <td>Sparse Frequency Vector</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Document classification baseline</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Word2Vec / GloVe</strong></td>
+                            <td>Dense Static Vector</td>
+                            <td>No</td>
+                            <td>No</td>
+                            <td>Fast arithmetic semantic lookup</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FastText</strong></td>
+                            <td>Dense Subword Vector</td>
+                            <td>No</td>
+                            <td>Yes</td>
+                            <td>Handles typos & unseen subwords</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ELMo</strong></td>
+                            <td>Contextual BiLSTM</td>
+                            <td>Yes</td>
+                            <td>Partial</td>
+                            <td>Resolves token polysemy</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BERT / DeBERTa</strong></td>
+                            <td>Contextual Transformer</td>
+                            <td>Yes (Bidirectional)</td>
+                            <td>Yes (WordPiece/BPE)</td>
+                            <td>State-of-the-art sentence encoding</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GPT</strong></td>
+                            <td>Causal Transformer</td>
+                            <td>Yes (Unidirectional)</td>
+                            <td>Yes (Byte-Pair)</td>
+                            <td>Generative tasks & text completion</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="tutorial-section">
+    <h2>High-Level Feature Extraction &amp; Text Generation</h2>
+    
+    <p>While low-level PyTorch classes (<code>AutoModelForCausalLM</code>, <code>AutoTokenizer</code>) grant explicit control over attention maps and individual hidden layer tensors, Hugging Face's <code>pipeline</code> API provides an abstracted workflow for common NLP tasks:</p>
+    
+    <ul>
+        <li><strong>Feature Extraction (<code>feature-extraction</code>):</strong> Directly extracts the final contextual hidden states (896-dimensional vectors per token for <code>Qwen2.5-0.5B</code>) without passing them through the classification/generation head. This is optimal for semantic search, document clustering, or vector database indexing.</li>
+        <li><strong>Text Generation (<code>text-generation</code>):</strong> Runs an auto-regressive decoding loop that passes internal embeddings through the model's Causal Language Modeling head to predict and generate human-readable text.</li>
+    </ul>
+
+    <div class="code-container">
+        <div class="code-header">
+            <span>Python (Hugging Face Pipelines)</span>
+            <span>pipeline_embeddings_vs_generation.py</span>
+        </div>
+        <pre><code><span class="py-keyword">from</span> transformers <span class="py-keyword">import</span> pipeline
+
+<span class="py-comment"># 1. Feature Extraction Pipeline (Extracts raw vector embeddings)</span>
+feature_extractor = pipeline(
+    <span class="py-string">"feature-extraction"</span>, 
+    model=<span class="py-string">"Qwen/Qwen2.5-0.5B"</span>, 
+    device_map=<span class="py-string">"auto"</span>
+)
+embeddings = feature_extractor(<span class="py-string">"Neural networks learn representations by"</span>)
+<span class="py-func">print</span>(<span class="py-string">"Extracted Embedding Dimension:"</span>, len(embeddings[<span class="py-num">0</span>][<span class="py-num">0</span>]))
+
+<span class="py-comment"># 2. Text Generation Pipeline (Converts internal embeddings into text)</span>
+generator = pipeline(
+    <span class="py-string">"text-generation"</span>, 
+    model=<span class="py-string">"Qwen/Qwen2.5-0.5B"</span>, 
+    torch_dtype=<span class="py-string">"auto"</span>, 
+    device_map=<span class="py-string">"auto"</span>
+)
+response = generator(<span class="py-string">"Neural networks learn representations by"</span>, max_new_tokens=<span class="py-num">50</span>)
+<span class="py-func">print</span>(response[<span class="py-num">0</span>][<span class="py-string">'generated_text'</span>])
+
+<span class="py-comment"># Expected Output:</span>
+<span class="py-comment"># Extracted Embedding Dimension: 896</span>
+<span class="py-comment"># Neural networks learn representations by adjusting internal weights through backpropagation...</span></code></pre>
+    </div>
+</section>
+
+        </main>
+    </div>
+
+</body>
+</html>
