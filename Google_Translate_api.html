@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentence-by-Sentence Interactive Translator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f9fc;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #1b4332;
+            margin: 0;
+            font-size: 26px;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 15px;
+            box-sizing: border-box;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            border-color: #2a9d8f;
+            box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.15);
+        }
+
+        .translate-btn {
+            align-self: flex-end;
+            padding: 12px 24px;
+            background-color: #2a9d8f;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .translate-btn:hover {
+            background-color: #218377;
+        }
+
+        .instruction {
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+            background-color: #eef9f5;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .story-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .sentence-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #ffffff;
+            overflow: hidden;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .sentence-card:hover {
+            border-color: #2a9d8f;
+            box-shadow: 0 2px 8px rgba(42, 157, 143, 0.15);
+        }
+
+        .english-text {
+            padding: 14px 18px;
+            font-size: 16px;
+            color: #1d2d44;
+            font-weight: 500;
+            line-height: 1.5;
+            background-color: #ffffff;
+        }
+
+        .telugu-text {
+            display: none;
+            padding: 12px 18px;
+            background-color: #fefae0;
+            border-top: 1px dashed #dda15e;
+            color: #3d0c02;
+            font-size: 16px;
+            font-family: 'Gautami', 'Nirmala UI', sans-serif;
+            line-height: 1.6;
+        }
+
+        .sentence-card.active .telugu-text {
+            display: block;
+        }
+
+        .status {
+            text-align: center;
+            font-style: italic;
+            color: #666;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Sentence-by-Sentence Interactive Reader</h1>
+        </div>
+
+        <div class="input-section">
+            <textarea id="storyInput" placeholder="Paste your English lesson here..."></textarea>
+            <button class="translate-btn" onclick="startTranslation()">Translate</button>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="instruction">💡 Touch any English sentence to reveal/hide its Telugu translation</div>
+        </div>
+
+        <div id="status" class="status">Loading full translation (1 request)...</div>
+        <div class="story-list" id="storyContainer"></div>
+    </div>
+
+    <script>
+        /**
+         * Splits input text Strictly into individual sentences.
+         */
+        function parseTextToLessonData(rawText) {
+            // Replaces newlines with spaces first, then matches full sentences using punctuation boundary Regex
+            const cleanText = rawText.replace(/[\r\n]+/g, ' ').trim();
+            const sentenceMatches = cleanText.match(/[^.!?]+[.!?]+/g);
+
+            // If punctuation is missing, fallback to returning non-empty trimmed lines
+            if (!sentenceMatches) {
+                return rawText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+            }
+
+            return sentenceMatches
+                .map(sentence => sentence.trim())
+                .filter(sentence => sentence.length > 0);
+        }
+
+        /**
+         * Sends all sentences in 1 batch request using '\n' as line separator
+         */
+        async function fetchBatchTranslation(sentences) {
+            const combinedText = sentences.join('\n');
+            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=te&dt=t&q=${encodeURIComponent(combinedText)}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                const fullTranslatedText = data[0].map(item => item[0]).join('');
+                return fullTranslatedText.split('\n');
+            } catch (error) {
+                console.error('Batch translation error:', error);
+                return sentences.map(() => 'Translation unavailable');
+            }
+        }
+
+        async function startTranslation() {
+            const rawText = document.getElementById('storyInput').value;
+            const container = document.getElementById('storyContainer');
+            const statusDiv = document.getElementById('status');
+
+            const lessonData = parseTextToLessonData(rawText);
+
+            if (lessonData.length === 0) {
+                alert('Please enter some text to translate!');
+                return;
+            }
+
+            container.innerHTML = '';
+            statusDiv.style.display = 'block';
+            statusDiv.innerText = 'Loading full translation (1 request)...';
+
+            const translatedSentences = await fetchBatchTranslation(lessonData);
+            statusDiv.style.display = 'none';
+
+            lessonData.forEach((sentence, index) => {
+                const card = document.createElement('div');
+                card.className = 'sentence-card';
+                card.onclick = function() { 
+                    this.classList.toggle('active'); 
+                };
+
+                const engDiv = document.createElement('div');
+                engDiv.className = 'english-text';
+                engDiv.innerText = sentence;
+
+                const telDiv = document.createElement('div');
+                telDiv.className = 'telugu-text';
+                telDiv.innerText = translatedSentences[index] || translatedSentences[translatedSentences.length - 1];
+
+                card.appendChild(engDiv);
+                card.appendChild(telDiv);
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
