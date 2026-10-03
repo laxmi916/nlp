@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pretrained Language Models — BERT, RoBERTa, GPT and T5</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1000px;
+        margin: auto;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #222;
+    }
+    h1, h2 {
+        color: #17365d;
+    }
+    .box {
+        background: white;
+        padding: 18px;
+        margin: 18px 0;
+        border-radius: 8px;
+        border-left: 5px solid #357edd;
+    }
+    pre {
+        background: #1e1e1e;
+        color: #eee;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    code {
+        font-family: Consolas, monospace;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background: #e9eef5;
+    }
+</style>
+</head>
+
+<body>
+
+<section>
+<h1>BERT — Bidirectional Encoder Representations from Transformers</h1>
+
+<div class="box">
+<strong>BERT</strong> is a pretrained Transformer <strong>Encoder</strong> model
+designed mainly for learning bidirectional contextual representations and supporting text-understanding tasks.
+</div>
+
+<h2>1. Key Idea</h2>
+
+<p>
+BERT uses <strong>bidirectional context</strong>. Each token can use information
+from tokens before and after it.
+</p>
+
+<pre>
+The bank is near the river.
+        ↑
+BERT uses surrounding context
+to understand "bank".
+</pre>
+
+<h2>2. BERT Architecture</h2>
+
+<pre>
+Input Text
+    ↓
+Tokenizer
+    ↓
+Token IDs
+    ↓
+Transformer Encoder
+    ↓
+Contextual Representations
+    ↓
+Task-specific Head
+    ↓
+Prediction
+</pre>
+
+<h2>3. Pretraining</h2>
+
+<p>
+The original BERT was pretrained using <strong>Masked Language Modeling</strong>
+and <strong>Next Sentence Prediction</strong>.
+</p>
+
+<pre>
+The cat is [MASK] on the mat.
+              ↓
+           sleeping
+</pre>
+
+<p>
+Later models such as RoBERTa showed that Next Sentence Prediction was not
+essential.
+</p>
+
+<h2>4. Two Important BERT Tasks</h2>
+
+<table>
+<tr>
+<th>Task</th>
+<th>Purpose</th>
+<th>Model Class</th>
+</tr>
+<tr>
+<td>Sentiment Classification</td>
+<td>Predict one class for a sentence</td>
+<td>AutoModelForSequenceClassification</td>
+</tr>
+<tr>
+<td>Named Entity Recognition</td>
+<td>Predict an entity label for each token</td>
+<td>AutoModelForTokenClassification</td>
+</tr>
+</table>
+
+<!-- SENTIMENT -->
+
+<h2>5. Task 1 — Sentiment Classification</h2>
+
+<p>
+Example:
+</p>
+
+<pre>
+"I really enjoyed this movie."
+        ↓
+BERT
+        ↓
+POSITIVE
+</pre>
+
+<h3>Using AutoModel</h3>
+
+<pre><code>
+pip install torch transformers
+</code></pre>
+
+<pre><code>
+import torch
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification
+)
+
+
+# --------------------------------------------------
+# 1. Model name
+# --------------------------------------------------
+
+model_name = "textattack/bert-base-uncased-SST-2"
+
+
+# --------------------------------------------------
+# 2. Load tokenizer
+# --------------------------------------------------
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+
+# --------------------------------------------------
+# 3. Load pretrained model
+# --------------------------------------------------
+
+model = AutoModelForSequenceClassification.from_pretrained(
+    model_name
+)
+
+# We are doing prediction, not training
+model.eval()
+
+
+# --------------------------------------------------
+# 4. Input sentence
+# --------------------------------------------------
+
+text = "I really enjoyed this movie."
+
+print("Input:")
+print(text)
+
+
+# --------------------------------------------------
+# 5. Tokenize the sentence
+# --------------------------------------------------
+
+inputs = tokenizer(
+    text,
+    return_tensors="pt"
+)
+
+print("\nToken IDs:")
+print(inputs["input_ids"])
+
+
+# --------------------------------------------------
+# 6. Run the model
+# --------------------------------------------------
+
+with torch.no_grad():
+
+    outputs = model(**inputs)
+
+
+# --------------------------------------------------
+# 7. Convert logits to probabilities
+# --------------------------------------------------
+
+probabilities = torch.softmax(
+    outputs.logits,
+    dim=1
+)
+
+
+# --------------------------------------------------
+# 8. Find the predicted class
+# --------------------------------------------------
+
+prediction = torch.argmax(
+    probabilities,
+    dim=1
+)
+
+
+# --------------------------------------------------
+# 9. Convert class ID to label
+# --------------------------------------------------
+
+labels = {
+    0: "NEGATIVE",
+    1: "POSITIVE"
+}
+
+predicted_class = prediction.item()
+
+predicted_label = labels[predicted_class]
+
+confidence = probabilities[
+    0, predicted_class
+].item()
+
+
+# --------------------------------------------------
+# 10. Display result
+# --------------------------------------------------
+
+print("\nPrediction:")
+print(predicted_label)
+
+print("\nConfidence:")
+print(f"{confidence:.4f}")
+</code></pre>
+
+<p>
+The model produces logits, which are converted into probabilities using
+<strong>softmax</strong>. This example uses a BERT checkpoint fine-tuned on SST-2.
+</p>
+
+<h3>Using Pipeline</h3>
+
+<pre><code>
+from transformers import pipeline
+
+classifier = pipeline(
+    "sentiment-analysis",
+    model="distilbert-base-uncased-finetuned-sst-2-english"
+)
+
+result = classifier(
+    "I really enjoyed this movie."
+)
+
+print(result)
+</code></pre>
+
+<p>
+Typical result:
+</p>
+
+<pre>
+[{'label': 'POSITIVE', 'score': 0.99}]
+</pre>
+
+<!-- NER -->
+
+<h2>6. Task 2 — Named Entity Recognition (NER)</h2>
+
+<p>
+NER identifies entities such as people, organizations and locations.
+</p>
+
+<pre>
+Elon Musk founded SpaceX in the United States.
+
+Elon Musk       → PERSON
+SpaceX          → ORGANIZATION
+United States   → LOCATION
+</pre>
+
+<h3>Using AutoModel</h3>
+
+<pre><code>
+import torch
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForTokenClassification
+)
+
+
+# --------------------------------------------------
+# 1. Model name
+# --------------------------------------------------
+
+model_name = "dslim/bert-base-NER"
+
+
+# --------------------------------------------------
+# 2. Load tokenizer
+# --------------------------------------------------
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name
+)
+
+
+# --------------------------------------------------
+# 3. Load pretrained BERT NER model
+# --------------------------------------------------
+
+model = AutoModelForTokenClassification.from_pretrained(
+    model_name
+)
+
+# We are doing prediction, not training
+model.eval()
+
+
+# --------------------------------------------------
+# 4. Input sentence
+# --------------------------------------------------
+
+text = "Elon Musk founded SpaceX in California."
+
+print("Input:")
+print(text)
+
+
+# --------------------------------------------------
+# 5. Tokenize the sentence
+# --------------------------------------------------
+
+inputs = tokenizer(
+    text,
+    return_tensors="pt",
+    return_special_tokens_mask=True
+)
+
+print("\nToken IDs:")
+print(inputs["input_ids"])
+
+
+# --------------------------------------------------
+# 6. Run the BERT model
+# --------------------------------------------------
+
+with torch.no_grad():
+
+    outputs = model(**inputs)
+
+
+# --------------------------------------------------
+# 7. Convert logits into probabilities
+# --------------------------------------------------
+
+probabilities = torch.softmax(
+    outputs.logits,
+    dim=2
+)
+
+
+# --------------------------------------------------
+# 8. Find the predicted class for each token
+# --------------------------------------------------
+
+predictions = torch.argmax(
+    probabilities,
+    dim=2
+)
+
+
+# --------------------------------------------------
+# 9. Convert token IDs into tokens
+# --------------------------------------------------
+
+tokens = tokenizer.convert_ids_to_tokens(
+    inputs["input_ids"][0]
+)
+
+# Identify special tokens such as [CLS] and [SEP]
+special_tokens_mask = inputs["special_tokens_mask"][0].tolist()
+
+
+# --------------------------------------------------
+# 10. Display token-level predictions
+# --------------------------------------------------
+
+print("\nNamed Entity Recognition:")
+
+for i, (token, prediction) in enumerate(
+    zip(tokens, predictions[0])
+):
+
+    # Skip special tokens
+    if special_tokens_mask[i] == 1:
+        continue
+
+    class_id = prediction.item()
+    label = model.config.id2label[class_id]
+
+    confidence = probabilities[
+        0, i, class_id
+    ].item()
+
+    print(
+        f"{token:15} -> "
+        f"{label:10} "
+        f"({confidence:.4f})"
+    )
+</code></pre>
+
+<p><strong>Note:</strong> The raw token-classification output may contain subword tokens such as <code>Space</code> and <code>##X</code>. The <code>pipeline()</code> example below uses <code>aggregation_strategy="simple"</code> to combine subwords into entity spans.</p>
+
+<h3>Using Pipeline</h3>
+
+<pre><code>
+from transformers import pipeline
+
+ner = pipeline(
+    "token-classification",
+    model="dslim/bert-base-NER",
+    aggregation_strategy="simple"
+)
+
+text = "Elon Musk founded SpaceX."
+
+results = ner(text)
+
+for entity in results:
+    print(
+        entity["word"],
+        "->",
+        entity["entity_group"]
+    )
+</code></pre>
+
+<!-- COMPARISON -->
+
+<h2>7. AutoModel vs Pipeline</h2>
+
+<table>
+<tr>
+<th>AutoModel</th>
+<th>Pipeline</th>
+</tr>
+<tr>
+<td>Shows tokenizer and model explicitly</td>
+<td>Hides implementation details</td>
+</tr>
+<tr>
+<td>Useful for learning</td>
+<td>Useful for quick applications</td>
+</tr>
+<tr>
+<td>More control</td>
+<td>Less code</td>
+</tr>
+</table>
+
+<h2>8. Key Takeaway</h2>
+
+<pre>
+                    BERT
+                     ↓
+            Transformer Encoder
+                     ↓
+        Contextual Representations
+              ↙              ↘
+     Classification          NER
+           ↓                   ↓
+     Sentence label       Token labels
+</pre>
+
+<p>
+<strong>BERT is primarily an encoder-based pretrained model for
+understanding text.</strong>
+</p>
+
+</section>
+
+<section>
+<h2>RoBERTa — An Improved BERT Pretraining Approach</h2>
+
+<p>
+<strong>RoBERTa</strong> stands for <strong>Robustly Optimized BERT Pretraining Approach</strong>.
+It keeps the BERT-style Transformer Encoder architecture while using a stronger pretraining recipe. RoBERTa was introduced by
+Facebook AI (now Meta AI).
+</p>
+
+<h3>1. What is RoBERTa?</h3>
+
+<p>
+RoBERTa uses the <strong>Transformer Encoder</strong>, just like BERT, and is mainly designed
+for understanding text.
+</p>
+
+<pre>
+BERT
+  ↓
+Improved pretraining strategy
+  ↓
+RoBERTa
+  ↓
+Improved pretrained representations
+</pre>
+
+<h3>2. How is RoBERTa Different from BERT?</h3>
+
+<table>
+<tr>
+<th>BERT</th>
+<th>RoBERTa</th>
+</tr>
+<tr>
+<td>Uses Masked Language Modeling</td>
+<td>Uses Masked Language Modeling</td>
+</tr>
+<tr>
+<td>Original training included NSP</td>
+<td>Removes NSP</td>
+</tr>
+<tr>
+<td>Uses relatively smaller training setup</td>
+<td>Uses larger training data and longer training</td>
+</tr>
+<tr>
+<td>Uses static masking in the original setup</td>
+<td>Uses dynamic masking</td>
+</tr>
+</table>
+
+<p>
+The key point is that <strong>RoBERTa does not introduce a fundamentally new Transformer
+architecture</strong>. Its main contribution is a better pretraining strategy.
+</p>
+
+<h3>3. Dynamic Masking</h3>
+
+<p>
+Instead of always masking the same words, RoBERTa can create different masking patterns
+during training.
+</p>
+
+<pre>
+Sentence:
+The cat is sitting on the mat.
+
+Masking 1:
+The [MASK] is sitting on the mat.
+
+Masking 2:
+The cat is [MASK] on the mat.
+
+Masking 3:
+The cat is sitting on the [MASK].
+</pre>
+
+<p>
+This exposes the model to different learning examples from the same sentence.
+</p>
+
+<h3>4. RoBERTa for Text Classification</h3>
+
+<p>
+RoBERTa can be fine-tuned for tasks such as sentiment analysis, topic classification,
+and other text-classification problems.
+</p>
+
+<pre>
+Input Text
+    ↓
+RoBERTa Encoder
+    ↓
+Contextual Representations
+    ↓
+Classification Layer
+    ↓
+Prediction
+</pre>
+
+<h3>5. Example — Sentiment Classification</h3>
+
+<p>Install the required libraries:</p>
+
+<pre>
+pip install torch transformers
+</pre>
+
+<p>Complete example:</p>
+
+<pre><code>
+import torch
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification
+)
+
+
+# Load a RoBERTa model fine-tuned for sentiment
+model_name = "cardiffnlp/twitter-roberta-base-sentiment-latest"
+
+
+# Load tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+
+# Load model
+model = AutoModelForSequenceClassification.from_pretrained(
+    model_name
+)
+
+model.eval()
+
+
+# Input sentence
+text = "I really enjoyed this movie."
+
+print("Input:")
+print(text)
+
+
+# Tokenization
+inputs = tokenizer(
+    text,
+    return_tensors="pt"
+)
+
+
+# Prediction
+with torch.no_grad():
+    outputs = model(**inputs)
+
+
+# Convert logits to probabilities
+probabilities = torch.softmax(
+    outputs.logits,
+    dim=1
+)
+
+
+# Get predicted class
+prediction = torch.argmax(
+    probabilities,
+    dim=1
+).item()
+
+
+# Get label
+label = model.config.id2label[prediction]
+
+
+# Get confidence
+confidence = probabilities[
+    0, prediction
+].item()
+
+
+print("\nPrediction:")
+print(label)
+
+print("\nConfidence:")
+print(f"{confidence:.4f}")
+</code></pre>
+
+<h3>6. Using Pipeline</h3>
+
+<pre><code>
+from transformers import pipeline
+
+classifier = pipeline(
+    "sentiment-analysis",
+    model="cardiffnlp/twitter-roberta-base-sentiment-latest"
+)
+
+result = classifier(
+    "I really enjoyed this movie."
+)
+
+print(result)
+</code></pre>
+
+<h3>Key Takeaway</h3>
+
+<pre>
+BERT
+  ↓
+Same basic Encoder architecture
+  ↓
+Improved pretraining strategy
+  ↓
+RoBERTa
+</pre>
+
+<p>
+<strong>RoBERTa keeps the BERT-style encoder architecture; its main contribution is a revised and stronger pretraining recipe rather than a new Transformer architecture.</strong>
+</p>
+
+<h3>BERT / Encoder Models</h3>
+
+<p>
+BERT and other encoder-based models are particularly natural for tasks where
+the input text is <strong>analyzed or represented</strong> rather than generated.
+</p>
+
+<pre>
+Input Text
+    ↓
+Understand / Represent
+    ↓
+Prediction
+</pre>
+
+<h4>Common Applications</h4>
+
+<ul>
+    <li>Named Entity Recognition (NER)</li>
+    <li>Sentiment Classification</li>
+    <li>Document Classification</li>
+    <li>Token Classification</li>
+    <li>Sentence Similarity</li>
+    <li>Semantic Search Representations</li>
+    <li>Information Extraction</li>
+    <li>Text Embeddings</li>
+</ul>
+
+<p>
+<strong>Use encoder models when you have a fixed input and your main goal is
+to analyze, classify, compare, or represent the text.</strong>
+</p>
+
+</section>
+
+<section>
+
+<h2>GPT — Generative Pre-trained Transformer</h2>
+
+<p>
+<strong>GPT</strong> stands for <strong>Generative Pre-trained Transformer</strong>.
+GPT is a pretrained language model based on the <strong>Transformer Decoder</strong>.
+It is mainly designed for <strong>text generation</strong>.
+</p>
+
+<h3>1. What is GPT?</h3>
+
+<p>
+GPT generates text by predicting the <strong>next token</strong> based on the
+tokens that came before it.
+</p>
+
+<pre>
+Input:
+Artificial intelligence is
+
+        ↓
+
+GPT Decoder
+
+        ↓
+
+Next token → transforming
+
+        ↓
+
+Artificial intelligence is transforming...
+</pre>
+
+<p>
+This process is called <strong>autoregressive language modeling</strong>.
+</p>
+
+<h3>2. GPT Architecture</h3>
+
+<pre>
+Input Text
+    ↓
+Tokenizer
+    ↓
+Token IDs
+    ↓
+Transformer Decoder
+    ↓
+Causal Self-Attention
+    ↓
+Next-Token Prediction
+    ↓
+Generated Text
+</pre>
+
+<p>
+GPT uses <strong>causal attention</strong>, which prevents a token from
+looking at future tokens.
+</p>
+
+<pre>
+The   cat   is   sleeping
+
+The       ✓
+cat       ✓ ✓
+is        ✓ ✓ ✓
+sleeping  ✓ ✓ ✓ ✓
+</pre>
+
+<p>
+Therefore, when predicting the next token, GPT can only use the tokens that
+have already appeared.
+</p>
+
+<h3>3. GPT Training</h3>
+
+<p>
+GPT is trained to predict the next token.
+</p>
+
+<pre>
+The cat
+   ↓
+predict: is
+
+The cat is
+   ↓
+predict: sleeping
+
+The cat is sleeping
+   ↓
+predict: ...
+</pre>
+
+<p>
+The objective can be represented as:
+</p>
+
+<pre>
+P(xₜ | x₁, x₂, ..., xₜ₋₁)
+</pre>
+
+<h3>4. GPT vs BERT</h3>
+
+<table>
+<tr>
+<th>BERT</th>
+<th>GPT</th>
+</tr>
+
+<tr>
+<td>Transformer Encoder</td>
+<td>Transformer Decoder</td>
+</tr>
+
+<tr>
+<td>Bidirectional context</td>
+<td>Left-to-right context</td>
+</tr>
+
+<tr>
+<td>Mainly understands text</td>
+<td>Mainly generates text</td>
+</tr>
+
+<tr>
+<td>Masked Language Modeling</td>
+<td>Next-token prediction</td>
+</tr>
+</table>
+
+<h3>5. Example — Text Generation</h3>
+
+<p>Install the required libraries:</p>
+
+<pre>
+pip install torch transformers
+</pre>
+
+<p>
+The following example uses GPT-2, a small and widely used GPT-family model.
+</p>
+
+<pre><code>
+import torch
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM
+)
+
+
+# --------------------------------------------------
+# 1. Load pretrained GPT model
+# --------------------------------------------------
+
+model_name = "openai-community/gpt2"
+
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name
+)
+
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_name
+)
+
+model.eval()
+
+
+# --------------------------------------------------
+# 2. Input prompt
+# --------------------------------------------------
+
+text = "Artificial intelligence is"
+
+print("Prompt:")
+print(text)
+
+
+# --------------------------------------------------
+# 3. Tokenize
+# --------------------------------------------------
+
+inputs = tokenizer(
+    text,
+    return_tensors="pt"
+)
+
+
+print("\nInput token IDs:")
+print(inputs["input_ids"])
+
+
+# --------------------------------------------------
+# 4. Generate text
+# --------------------------------------------------
+
+with torch.no_grad():
+
+    output_ids = model.generate(
+        **inputs,
+        max_new_tokens=30,
+        do_sample=True,
+        temperature=0.7
+    )
+
+
+# --------------------------------------------------
+# 5. Convert token IDs to text
+# --------------------------------------------------
+
+generated_text = tokenizer.decode(
+    output_ids[0],
+    skip_special_tokens=True
+)
+
+
+# --------------------------------------------------
+# 6. Display result
+# --------------------------------------------------
+
+print("\nGenerated Text:")
+print(generated_text)
+</code></pre>
+
+<h3>6. How the Program Works</h3>
+
+<pre>
+"Artificial intelligence is"
+             ↓
+         Tokenizer
+             ↓
+          Token IDs
+             ↓
+         GPT-2 Model
+             ↓
+       Predict next token
+             ↓
+       Predict next token
+             ↓
+             ...
+             ↓
+       Generated sentence
+</pre>
+
+<h3>7. Using Pipeline</h3>
+
+<p>
+For quick text generation, Hugging Face provides the
+<strong>pipeline()</strong> API.
+</p>
+
+<pre><code>
+from transformers import pipeline
+
+generator = pipeline(
+    "text-generation",
+    model="openai-community/gpt2"
+)
+
+result = generator(
+    "Artificial intelligence is",
+    max_new_tokens=30
+)
+
+print(result[0]["generated_text"])
+</code></pre>
+
+<h3>8. Why Use <code>AutoModelForCausalLM</code>?</h3>
+
+<p>
+The explicit approach is useful for understanding what happens inside
+the model:
+</p>
+
+<pre>
+Text
+ ↓
+Tokenizer
+ ↓
+Token IDs
+ ↓
+Causal Language Model
+ ↓
+Logits
+ ↓
+Next-token selection
+ ↓
+Generated tokens
+ ↓
+Decoded text
+</pre>
+
+<p>
+<strong>pipeline()</strong> performs these steps internally and is useful
+when we want a shorter implementation.
+</p>
+
+<h3>9. Key Takeaway</h3>
+
+<pre>
+GPT
+ ↓
+Transformer Decoder
+ ↓
+Causal Self-Attention
+ ↓
+Next-Token Prediction
+ ↓
+Autoregressive Generation
+ ↓
+Generated Text
+</pre>
+
+<p>
+<strong>GPT is primarily a decoder-based pretrained language model that
+generates text by repeatedly predicting the next token.</strong>
+</p>
+
+<h3>GPT / Decoder Models</h3>
+
+<p>
+GPT and other decoder-based models are particularly natural for tasks where
+the main goal is to <strong>generate new text</strong> from a given prompt.
+</p>
+
+<pre>
+Prompt
+  ↓
+Generate Next Token
+  ↓
+Generate Next Token
+  ↓
+Generate Next Token
+  ↓
+...
+  ↓
+Generated Text
+</pre>
+
+<h4>Common Applications</h4>
+
+<ul>
+    <li>Text Generation</li>
+    <li>Chat</li>
+    <li>Code Generation</li>
+    <li>Story Generation</li>
+    <li>Text Completion</li>
+    <li>Instruction Following</li>
+    <li>Conversational Systems</li>
+    <li>Generative RAG Answers</li>
+</ul>
+
+<p>
+<strong>Use decoder models when you have an input prompt and your main goal is
+to produce new text as the output.</strong>
+</p>
+
+</section>
+
+<section>
+
+<h2>LLaMA — Large Language Model Meta AI</h2>
+
+<p>
+<strong>LLaMA</strong> is a family of pretrained <strong>decoder-only Transformer
+language models</strong> developed by Meta. Like GPT, LLaMA uses
+<strong>causal self-attention</strong> and predicts the next token to generate text.
+</p>
+
+<h3>1. Key Idea</h3>
+
+<pre>
+Prompt
+  ↓
+LLaMA Decoder
+  ↓
+Predict Next Token
+  ↓
+Predict Next Token
+  ↓
+...
+  ↓
+Generated Text
+</pre>
+
+<p>
+LLaMA is therefore primarily designed for <strong>text generation and
+language-modeling tasks</strong>.
+</p>
+
+<h3>2. LLaMA Architecture</h3>
+
+<pre>
+Input Text
+    ↓
+Tokenizer
+    ↓
+Token IDs
+    ↓
+LLaMA Transformer Decoder
+    ↓
+Causal Self-Attention
+    ↓
+Next-Token Prediction
+    ↓
+Generated Text
+</pre>
+
+<p>
+Like GPT, each token can attend only to the tokens that occur before it.
+This allows LLaMA to generate text autoregressively.
+</p>
+
+<h3>3. LLaMA vs BERT, GPT and T5</h3>
+
+<table>
+<tr>
+<th>Model</th>
+<th>Architecture</th>
+<th>Main Use</th>
+</tr>
+
+<tr>
+<td>BERT</td>
+<td>Encoder</td>
+<td>Analyze / represent text</td>
+</tr>
+
+<tr>
+<td>GPT</td>
+<td>Decoder</td>
+<td>Generate text</td>
+</tr>
+
+<tr>
+<td>T5</td>
+<td>Encoder-Decoder</td>
+<td>Transform text to text</td>
+</tr>
+
+<tr>
+<td>LLaMA</td>
+<td>Decoder</td>
+<td>Generate and understand text through autoregressive modeling</td>
+</tr>
+</table>
+
+<h3>4. When to Use LLaMA?</h3>
+
+<p>
+LLaMA is particularly natural when the task requires a
+<strong>decoder-only language model to generate or process text
+autoregressively</strong>.
+</p>
+
+<ul>
+    <li>Text Generation</li>
+    <li>Chat Applications</li>
+    <li>Question Answering</li>
+    <li>Code Generation</li>
+    <li>Instruction Following</li>
+    <li>Summarization</li>
+    <li>Conversational Systems</li>
+    <li>Generative RAG</li>
+</ul>
+
+<p>
+<strong>Use LLaMA-family models when your application needs a generative
+language model that can produce new text from a prompt.</strong>
+</p>
+
+<h3>5. Example — Text Generation</h3>
+
+<p>
+Install the required libraries:
+</p>
+
+<pre>
+pip install torch transformers
+</pre>
+
+<p>
+The following example uses a small LLaMA-family checkpoint that can be
+loaded with Hugging Face Transformers.
+</p>
+
+<pre><code>
+import torch
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM
+)
+
+
+# --------------------------------------------------
+# 1. Load pretrained LLaMA-family model
+# --------------------------------------------------
+
+model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name
+)
+
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_name
+)
+
+model.eval()
+
+
+# --------------------------------------------------
+# 2. Input prompt
+# --------------------------------------------------
+
+text = "Explain artificial intelligence in simple words."
+
+print("Prompt:")
+print(text)
+
+
+# --------------------------------------------------
+# 3. Tokenize
+# --------------------------------------------------
+
+inputs = tokenizer(
+    text,
+    return_tensors="pt"
+)
+
+
+print("\nInput token IDs:")
+print(inputs["input_ids"])
+
+
+# --------------------------------------------------
+# 4. Generate text
+# --------------------------------------------------
+
+with torch.no_grad():
+
+    output_ids = model.generate(
+        **inputs,
+        max_new_tokens=50,
+        do_sample=True,
+        temperature=0.7
+    )
+
+
+# --------------------------------------------------
+# 5. Convert token IDs to text
+# --------------------------------------------------
+
+generated_text = tokenizer.decode(
+    output_ids[0],
+    skip_special_tokens=True
+)
+
+
+# --------------------------------------------------
+# 6. Display result
+# --------------------------------------------------
+
+print("\nGenerated Text:")
+print(generated_text)
+</code></pre>
+
+<h3>6. Using <code>pipeline()</code></h3>
+
+<p>
+The same task can be performed with less code using
+<strong>pipeline()</strong>.
+</p>
+
+<pre><code>
+from transformers import pipeline
+
+generator = pipeline(
+    "text-generation",
+    model="TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+)
+
+result = generator(
+    "Explain artificial intelligence in simple words.",
+    max_new_tokens=50
+)
+
+print(result[0]["generated_text"])
+</code></pre>
+
+<h3>7. How the Program Works</h3>
+
+<pre>
+Prompt
+  ↓
+Tokenizer
+  ↓
+Token IDs
+  ↓
+LLaMA Decoder
+  ↓
+Predict Next Token
+  ↓
+Predict Next Token
+  ↓
+...
+  ↓
+Generated Token IDs
+  ↓
+Decoded Text
+</pre>
+
+<p>
+<strong>AutoModel approach:</strong> useful for learning and controlling
+tokenization, model loading, and generation.
+</p>
+
+<p>
+<strong>pipeline() approach:</strong> useful for quick text-generation
+applications with less code.
+</p>
+
+<h3>8. LLaMA vs GPT</h3>
+
+<table>
+<tr>
+<th>GPT</th>
+<th>LLaMA</th>
+</tr>
+
+<tr>
+<td>Decoder-only Transformer</td>
+<td>Decoder-only Transformer</td>
+</tr>
+
+<tr>
+<td>Autoregressive next-token prediction</td>
+<td>Autoregressive next-token prediction</td>
+</tr>
+
+<tr>
+<td>Designed for language generation</td>
+<td>Designed for language generation</td>
+</tr>
+
+<tr>
+<td>Different model family</td>
+<td>Different model family developed by Meta</td>
+</tr>
+</table>
+
+<p>
+Both are based on the <strong>decoder-only Transformer paradigm</strong>.
+Their differences come from their specific architecture choices, training
+data, training procedures, model sizes, and later fine-tuning.
+</p>
+
+<h3>9. Key Takeaway</h3>
+
+<pre>
+BERT    → Analyze / Represent
+GPT     → Generate
+T5      → Transform
+LLaMA   → Generate / Autoregressive Language Modeling
+</pre>
+
+<p>
+<strong>LLaMA is a decoder-only pretrained language-model family that
+generates text by repeatedly predicting the next token.</strong>
+</p>
+
+</section>
+
+<section>
+
+<h2>Ollama — Running LLMs Locally</h2>
+
+<p>
+<strong>Ollama</strong> is a tool for running large language models locally
+on a computer. It provides a simple way to download, manage, and interact
+with models such as LLaMA and other supported models.
+</p>
+
+<h3>1. LLaMA vs Ollama</h3>
+
+<table>
+<tr>
+<th>LLaMA</th>
+<th>Ollama</th>
+</tr>
+
+<tr>
+<td>Language model family</td>
+<td>LLM runtime / tool</td>
+</tr>
+
+<tr>
+<td>Developed by Meta</td>
+<td>Used to run models locally</td>
+</tr>
+
+<tr>
+<td>Defines the model</td>
+<td>Runs and manages the model</td>
+</tr>
+
+<tr>
+<td>Example: LLaMA 3</td>
+<td>Example: <code>ollama run llama3</code></td>
+</tr>
+</table>
+
+<h3>2. How Ollama Works</h3>
+
+<pre>
+Install Ollama
+      ↓
+Download a Model
+      ↓
+Local Model
+      ↓
+Ollama Runtime
+      ↓
+Prompt
+      ↓
+Generated Response
+</pre>
+
+<h3>3. Install and Run a Model</h3>
+
+<p>
+After installing Ollama, open a terminal and run:
+</p>
+
+<pre>
+ollama pull llama3.2
+</pre>
+
+<p>
+Then start an interactive conversation:
+</p>
+
+<pre>
+ollama run llama3.2
+</pre>
+
+<p>
+You can now enter a prompt such as:
+</p>
+
+<pre>
+Explain artificial intelligence in simple words.
+</pre>
+
+<h3>4. Using Ollama from Python</h3>
+
+<p>
+Ollama provides a local API that can be accessed from Python.
+</p>
+
+<p>Install the Python package:</p>
+
+<pre>
+pip install ollama
+</pre>
+
+<pre><code>
+import ollama
+
+response = ollama.chat(
+    model="llama3.2",
+    messages=[
+        {
+            "role": "user",
+            "content": "Explain artificial intelligence in simple words."
+        }
+    ]
+)
+
+print(response["message"]["content"])
+</code></pre>
+
+<h3>5. How the Python Program Works</h3>
+
+<pre>
+Python Program
+      ↓
+Ollama Python Library
+      ↓
+Local Ollama Server
+      ↓
+LLaMA Model
+      ↓
+Generated Response
+      ↓
+Python Program
+</pre>
+
+<h3>6. Why Use Ollama?</h3>
+
+<ul>
+    <li>Run supported LLMs locally</li>
+    <li>Experiment without calling a cloud API</li>
+    <li>Build local AI applications</li>
+    <li>Use models through a simple command line</li>
+    <li>Access models through a local API</li>
+</ul>
+
+<h3>7. Important Distinction</h3>
+
+<pre>
+LLaMA
+  → Model
+
+Ollama
+  → Tool for running models locally
+
+Hugging Face Transformers
+  → Python framework for loading and working
+    with Transformer models
+</pre>
+
+<p>
+<strong>Ollama is not limited to Meta's LLaMA models.</strong>
+It supports models from many organizations, as long as the model is available
+in a format and architecture supported by Ollama.
+</p>
+
+<p>
+Examples of supported model families include:
+</p>
+
+<ul>
+    <li><strong>LLaMA</strong> — Meta</li>
+    <li><strong>Qwen</strong> — Alibaba</li>
+    <li><strong>Gemma</strong> — Google</li>
+    <li><strong>Mistral</strong> — Mistral AI</li>
+    <li><strong>Phi</strong> — Microsoft</li>
+    <li><strong>DeepSeek</strong> — DeepSeek</li>
+    <li><strong>gpt-oss</strong> — OpenAI's open-weight models</li>
+</ul>
+
+<p>
+Therefore, <strong>Ollama is a runtime/tool for running supported models
+locally, not a model itself.</strong>
+</p>
+
+<p>Ollama primarily targets models that fit its supported local inference ecosystem, especially generative LLMs. BERT and T5 are different architectural families and are generally used through frameworks such as Hugging Face Transformers rather than being typical Ollama choices.</p>
+
+</section>
+
+<section>
+
+<h2>T5 — Text-to-Text Transfer Transformer</h2>
+
+<p>
+<strong>T5</strong> stands for <strong>Text-to-Text Transfer Transformer</strong>.
+It is a pretrained <strong>Encoder-Decoder Transformer</strong> designed to solve
+NLP tasks by converting one text sequence into another.
+</p>
+
+<h3>1. Key Idea</h3>
+<p>T5 treats many NLP tasks as <strong>text-to-text problems</strong>.</p>
+<pre>
+Input Text
+    ↓
+T5 Encoder
+    ↓
+T5 Decoder
+    ↓
+Output Text
+</pre>
+<pre>
+translate English to French: Hello
+              ↓
+           Bonjour
+</pre>
+
+<h3>2. T5 Architecture</h3>
+<pre>
+Input
+  ↓
+Tokenizer
+  ↓
+Transformer Encoder
+  ↓
+Encoded Representation
+  ↓
+Transformer Decoder
+  ↓
+Generated Output
+</pre>
+<p>The <strong>encoder</strong> processes the input sequence, while the <strong>decoder</strong> generates the output sequence.</p>
+
+<h3>3. Why is T5 Different?</h3>
+<table>
+<tr><th>Task</th><th>Input</th><th>Output</th></tr>
+<tr><td>Translation</td><td>translate English to French: Hello</td><td>Bonjour</td></tr>
+<tr><td>Summarization</td><td>summarize: Long article...</td><td>Short summary</td></tr>
+<tr><td>Question Answering</td><td>question + context</td><td>Answer</td></tr>
+<tr><td>Text Transformation</td><td>rewrite: Original sentence</td><td>Rewritten sentence</td></tr>
+</table>
+
+<h3>4. T5 vs BERT vs GPT</h3>
+<table>
+<tr><th>Model</th><th>Architecture</th><th>Main Use</th></tr>
+<tr><td>BERT</td><td>Encoder</td><td>Analyze / represent text</td></tr>
+<tr><td>GPT</td><td>Decoder</td><td>Generate text</td></tr>
+<tr><td>T5</td><td>Encoder-Decoder</td><td>Transform one text into another</td></tr>
+</table>
+
+<h3>5. When to Use T5?</h3>
+<p>T5 is particularly natural when the task has the form:</p>
+<pre>
+Input Text
+    ↓
+Understand Input
+    ↓
+Generate Another Text
+</pre>
+<ul>
+<li>Machine Translation</li>
+<li>Text Summarization</li>
+<li>Question Answering</li>
+<li>Text Rewriting</li>
+<li>Grammar Correction</li>
+<li>Text-to-Text Classification</li>
+</ul>
+<p><strong>Use an encoder-decoder model such as T5 when you need to transform one sequence of text into another.</strong></p>
+
+<h3>6. Example — English to French Translation</h3>
+<p>Install the required libraries:</p>
+<pre>pip install torch transformers sentencepiece</pre>
+<pre><code>import torch
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+
+model_name = "t5-small"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+model.eval()
+
+text = "translate English to French: I am learning artificial intelligence."
+
+inputs = tokenizer(text, return_tensors="pt")
+
+with torch.no_grad():
+    output_ids = model.generate(
+        **inputs,
+        max_new_tokens=30
+    )
+
+translation = tokenizer.decode(
+    output_ids[0],
+    skip_special_tokens=True
+)
+
+print("Input:")
+print(text)
+print("\nOutput:")
+print(translation)</code></pre>
+
+<h3>7. Using <code>pipeline()</code></h3>
+<pre><code>from transformers import pipeline
+
+translator = pipeline(
+    "text2text-generation",
+    model="t5-small"
+)
+
+text = "translate English to French: I am learning artificial intelligence."
+
+result = translator(
+    text,
+    max_new_tokens=30
+)
+
+print(result[0]["generated_text"])</code></pre>
+
+<h3>8. How the Program Works</h3>
+<pre>
+Input Text
+    ↓
+Tokenizer
+    ↓
+Input IDs
+    ↓
+T5 Encoder
+    ↓
+Encoded Representation
+    ↓
+T5 Decoder
+    ↓
+Output Token IDs
+    ↓
+Decoded Text
+</pre>
+
+<p><strong>AutoModel approach:</strong> useful for learning and controlling individual steps.</p>
+<p><strong>pipeline() approach:</strong> useful for quick applications with less code.</p>
+
+<h3>9. Key Takeaway</h3>
+<pre>
+BERT → Analyze / Represent
+GPT  → Generate
+T5   → Transform
+</pre>
+<p><strong>T5 combines an encoder for processing the input with a decoder for generating the output sequence.</strong></p>
+
+</section>
+
+
+
+</body>
+</html>

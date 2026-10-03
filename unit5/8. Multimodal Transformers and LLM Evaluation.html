@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Multimodal Transformers + LLM Evaluation</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1000px;
+        margin: auto;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #222;
+    }
+    h1, h2 {
+        color: #17365d;
+    }
+    .box {
+        background: white;
+        padding: 18px;
+        margin: 18px 0;
+        border-radius: 8px;
+        border-left: 5px solid #357edd;
+    }
+    pre {
+        background: #1e1e1e;
+        color: #eee;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    code {
+        font-family: Consolas, monospace;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background: #e9eef5;
+    }
+</style>
+</head>
+
+<body>
+
+<section>
+
+<h2>Multimodal Transformers + LLM Evaluation</h2>
+
+<p>
+Modern AI systems are not limited to text. <strong>Multimodal Transformers</strong>
+can process multiple types of information such as text and images and learn
+relationships between them.
+</p>
+
+<p>
+This section covers two important areas:
+</p>
+
+<ul>
+    <li><strong>Multimodal Transformers</strong> — working with text and images.</li>
+    <li><strong>LLM Evaluation</strong> — measuring answer quality and identifying hallucinations.</li>
+</ul>
+
+
+<!-- ====================================================== -->
+<h2>Part A — Multimodal Transformers</h2>
+<!-- ====================================================== -->
+
+<h3>1. What is a Multimodal Transformer?</h3>
+
+<p>
+A multimodal Transformer processes information from more than one modality,
+such as text, images, audio, or video.
+</p>
+
+<pre>
+Text ──────┐
+           │
+           ▼
+      Multimodal Model
+           │
+Image ─────┘
+           │
+           ▼
+    Joint Representation
+           │
+           ▼
+       Output
+</pre>
+
+<p>
+For example, a vision-language model can receive an image and a question:
+</p>
+
+<pre>
+Image:
+[photo of a dog]
+
+Question:
+"What animal is shown?"
+
+                ↓
+
+        Vision-Language Model
+
+                ↓
+
+             "Dog"
+</pre>
+
+
+<h3>2. Text + Image Tasks</h3>
+
+<p>Common multimodal tasks include:</p>
+
+<ul>
+    <li>Image captioning</li>
+    <li>Visual question answering</li>
+    <li>Image-text similarity</li>
+    <li>Image classification</li>
+    <li>Document understanding</li>
+    <li>Visual reasoning</li>
+</ul>
+
+
+<h3>3. Example — Image Captioning</h3>
+
+<p>
+Image captioning generates a natural-language description of an image.
+</p>
+
+<pre>
+Image
+  ↓
+Vision Encoder
+  ↓
+Visual Representation
+  ↓
+Language Decoder
+  ↓
+Text Caption
+</pre>
+
+<p>Install the required libraries:</p>
+
+<pre>
+pip install torch transformers pillow
+</pre>
+
+<p>
+Download or place an image named <code>image.jpg</code> in the same directory
+as the Python program.
+</p>
+
+<pre><code>
+from transformers import (
+    BlipProcessor,
+    BlipForConditionalGeneration
+)
+
+from PIL import Image
+import torch
+
+
+# --------------------------------------------------
+# 1. Load the image
+# --------------------------------------------------
+
+image = Image.open(
+    "image.jpg"
+).convert("RGB")
+
+
+# --------------------------------------------------
+# 2. Load the pretrained multimodal model
+# --------------------------------------------------
+
+model_name = (
+    "Salesforce/blip-image-captioning-base"
+)
+
+processor = BlipProcessor.from_pretrained(
+    model_name
+)
+
+model = BlipForConditionalGeneration.from_pretrained(
+    model_name
+)
+
+model.eval()
+
+
+# --------------------------------------------------
+# 3. Prepare image
+# --------------------------------------------------
+
+inputs = processor(
+    images=image,
+    return_tensors="pt"
+)
+
+
+# --------------------------------------------------
+# 4. Generate caption
+# --------------------------------------------------
+
+with torch.no_grad():
+
+    output_ids = model.generate(
+        **inputs,
+        max_new_tokens=30
+    )
+
+
+# --------------------------------------------------
+# 5. Convert tokens to text
+# --------------------------------------------------
+
+caption = processor.decode(
+    output_ids[0],
+    skip_special_tokens=True
+)
+
+
+# --------------------------------------------------
+# 6. Display result
+# --------------------------------------------------
+
+print("Generated Caption:")
+print(caption)
+</code></pre>
+
+<p>
+The important pipeline is:
+</p>
+
+<pre>
+Image
+ ↓
+BLIP Vision Encoder
+ ↓
+Multimodal Representation
+ ↓
+Text Generation
+ ↓
+Caption
+</pre>
+
+
+<h3>4. Example — Image + Text Classification with CLIP</h3>
+
+<p>
+CLIP learns a shared representation for images and text. It can compare an
+image with several text descriptions and determine which description is most
+compatible with the image.
+</p>
+
+<pre>
+Image
+  │
+  ├───────────────┐
+  │               │
+Image Encoder   Text Encoder
+  │               │
+  ▼               ▼
+Image Vector    Text Vectors
+  │               │
+  └───────┬───────┘
+          ↓
+     Similarity
+          ↓
+   Best matching text
+</pre>
+
+<p>Install:</p>
+
+<pre>
+pip install torch transformers pillow
+</pre>
+
+<pre><code>
+from transformers import (
+    CLIPProcessor,
+    CLIPModel
+)
+
+from PIL import Image
+import torch
+
+
+# --------------------------------------------------
+# 1. Load image
+# --------------------------------------------------
+
+image = Image.open(
+    "image.jpg"
+).convert("RGB")
+
+
+# --------------------------------------------------
+# 2. Candidate descriptions
+# --------------------------------------------------
+
+labels = [
+    "a photo of a dog",
+    "a photo of a cat",
+    "a photo of a car",
+    "a photo of a person"
+]
+
+
+# --------------------------------------------------
+# 3. Load CLIP
+# --------------------------------------------------
+
+model_name = "openai/clip-vit-base-patch32"
+
+processor = CLIPProcessor.from_pretrained(
+    model_name
+)
+
+model = CLIPModel.from_pretrained(
+    model_name
+)
+
+model.eval()
+
+
+# --------------------------------------------------
+# 4. Prepare image and text
+# --------------------------------------------------
+
+inputs = processor(
+    text=labels,
+    images=image,
+    return_tensors="pt",
+    padding=True
+)
+
+
+# --------------------------------------------------
+# 5. Calculate image-text scores
+# --------------------------------------------------
+
+with torch.no_grad():
+
+    outputs = model(**inputs)
+
+    probabilities = outputs.logits_per_image.softmax(
+        dim=1
+    )
+
+
+# --------------------------------------------------
+# 6. Display scores
+# --------------------------------------------------
+
+for label, probability in zip(
+    labels,
+    probabilities[0]
+):
+
+    print(
+        label,
+        "->",
+        probability.item()
+    )
+
+
+# --------------------------------------------------
+# 7. Find best matching label
+# --------------------------------------------------
+
+best_index = probabilities[0].argmax().item()
+
+print("\nBest match:")
+print(labels[best_index])
+</code></pre>
+
+<p>
+This demonstrates a fundamental multimodal idea:
+<strong>represent different modalities in a comparable vector space.</strong>
+</p>
+
+
+<h3>5. Image + Question</h3>
+
+<p>
+A more advanced vision-language model can accept both an image and a textual
+question and generate an answer.
+</p>
+
+<pre>
+Image
+   +
+Question
+   ↓
+Vision-Language Model
+   ↓
+Answer
+</pre>
+
+<p>
+This forms the basis of systems such as visual assistants and multimodal
+RAG systems.
+</p>
+
+
+<!-- ====================================================== -->
+<h2>Part B — LLM Evaluation</h2>
+<!-- ====================================================== -->
+
+<h3>6. Why Evaluate an LLM?</h3>
+
+<p>
+A language model can produce fluent and convincing text without necessarily
+being correct. Therefore, evaluating only whether the answer "sounds good"
+is insufficient.
+</p>
+
+<p>We may evaluate:</p>
+
+<ul>
+    <li>Correctness</li>
+    <li>Relevance</li>
+    <li>Faithfulness to provided context</li>
+    <li>Factual consistency</li>
+    <li>Instruction following</li>
+    <li>Safety</li>
+    <li>Hallucination rate</li>
+</ul>
+
+
+<h3>7. What is Hallucination?</h3>
+
+<p>
+A <strong>hallucination</strong> occurs when a model generates information
+that is unsupported, fabricated, or inconsistent with the available evidence.
+</p>
+
+<pre>
+Question
+   ↓
+LLM
+   ↓
+Plausible-sounding answer
+   ↓
+Unsupported information
+   ↓
+Hallucination
+</pre>
+
+<p>
+For example:
+</p>
+
+<pre>
+Context:
+"Python was created by Guido van Rossum."
+
+Question:
+"Who created Python?"
+
+Good answer:
+"Guido van Rossum."
+
+Hallucinated answer:
+"Python was created by James Smith in 1985."
+</pre>
+
+<p>
+The second answer contains a factual claim that is not supported by the
+given context.
+</p>
+
+
+<h3>8. Hallucination in RAG</h3>
+
+<p>
+RAG reduces dependence on the model's internal knowledge by supplying
+retrieved context, but retrieval alone does not guarantee a correct answer.
+The model can still generate unsupported statements.
+</p>
+
+<pre>
+Retrieved Context
+       ↓
+       LLM
+       ↓
+Generated Answer
+       ↓
+Is every important claim
+supported by the context?
+       ↓
+Yes ──────── No
+ ↓             ↓
+Faithful    Possible
+Answer      Hallucination
+</pre>
+
+
+<h3>9. Basic Evaluation Dataset</h3>
+
+<p>
+A simple evaluation dataset can contain questions, expected answers, and
+model-generated answers.
+</p>
+
+<pre><code>
+evaluation_data = [
+
+    {
+        "question": "Who created Python?",
+        "expected": "Guido van Rossum",
+        "generated": "Guido van Rossum"
+    },
+
+    {
+        "question": "What does RAG stand for?",
+        "expected": "Retrieval-Augmented Generation",
+        "generated": "Retrieval-Augmented Generation"
+    },
+
+    {
+        "question": "What is 2 + 2?",
+        "expected": "4",
+        "generated": "5"
+    }
+
+]
+
+for item in evaluation_data:
+
+    print("Question:")
+    print(item["question"])
+
+    print("Expected:")
+    print(item["expected"])
+
+    print("Generated:")
+    print(item["generated"])
+
+    print()
+</code></pre>
+
+
+<h3>10. Exact Match Evaluation</h3>
+
+<p>
+For questions with short, well-defined answers, we can use
+<strong>Exact Match (EM)</strong>.
+</p>
+
+<pre>
+Exact Match =
+Number of correct answers
+──────────────────────────
+Total answers
+</pre>
+
+<pre><code>
+def exact_match(
+    expected,
+    generated
+):
+
+    return (
+        expected.strip().lower()
+        ==
+        generated.strip().lower()
+    )
+
+
+evaluation_data = [
+
+    {
+        "expected": "4",
+        "generated": "4"
+    },
+
+    {
+        "expected": "Paris",
+        "generated": "Paris"
+    },
+
+    {
+        "expected": "Guido van Rossum",
+        "generated": "Guido van Rossum"
+    },
+
+    {
+        "expected": "RAG",
+        "generated": "RAG system"
+    }
+]
+
+
+correct = 0
+
+
+for item in evaluation_data:
+
+    if exact_match(
+        item["expected"],
+        item["generated"]
+    ):
+
+        correct += 1
+
+
+accuracy = (
+    correct / len(evaluation_data)
+)
+
+
+print(
+    "Exact Match Accuracy:",
+    accuracy
+)
+</code></pre>
+
+<p>
+Exact Match is useful for short factual answers, but it is too strict for
+many natural-language generation tasks.
+</p>
+
+
+<h3>11. Text Similarity Evaluation</h3>
+
+<p>
+For generated text, we may compare the generated answer with a reference
+answer using metrics such as ROUGE or BLEU. These metrics measure different
+forms of textual overlap and should not be treated as complete measures of
+factual correctness.
+</p>
+
+<p>Install:</p>
+
+<pre>
+pip install rouge-score
+</pre>
+
+<pre><code>
+from rouge_score import rouge_scorer
+
+
+reference = (
+    "Python is a programming language."
+)
+
+generated = (
+    "Python is a popular programming language."
+)
+
+
+scorer = rouge_scorer.RougeScorer(
+    ["rouge1", "rougeL"],
+    use_stemmer=True
+)
+
+
+scores = scorer.score(
+    reference,
+    generated
+)
+
+
+print("ROUGE-1 F1:")
+print(
+    scores["rouge1"].fmeasure
+)
+
+
+print("\nROUGE-L F1:")
+print(
+    scores["rougeL"].fmeasure
+)
+</code></pre>
+
+
+<h3>12. Why ROUGE Alone Is Not Enough</h3>
+
+<pre>
+Reference:
+"Paris is the capital of France."
+
+Generated:
+"Paris is the capital of Germany."
+</pre>
+
+<p>
+The generated answer shares many words with the reference, so lexical
+overlap metrics can still be relatively high even though the answer contains
+an important factual error.
+</p>
+
+<p>
+Therefore:
+</p>
+
+<pre>
+Good Evaluation
+      =
+Text Similarity
+      +
+Factual Correctness
+      +
+Relevance
+      +
+Instruction Following
+</pre>
+
+
+<h3>13. Basic Hallucination Check Using Context</h3>
+
+<p>
+For a simple educational example, we can check whether important words or
+facts from a generated answer are supported by the supplied context.
+This is only a basic demonstration; real hallucination evaluation requires
+more sophisticated methods.
+</p>
+
+<pre><code>
+context = """
+Python was created by Guido van Rossum.
+Python was first released in 1991.
+"""
+
+
+answer_good = (
+    "Python was created by Guido van Rossum."
+)
+
+answer_bad = (
+    "Python was created by James Smith in 1985."
+)
+
+
+def basic_support_check(
+    context,
+    answer
+):
+
+    answer_words = set(
+        answer.lower().replace(
+            ".", ""
+        ).split()
+    )
+
+    context_words = set(
+        context.lower().replace(
+            ".", ""
+        ).split()
+    )
+
+    common_words = (
+        answer_words & context_words
+    )
+
+    coverage = (
+        len(common_words)
+        /
+        len(answer_words)
+    )
+
+    return coverage
+
+
+print(
+    "Good answer coverage:",
+    basic_support_check(
+        context,
+        answer_good
+    )
+)
+
+
+print(
+    "Bad answer coverage:",
+    basic_support_check(
+        context,
+        answer_bad
+    )
+)
+</code></pre>
+
+<p>
+This illustrates the idea of checking generated text against retrieved
+evidence, but <strong>word overlap is not a reliable hallucination detector</strong>.
+A factual claim can use different words from the evidence and still be
+correct.
+</p>
+
+
+<h3>14. A Better Evaluation Framework</h3>
+
+<p>
+For practical LLM applications, evaluate multiple dimensions instead of
+using one metric.
+</p>
+
+<table>
+
+<tr>
+<th>Metric / Dimension</th>
+<th>What it measures</th>
+</tr>
+
+<tr>
+<td>Exact Match</td>
+<td>Whether the answer exactly matches the expected answer.</td>
+</tr>
+
+<tr>
+<td>ROUGE / BLEU</td>
+<td>Textual overlap with reference text.</td>
+</tr>
+
+<tr>
+<td>Semantic Similarity</td>
+<td>Similarity in meaning between generated and reference answers.</td>
+</tr>
+
+<tr>
+<td>Factual Correctness</td>
+<td>Whether claims are factually correct.</td>
+</tr>
+
+<tr>
+<td>Faithfulness</td>
+<td>Whether the answer is supported by supplied context.</td>
+</tr>
+
+<tr>
+<td>Relevance</td>
+<td>Whether the answer addresses the question.</td>
+</tr>
+
+<tr>
+<td>Instruction Following</td>
+<td>Whether the model follows the requested format or constraints.</td>
+</tr>
+
+</table>
+
+
+<h3>15. Example — Simple Evaluation Pipeline</h3>
+
+<pre>
+                    Test Dataset
+                         ↓
+                    LLM Responses
+                         ↓
+             ┌───────────┼───────────┐
+             ↓           ↓           ↓
+        Exact Match   Similarity   Factuality
+             │           │           │
+             └───────────┼───────────┘
+                         ↓
+                  Evaluation Report
+</pre>
+
+<pre><code>
+results = [
+
+    {
+        "expected": "Paris",
+        "generated": "Paris"
+    },
+
+    {
+        "expected": "4",
+        "generated": "5"
+    },
+
+    {
+        "expected": "Guido van Rossum",
+        "generated": "Guido van Rossum"
+    }
+]
+
+
+correct = 0
+
+
+for result in results:
+
+    if (
+        result["expected"].lower()
+        ==
+        result["generated"].lower()
+    ):
+
+        correct += 1
+
+
+accuracy = correct / len(results)
+
+
+print("Evaluation Results")
+print("------------------")
+
+print(
+    "Total examples:",
+    len(results)
+)
+
+print(
+    "Correct:",
+    correct
+)
+
+print(
+    "Exact Match:",
+    accuracy
+)
+</code></pre>
+
+
+<h3>16. Multimodal Evaluation</h3>
+
+<p>
+Multimodal systems also need to be evaluated for whether their answers are
+actually supported by the image.
+</p>
+
+<pre>
+Image
+  ↓
+Vision-Language Model
+  ↓
+Generated Description
+  ↓
+Compare with Image / Reference
+  ↓
+Correct?
+  ↓
+Yes / No
+</pre>
+
+<p>
+For example, if an image contains a <strong>dog</strong> but the model says
+"a cat", the answer is visually incorrect even if the generated sentence is
+grammatically perfect.
+</p>
+
+
+<h3>17. Multimodal Hallucination</h3>
+
+<p>
+A vision-language model can also hallucinate objects, attributes, or events
+that are not present in the image.
+</p>
+
+<pre>
+Image:
+A dog sitting on grass
+
+Model:
+"A brown dog is sitting on grass
+beside a red car."
+</pre>
+
+<p>
+If there is no red car in the image, the additional claim is unsupported.
+</p>
+
+<pre>
+Visual Evidence
+      ↓
+Generated Claims
+      ↓
+Compare Claims with Evidence
+      ↓
+Supported / Unsupported
+</pre>
+
+
+<h3>18. Important Evaluation Principle</h3>
+
+<p>
+A language model can produce an answer that is fluent, relevant-looking,
+and semantically similar to a reference while still being factually wrong.
+Therefore, <strong>no single automatic metric completely evaluates an LLM
+or multimodal model</strong>.
+</p>
+
+<pre>
+LLM Evaluation
+      ↓
+ ┌────┼─────────┬──────────┐
+ ↓    ↓         ↓          ↓
+Accuracy  Relevance  Faithfulness  Safety
+      ↓
+Overall Evaluation
+</pre>
+
+
+<h3>19. Key Takeaway</h3>
+
+<table>
+
+<tr>
+<th>Topic</th>
+<th>Key Idea</th>
+</tr>
+
+<tr>
+<td>Multimodal Transformer</td>
+<td>Processes information from multiple modalities such as text and images.</td>
+</tr>
+
+<tr>
+<td>Image Captioning</td>
+<td>Converts visual information into natural-language descriptions.</td>
+</tr>
+
+<tr>
+<td>CLIP-style Matching</td>
+<td>Compares image and text representations in a shared embedding space.</td>
+</tr>
+
+<tr>
+<td>Hallucination</td>
+<td>Generated information that is unsupported, fabricated, or inconsistent with available evidence.</td>
+</tr>
+
+<tr>
+<td>Exact Match</td>
+<td>Measures exact agreement with a reference answer.</td>
+</tr>
+
+<tr>
+<td>ROUGE / BLEU</td>
+<td>Measure different forms of textual overlap.</td>
+</tr>
+
+<tr>
+<td>Faithfulness</td>
+<td>Measures whether a generated answer is supported by provided context.</td>
+</tr>
+
+</table>
+
+<h3>20. Overall Picture</h3>
+
+<pre>
+                 MULTIMODAL AI
+                      │
+             ┌────────┴────────┐
+             ↓                 ↓
+           Image              Text
+             │                 │
+             └────────┬────────┘
+                      ↓
+             Multimodal Model
+                      ↓
+                    Output
+
+
+                  EVALUATION
+                      │
+                      ↓
+                 Model Output
+                      ↓
+        ┌─────────────┼─────────────┐
+        ↓             ↓             ↓
+    Correctness    Relevance    Faithfulness
+        │             │             │
+        └─────────────┼─────────────┘
+                      ↓
+              Evaluation Report
+</pre>
+
+<p>
+<strong>Core idea:</strong> multimodal Transformers connect information from
+different modalities, while LLM evaluation determines whether the generated
+output is correct, relevant, and supported by available evidence.
+</p>
+
+</section>
+
+</body>
+</html>

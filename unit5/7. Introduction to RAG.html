@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>RAG
+</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1000px;
+        margin: auto;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #222;
+    }
+    h1, h2 {
+        color: #17365d;
+    }
+    .box {
+        background: white;
+        padding: 18px;
+        margin: 18px 0;
+        border-radius: 8px;
+        border-left: 5px solid #357edd;
+    }
+    pre {
+        background: #1e1e1e;
+        color: #eee;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    code {
+        font-family: Consolas, monospace;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background: #e9eef5;
+    }
+</style>
+</head>
+
+<body>
+
+<section>
+
+<h2>Introduction to RAG</h2>
+
+<p>
+<strong>Retrieval-Augmented Generation (RAG)</strong> combines information
+retrieval with a language model. Instead of asking an LLM to answer only
+from its internal knowledge, RAG first retrieves relevant information and
+then provides that information to the LLM as context.
+</p>
+
+<pre>
+User Question
+      ↓
+   Retrieval
+      ↓
+Relevant Documents
+      ↓
+Context Augmentation
+      ↓
+LLM / Generator
+      ↓
+Final Answer
+</pre>
+
+
+<h3>1. Why RAG?</h3>
+
+<p>
+A pretrained LLM may not know information from a private document, internal
+knowledge base, or recently added data. RAG allows the model to retrieve
+relevant external information at query time.
+</p>
+
+<pre>
+Without RAG:
+
+Question → LLM → Answer
+
+
+With RAG:
+
+Question
+   ↓
+Retrieve relevant information
+   ↓
+Question + Retrieved Context
+   ↓
+LLM
+   ↓
+Answer
+</pre>
+
+
+<h3>2. The Three Main Steps</h3>
+
+<h4>Step 1 — Retrieval</h4>
+
+<p>
+The system searches a collection of documents and retrieves the pieces that
+are most relevant to the user's question.
+</p>
+
+<pre>
+Question
+   ↓
+Query Embedding
+   ↓
+Similarity Search
+   ↓
+Top-K Documents
+</pre>
+
+<h4>Step 2 — Context Augmentation</h4>
+
+<p>
+The retrieved information is added to the user's question to create an
+augmented prompt.
+</p>
+
+<pre>
+Question
+   +
+Retrieved Documents
+   ↓
+Augmented Prompt
+</pre>
+
+<h4>Step 3 — Generation</h4>
+
+<p>
+The language model receives the augmented prompt and generates the final
+answer using the retrieved context.
+</p>
+
+<pre>
+Augmented Prompt
+       ↓
+      LLM
+       ↓
+Generated Answer
+</pre>
+
+
+<h3>3. Complete RAG Pipeline</h3>
+
+<pre>
+                 Documents
+                     ↓
+                  Chunking
+                     ↓
+              Embedding Model
+                     ↓
+              Vector Database
+                     │
+                     │
+User Query ──→ Embedding Model
+                     ↓
+               Similarity Search
+                     ↓
+              Relevant Chunks
+                     ↓
+          Context + User Question
+                     ↓
+                  LLM
+                     ↓
+                  Answer
+</pre>
+
+
+<h3>4. Example — Simple RAG Without a Vector Database</h3>
+
+<p>
+First, we can understand the RAG concept using a small collection of
+documents and cosine similarity.
+</p>
+
+<p>Install the required libraries:</p>
+
+<pre>
+pip install sentence-transformers scikit-learn
+</pre>
+
+<pre><code>
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+# --------------------------------------------------
+# 1. Knowledge base
+# --------------------------------------------------
+
+documents = [
+
+    "Python is a programming language used for web development, "
+    "data science, automation, and artificial intelligence.",
+
+    "Machine learning is a branch of artificial intelligence "
+    "that learns patterns from data.",
+
+    "Deep learning uses neural networks with multiple layers "
+    "to learn complex patterns.",
+
+    "Transformers are neural network architectures widely used "
+    "for natural language processing.",
+
+    "RAG combines information retrieval with language generation."
+]
+
+
+# --------------------------------------------------
+# 2. Load embedding model
+# --------------------------------------------------
+
+embedding_model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
+
+
+# --------------------------------------------------
+# 3. Create document embeddings
+# --------------------------------------------------
+
+document_embeddings = embedding_model.encode(
+    documents
+)
+
+
+# --------------------------------------------------
+# 4. User question
+# --------------------------------------------------
+
+question = "What is RAG?"
+
+
+# --------------------------------------------------
+# 5. Convert question into an embedding
+# --------------------------------------------------
+
+question_embedding = embedding_model.encode(
+    [question]
+)
+
+
+# --------------------------------------------------
+# 6. Calculate similarity
+# --------------------------------------------------
+
+scores = cosine_similarity(
+    question_embedding,
+    document_embeddings
+)[0]
+
+
+# --------------------------------------------------
+# 7. Retrieve top documents
+# --------------------------------------------------
+
+top_k = 2
+
+top_indices = scores.argsort()[
+    ::-1
+][:top_k]
+
+
+# --------------------------------------------------
+# 8. Display retrieved context
+# --------------------------------------------------
+
+print("Question:")
+print(question)
+
+print("\nRetrieved Context:")
+
+for index in top_indices:
+
+    print(
+        "\nScore:",
+        scores[index]
+    )
+
+    print(
+        "Document:",
+        documents[index]
+    )
+</code></pre>
+
+
+<h3>5. What Happened?</h3>
+
+<pre>
+Question:
+"What is RAG?"
+
+        ↓
+
+Question Embedding
+
+        ↓
+
+Compare with document embeddings
+
+        ↓
+
+Cosine Similarity
+
+        ↓
+
+Rank documents
+
+        ↓
+
+Retrieve top 2 documents
+</pre>
+
+<p>
+At this point we have completed the <strong>retrieval</strong> part of RAG.
+The next step is to give the retrieved information to a generative model.
+</p>
+
+
+<h3>6. Context Augmentation</h3>
+
+<p>
+We combine the retrieved documents with the user's question.
+</p>
+
+<pre><code>
+context = "\n".join(
+    documents[index]
+    for index in top_indices
+)
+
+
+prompt = f"""
+Use the following context to answer the question.
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer:
+"""
+
+print(prompt)
+</code></pre>
+
+<p>
+The resulting prompt provides the language model with external context.
+</p>
+
+
+<h3>7. Example — Complete RAG with a Local T5 Generator</h3>
+
+<p>
+The following example performs retrieval and then sends the retrieved
+context to a pretrained T5 model for generation.
+</p>
+
+<p>Install:</p>
+
+<pre>
+pip install torch transformers sentence-transformers scikit-learn
+</pre>
+
+<pre><code>
+import torch
+
+from sentence_transformers import SentenceTransformer
+
+from sklearn.metrics.pairwise import cosine_similarity
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSeq2SeqLM
+)
+
+
+# ==================================================
+# 1. Knowledge base
+# ==================================================
+
+documents = [
+
+    "Python is a programming language used for "
+    "data science and artificial intelligence.",
+
+    "Machine learning enables computers to learn "
+    "patterns from data.",
+
+    "Deep learning uses multi-layer neural networks "
+    "to learn complex patterns.",
+
+    "RAG combines retrieval of external information "
+    "with language model generation."
+
+]
+
+
+# ==================================================
+# 2. Embedding model
+# ==================================================
+
+embedding_model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
+
+
+# ==================================================
+# 3. Create document embeddings
+# ==================================================
+
+document_embeddings = embedding_model.encode(
+    documents
+)
+
+
+# ==================================================
+# 4. User question
+# ==================================================
+
+question = "What is RAG?"
+
+
+# ==================================================
+# 5. Query embedding
+# ==================================================
+
+query_embedding = embedding_model.encode(
+    [question]
+)
+
+
+# ==================================================
+# 6. Similarity search
+# ==================================================
+
+scores = cosine_similarity(
+    query_embedding,
+    document_embeddings
+)[0]
+
+
+# ==================================================
+# 7. Retrieve top documents
+# ==================================================
+
+top_k = 2
+
+top_indices = scores.argsort()[
+    ::-1
+][:top_k]
+
+
+# ==================================================
+# 8. Build context
+# ==================================================
+
+context = "\n".join(
+    documents[index]
+    for index in top_indices
+)
+
+
+# ==================================================
+# 9. Create augmented prompt
+# ==================================================
+
+prompt = f"""
+Answer the question using the context.
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer:
+"""
+
+
+# ==================================================
+# 10. Load T5
+# ==================================================
+
+model_name = "google/flan-t5-small"
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name
+)
+
+model = AutoModelForSeq2SeqLM.from_pretrained(
+    model_name
+)
+
+
+# ==================================================
+# 11. Tokenize augmented prompt
+# ==================================================
+
+inputs = tokenizer(
+    prompt,
+    return_tensors="pt",
+    truncation=True
+)
+
+
+# ==================================================
+# 12. Generate answer
+# ==================================================
+
+with torch.no_grad():
+
+    output_ids = model.generate(
+        **inputs,
+        max_new_tokens=50
+    )
+
+
+# ==================================================
+# 13. Decode answer
+# ==================================================
+
+answer = tokenizer.decode(
+    output_ids[0],
+    skip_special_tokens=True
+)
+
+
+# ==================================================
+# 14. Display result
+# ==================================================
+
+print("Question:")
+print(question)
+
+print("\nRetrieved Context:")
+print(context)
+
+print("\nGenerated Answer:")
+print(answer)
+</code></pre>
+
+
+<h3>8. Understanding the Complete Program</h3>
+
+<pre>
+documents
+    ↓
+all-MiniLM-L6-v2
+    ↓
+Document Embeddings
+    │
+    │
+    │       User Question
+    │              ↓
+    │       Query Embedding
+    │              ↓
+    └──── Similarity Search
+                   ↓
+             Top-K Documents
+                   ↓
+                Context
+                   ↓
+          Question + Context
+                   ↓
+             FLAN-T5
+                   ↓
+               Answer
+</pre>
+
+
+<h3>9. RAG vs Normal LLM</h3>
+
+<table>
+
+<tr>
+<th>Normal LLM</th>
+<th>RAG</th>
+</tr>
+
+<tr>
+<td>Question → LLM → Answer</td>
+<td>Question → Retrieval → Context → LLM → Answer</td>
+</tr>
+
+<tr>
+<td>Relies mainly on learned parameters</td>
+<td>Uses external retrieved information</td>
+</tr>
+
+<tr>
+<td>Knowledge is difficult to update without additional training</td>
+<td>Knowledge can be updated by changing the knowledge source</td>
+</tr>
+
+<tr>
+<td>No retrieval step</td>
+<td>Explicit retrieval step</td>
+</tr>
+
+</table>
+
+
+<h3>10. RAG with a Vector Database</h3>
+
+<p>
+The simple example above calculates similarity directly. Real RAG systems
+usually store embeddings in a vector database or vector index.
+</p>
+
+<pre>
+Documents
+    ↓
+Chunking
+    ↓
+Embedding
+    ↓
+Vector Database
+    ↓
+        Query
+          ↓
+       Embedding
+          ↓
+    Vector Search
+          ↓
+       Top-K Chunks
+          ↓
+       LLM Context
+          ↓
+        Answer
+</pre>
+
+<p>
+Examples of technologies commonly used for vector retrieval include
+FAISS, Chroma, Qdrant, Milvus, and other vector databases.
+</p>
+
+
+<h3>11. Important RAG Components</h3>
+
+<table>
+
+<tr>
+<th>Component</th>
+<th>Purpose</th>
+</tr>
+
+<tr>
+<td>Documents</td>
+<td>Source knowledge used by the system.</td>
+</tr>
+
+<tr>
+<td>Chunking</td>
+<td>Breaks large documents into smaller pieces.</td>
+</tr>
+
+<tr>
+<td>Embedding Model</td>
+<td>Converts text into dense vectors.</td>
+</tr>
+
+<tr>
+<td>Vector Store</td>
+<td>Stores and searches document embeddings.</td>
+</tr>
+
+<tr>
+<td>Retriever</td>
+<td>Finds relevant document chunks.</td>
+</tr>
+
+<tr>
+<td>Context</td>
+<td>Retrieved information supplied to the LLM.</td>
+</tr>
+
+<tr>
+<td>Generator</td>
+<td>Produces the final natural-language answer.</td>
+</tr>
+
+</table>
+
+
+<h3>12. Key Takeaway</h3>
+
+<pre>
+             RAG
+
+Retrieval
+    ↓
+Find relevant information
+
+Context Augmentation
+    ↓
+Add retrieved information to the prompt
+
+Generation
+    ↓
+LLM generates the answer
+</pre>
+
+<p>
+<strong>RAG = Retrieval + Context Augmentation + Generation.</strong>
+</p>
+
+<p>
+The central idea is simple: <strong>retrieve relevant knowledge first, give
+that knowledge to the language model as context, and then generate the
+answer.</strong>
+</p>
+
+</section>    
+
+</body>
+</html>

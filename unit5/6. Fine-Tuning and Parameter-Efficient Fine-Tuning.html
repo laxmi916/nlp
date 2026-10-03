@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fine-Tuning and Parameter-Efficient Fine-Tuning</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1000px;
+        margin: auto;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #222;
+    }
+    h1, h2 {
+        color: #17365d;
+    }
+    .box {
+        background: white;
+        padding: 18px;
+        margin: 18px 0;
+        border-radius: 8px;
+        border-left: 5px solid #357edd;
+    }
+    pre {
+        background: #1e1e1e;
+        color: #eee;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    code {
+        font-family: Consolas, monospace;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background: #e9eef5;
+    }
+</style>
+</head>
+
+<body>
+<section>
+
+<section>
+
+<h2>Fine-Tuning and Parameter-Efficient Fine-Tuning</h2>
+
+<p>
+A pretrained Transformer already knows general language patterns. 
+<strong>Fine-tuning</strong> adapts that pretrained model to a specific task or
+domain using a smaller task-specific dataset.
+</p>
+
+<pre>
+Pretrained Transformer
+        ↓
+Task-Specific Dataset
+        ↓
+Fine-Tuning
+        ↓
+Specialized Model
+</pre>
+
+<h3>1. Why Fine-Tune a Pretrained Model?</h3>
+
+<p>
+Training a Transformer from scratch requires enormous amounts of data and
+computational resources. Fine-tuning starts with an existing pretrained model
+and teaches it a particular task.
+</p>
+
+<table>
+<tr>
+<th>Pretrained Model</th>
+<th>Fine-Tuned Model</th>
+</tr>
+
+<tr>
+<td>General language knowledge</td>
+<td>Task-specific knowledge</td>
+</tr>
+
+<tr>
+<td>Large general dataset</td>
+<td>Usually smaller task dataset</td>
+</tr>
+
+<tr>
+<td>Expensive to train from scratch</td>
+<td>Much cheaper than pretraining</td>
+</tr>
+
+<tr>
+<td>General-purpose</td>
+<td>Specialized</td>
+</tr>
+</table>
+
+
+<h3>2. Full Fine-Tuning</h3>
+
+<p>
+In traditional fine-tuning, the pretrained model's parameters are updated
+during training.
+</p>
+
+<pre>
+Pretrained Model
+      ↓
+Input
+      ↓
+Transformer
+      ↓
+Prediction
+      ↓
+Loss
+      ↓
+Backpropagation
+      ↓
+Update many/all model parameters
+</pre>
+
+<p>
+For a large language model, updating billions of parameters can require
+substantial GPU memory, storage, and training time.
+</p>
+
+
+<h3>3. Example — Fine-Tuning DistilBERT for Classification</h3>
+
+<p>
+We can fine-tune a pretrained DistilBERT model for a small binary
+classification task.
+</p>
+
+<p>Install the required libraries:</p>
+
+<pre>
+pip install torch transformers datasets
+</pre>
+
+<pre><code>
+import torch
+
+from datasets import Dataset
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification,
+    TrainingArguments,
+    Trainer
+)
+
+
+# --------------------------------------------------
+# 1. Small training dataset
+# --------------------------------------------------
+
+data = {
+    "text": [
+        "I really enjoyed this movie.",
+        "This movie was excellent.",
+        "I hated this movie.",
+        "This movie was terrible."
+    ],
+
+    "label": [
+        1,
+        1,
+        0,
+        0
+    ]
+}
+
+
+dataset = Dataset.from_dict(data)
+
+
+# --------------------------------------------------
+# 2. Load pretrained model
+# --------------------------------------------------
+
+model_name = "distilbert-base-uncased"
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name
+)
+
+
+# --------------------------------------------------
+# 3. Tokenize the dataset
+# --------------------------------------------------
+
+def tokenize_function(example):
+
+    return tokenizer(
+        example["text"],
+        truncation=True,
+        padding="max_length",
+        max_length=64
+    )
+
+
+tokenized_dataset = dataset.map(
+    tokenize_function
+)
+
+
+# --------------------------------------------------
+# 4. Load classification model
+# --------------------------------------------------
+
+model = AutoModelForSequenceClassification.from_pretrained(
+    model_name,
+    num_labels=2
+)
+
+
+# --------------------------------------------------
+# 5. Training configuration
+# --------------------------------------------------
+
+training_args = TrainingArguments(
+    output_dir="./fine_tuned_model",
+
+    num_train_epochs=3,
+
+    per_device_train_batch_size=2,
+
+    learning_rate=5e-5,
+
+    logging_steps=1,
+
+    save_strategy="no"
+)
+
+
+# --------------------------------------------------
+# 6. Trainer
+# --------------------------------------------------
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=tokenized_dataset
+)
+
+
+# --------------------------------------------------
+# 7. Fine-tune
+# --------------------------------------------------
+
+trainer.train()
+
+
+# --------------------------------------------------
+# 8. Save model
+# --------------------------------------------------
+
+trainer.save_model(
+    "./fine_tuned_model"
+)
+
+tokenizer.save_pretrained(
+    "./fine_tuned_model"
+)
+
+
+print("Fine-tuning completed.")
+</code></pre>
+
+<p>
+The important idea is that the pretrained DistilBERT parameters are updated
+using the new classification examples.
+</p>
+
+
+<h3>4. Limitations of Full Fine-Tuning</h3>
+
+<p>
+For a very large model, full fine-tuning can become expensive.
+</p>
+
+<pre>
+Large Model
+     ↓
+Billions of parameters
+     ↓
+Large GPU memory requirement
+     ↓
+Large optimizer states
+     ↓
+Large training cost
+</pre>
+
+<p>
+This motivates <strong>Parameter-Efficient Fine-Tuning (PEFT)</strong>.
+</p>
+
+
+<h2>Parameter-Efficient Fine-Tuning (PEFT)</h2>
+
+<h3>5. What is PEFT?</h3>
+
+<p>
+<strong>Parameter-Efficient Fine-Tuning (PEFT)</strong> adapts a pretrained
+model while training only a small number of additional or selected
+parameters.
+</p>
+
+<pre>
+Pretrained Model
+       ↓
+Keep most parameters frozen
+       ↓
+Train a small number of parameters
+       ↓
+Specialized Model
+</pre>
+
+<p>
+The goal is to obtain much of the benefit of fine-tuning while reducing
+trainable parameters and computational requirements.
+</p>
+
+
+<h3>6. LoRA</h3>
+
+<p>
+<strong>LoRA (Low-Rank Adaptation)</strong> is one of the most widely used
+PEFT techniques.
+</p>
+
+<p>
+Instead of directly changing a large pretrained weight matrix, LoRA keeps
+the original weights frozen and learns a small low-rank update.
+</p>
+
+<p>
+Conceptually:
+</p>
+
+<pre>
+Original weight:
+
+W
+
+LoRA learns:
+
+ΔW = B × A
+
+Updated weight:
+
+W' = W + ΔW
+</pre>
+
+<p>
+where <code>A</code> and <code>B</code> are much smaller matrices than the
+original weight matrix.
+</p>
+
+
+<h3>7. Why is LoRA Efficient?</h3>
+
+<pre>
+Full Fine-Tuning
+
+Large W
+ ↓
+Update all parameters
+
+
+LoRA
+
+Large W
+ ↓
+Freeze W
+
+Small A + B
+ ↓
+Train only A and B
+</pre>
+
+<p>
+Therefore, the number of trainable parameters can be dramatically reduced.
+</p>
+
+
+<h3>8. LoRA Architecture</h3>
+
+<pre>
+                    Input
+                      │
+                      ▼
+              ┌───────────────┐
+              │ Frozen W      │
+              │ Pretrained    │
+              │ Weight        │
+              └───────┬───────┘
+                      │
+                      │
+Input ──────► LoRA A ─► LoRA B
+                      │
+                      ▼
+                 Small Update
+                      │
+                      ▼
+                W + ΔW
+                      │
+                      ▼
+                   Output
+</pre>
+
+
+<h3>9. LoRA Parameters</h3>
+
+<p>
+LoRA commonly uses a small integer called <strong>rank</strong>
+(<code>r</code>) to control the size of the low-rank matrices.
+</p>
+
+<pre>
+Large Matrix W
+     │
+     │
+     ├── LoRA rank r = 4
+     │
+     ├── LoRA rank r = 8
+     │
+     └── LoRA rank r = 16
+</pre>
+
+<p>
+A smaller rank means fewer trainable parameters, while a larger rank gives
+LoRA more capacity to learn task-specific changes.
+</p>
+
+
+<h3>10. Example — LoRA with a Transformer</h3>
+
+<p>
+The Hugging Face PEFT library provides an easy way to add LoRA adapters to
+a pretrained Transformer.
+</p>
+
+<p>Install the required libraries:</p>
+
+<pre>
+pip install torch transformers peft
+</pre>
+
+<pre><code>
+import torch
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForSequenceClassification
+)
+
+from peft import (
+    LoraConfig,
+    get_peft_model,
+    TaskType
+)
+
+
+# --------------------------------------------------
+# 1. Load pretrained model
+# --------------------------------------------------
+
+model_name = "distilbert-base-uncased"
+
+tokenizer = AutoTokenizer.from_pretrained(
+    model_name
+)
+
+model = AutoModelForSequenceClassification.from_pretrained(
+    model_name,
+    num_labels=2
+)
+
+
+# --------------------------------------------------
+# 2. Create LoRA configuration
+# --------------------------------------------------
+
+lora_config = LoraConfig(
+
+    task_type=TaskType.SEQ_CLS,
+
+    r=8,
+
+    lora_alpha=16,
+
+    lora_dropout=0.1,
+
+    target_modules=[
+        "q_lin",
+        "v_lin"
+    ]
+)
+
+
+# --------------------------------------------------
+# 3. Add LoRA adapters
+# --------------------------------------------------
+
+model = get_peft_model(
+    model,
+    lora_config
+)
+
+
+# --------------------------------------------------
+# 4. Display trainable parameters
+# --------------------------------------------------
+
+model.print_trainable_parameters()
+</code></pre>
+
+<p>
+The important output is a comparison between the total number of model
+parameters and the much smaller number of trainable parameters.
+</p>
+
+<pre>
+trainable parameters: ...
+total parameters: ...
+trainable percentage: ...
+</pre>
+
+
+<h3>11. Example — Training the LoRA Model</h3>
+
+<p>
+The LoRA model can be trained using the same Hugging Face training tools.
+Only the LoRA parameters are updated.
+</p>
+
+<pre><code>
+from datasets import Dataset
+
+from transformers import (
+    TrainingArguments,
+    Trainer
+)
+
+
+# --------------------------------------------------
+# 1. Small dataset
+# --------------------------------------------------
+
+data = {
+    "text": [
+        "I loved this movie.",
+        "This movie was fantastic.",
+        "I hated this movie.",
+        "This movie was awful."
+    ],
+
+    "label": [
+        1,
+        1,
+        0,
+        0
+    ]
+}
+
+
+dataset = Dataset.from_dict(data)
+
+
+# --------------------------------------------------
+# 2. Tokenization
+# --------------------------------------------------
+
+def tokenize_function(example):
+
+    return tokenizer(
+        example["text"],
+        truncation=True,
+        padding="max_length",
+        max_length=64
+    )
+
+
+dataset = dataset.map(
+    tokenize_function
+)
+
+
+# --------------------------------------------------
+# 3. Training configuration
+# --------------------------------------------------
+
+training_args = TrainingArguments(
+
+    output_dir="./lora_model",
+
+    num_train_epochs=3,
+
+    per_device_train_batch_size=2,
+
+    learning_rate=1e-4,
+
+    logging_steps=1,
+
+    save_strategy="no"
+)
+
+
+# --------------------------------------------------
+# 4. Trainer
+# --------------------------------------------------
+
+trainer = Trainer(
+
+    model=model,
+
+    args=training_args,
+
+    train_dataset=dataset
+)
+
+
+# --------------------------------------------------
+# 5. Train LoRA adapters
+# --------------------------------------------------
+
+trainer.train()
+
+
+# --------------------------------------------------
+# 6. Save LoRA adapter
+# --------------------------------------------------
+
+model.save_pretrained(
+    "./lora_model"
+)
+
+tokenizer.save_pretrained(
+    "./lora_model"
+)
+
+
+print("LoRA fine-tuning completed.")
+</code></pre>
+
+
+<h3>12. Full Fine-Tuning vs LoRA</h3>
+
+<table>
+
+<tr>
+<th>Full Fine-Tuning</th>
+<th>LoRA / PEFT</th>
+</tr>
+
+<tr>
+<td>Updates many/all pretrained parameters</td>
+<td>Updates a small number of adapter parameters</td>
+</tr>
+
+<tr>
+<td>Higher memory requirement</td>
+<td>Lower memory requirement</td>
+</tr>
+
+<tr>
+<td>Large model checkpoint after training</td>
+<td>Small adapter checkpoint</td>
+</tr>
+
+<tr>
+<td>More expensive</td>
+<td>More parameter-efficient</td>
+</tr>
+
+<tr>
+<td>Useful when extensive model adaptation is required</td>
+<td>Useful when adapting large models with limited resources</td>
+</tr>
+
+</table>
+
+
+<h3>13. Fine-Tuning vs LoRA</h3>
+
+<pre>
+                    Pretrained Model
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+       Full Fine-Tuning              PEFT
+              │                         │
+       Update model                 Freeze most
+       parameters                   parameters
+                                        │
+                                        ▼
+                                      LoRA
+                                        │
+                              Train small adapters
+</pre>
+
+
+<h3>14. Important LoRA Terms</h3>
+
+<table>
+
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+
+<tr>
+<td>r</td>
+<td>Rank of the low-rank matrices.</td>
+</tr>
+
+<tr>
+<td>lora_alpha</td>
+<td>Scaling factor applied to the LoRA update.</td>
+</tr>
+
+<tr>
+<td>lora_dropout</td>
+<td>Dropout applied to the LoRA branch during training.</td>
+</tr>
+
+<tr>
+<td>target_modules</td>
+<td>Model layers where LoRA adapters are inserted.</td>
+</tr>
+
+<tr>
+<td>Adapter</td>
+<td>Small trainable component added to the pretrained model.</td>
+</tr>
+
+</table>
+
+
+<h3>15. When Should You Use Each?</h3>
+
+<pre>
+Small Model + Enough GPU
+        ↓
+Full Fine-Tuning can be practical
+
+
+Large Model + Limited GPU
+        ↓
+PEFT / LoRA
+
+
+Need multiple task-specific versions
+        ↓
+One Base Model
+      +
+Multiple LoRA Adapters
+</pre>
+
+<p>
+For example, one base model could have separate adapters for
+<strong>medical text</strong>, <strong>legal text</strong>, and
+<strong>customer support</strong>.
+</p>
+
+
+<h3>16. Key Takeaway</h3>
+
+<pre>
+Pretrained Transformer
+        ↓
+Fine-Tuning
+        ↓
+Task-Specific Model
+
+
+Pretrained Transformer
+        ↓
+PEFT / LoRA
+        ↓
+Freeze most parameters
+        ↓
+Train small adapters
+        ↓
+Task-Specific Model
+</pre>
+
+<p>
+<strong>Fine-tuning</strong> adapts a pretrained model to a new task.
+<strong>PEFT</strong> reduces the amount of the model that must be trained,
+and <strong>LoRA</strong> achieves this by learning small low-rank updates
+while keeping most pretrained weights frozen.
+</p>
+
+</section>
+
+</body>
+</html>

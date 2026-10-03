@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LLM Fundamentals</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        max-width: 1000px;
+        margin: auto;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #222;
+    }
+    h1, h2 {
+        color: #17365d;
+    }
+    .box {
+        background: white;
+        padding: 18px;
+        margin: 18px 0;
+        border-radius: 8px;
+        border-left: 5px solid #357edd;
+    }
+    pre {
+        background: #1e1e1e;
+        color: #eee;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+    }
+    code {
+        font-family: Consolas, monospace;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background: #e9eef5;
+    }
+</style>
+</head>
+
+<body>
+
+<section>
+
+<h2>LLM Fundamentals</h2>
+
+<p>
+Before learning advanced Generative AI applications such as RAG, fine-tuning,
+and AI agents, it is important to understand how Large Language Models (LLMs)
+process and generate text.
+</p>
+
+<h3>1. Tokenization</h3>
+
+<p>
+<strong>Tokenization</strong> is the process of converting text into smaller
+units called <strong>tokens</strong>. These tokens are then converted into
+numerical token IDs that the model can process.
+</p>
+
+<pre>
+Text
+ ↓
+Tokenizer
+ ↓
+Tokens
+ ↓
+Token IDs
+ ↓
+LLM
+</pre>
+
+<p>For example:</p>
+
+<pre>
+"Artificial intelligence is powerful"
+
+        ↓
+
+["Artificial", " intelligence", " is", " powerful"]
+
+        ↓
+
+[1234, 5678, 321, 9087]
+</pre>
+
+<p>
+A token does not always correspond to a complete word. Depending on the
+tokenizer, a word can be divided into multiple subword tokens.
+</p>
+
+<pre>
+"unbelievable"
+
+        ↓
+
+["un", "believ", "able"]
+</pre>
+
+<p>
+The exact tokens and token IDs depend on the tokenizer used by the model.
+</p>
+
+<h3>2. Pretraining</h3>
+
+<p>
+<strong>Pretraining</strong> is the initial training stage in which an LLM
+learns general language patterns from a very large collection of text.
+</p>
+
+<pre>
+Large Text Dataset
+        ↓
+    Tokenization
+        ↓
+   Transformer
+        ↓
+ Learn Language Patterns
+        ↓
+   Pretrained Model
+</pre>
+
+<p>
+During pretraining, the model learns patterns such as relationships between
+words, syntax, context, and common patterns in language.
+</p>
+
+<p>
+For decoder-based LLMs such as GPT and LLaMA, a major pretraining objective is
+<strong>next-token prediction</strong>.
+</p>
+
+<h3>3. Next-Token Prediction</h3>
+
+<p>
+A decoder-based LLM predicts the probability of the next token based on the
+tokens that came before it.
+</p>
+
+<pre>
+"The cat is"
+
+        ↓
+
+Possible next tokens:
+
+sleeping   → 0.45
+running    → 0.20
+eating     → 0.15
+...
+</pre>
+
+<p>
+The model selects or samples a token and then uses the newly generated token
+to predict the next one.
+</p>
+
+<pre>
+"The cat is"
+      ↓
+"sleeping"
+      ↓
+"The cat is sleeping"
+      ↓
+"on"
+      ↓
+"The cat is sleeping on"
+      ↓
+...
+</pre>
+
+<p>
+This process is called <strong>autoregressive generation</strong>.
+</p>
+
+<h3>4. Context Window</h3>
+
+<p>
+The <strong>context window</strong> is the maximum amount of token information
+that a model can process as context for a particular request or generation
+process.
+</p>
+
+<pre>
+Context Window
+┌───────────────────────────────────┐
+│ Previous conversation             │
+│ Documents                         │
+│ Instructions                      │
+│ User question                     │
+└───────────────────────────────────┘
+                  ↓
+                 LLM
+                  ↓
+              Response
+</pre>
+
+<p>
+For example, if a model has a context window of 32,000 tokens, the input
+context and the generated output must fit within the model's applicable
+token limit.
+</p>
+
+<p>
+<strong>Important:</strong> context window is measured in
+<strong>tokens</strong>, not simply in words or characters.
+</p>
+
+<h3>5. Base Model vs Instruction-Tuned Model</h3>
+
+<p>
+A <strong>base model</strong> is a pretrained language model that has mainly
+learned language patterns from its pretraining objective.
+</p>
+
+<pre>
+Large Text Corpus
+       ↓
+   Pretraining
+       ↓
+    Base Model
+</pre>
+
+<p>
+It may be capable of continuing text, but it is not necessarily optimized to
+follow user instructions in a conversational way.
+</p>
+
+<p>
+An <strong>instruction-tuned model</strong> is further trained so that it
+responds more effectively to instructions and tasks provided by users.
+</p>
+
+<pre>
+Base Model
+    ↓
+Instruction / Demonstration Dataset
+    ↓
+Further Training
+    ↓
+Instruction-Tuned Model
+</pre>
+
+<p>Conceptually:</p>
+
+<pre>
+Base Model:
+
+User:
+"Explain photosynthesis"
+
+Model:
+"Explain photosynthesis by..."
+
+
+Instruction-Tuned Model:
+
+User:
+"Explain photosynthesis"
+
+Model:
+"Photosynthesis is the process by which..."
+</pre>
+
+<p>
+The exact behavior depends on the model and its training.
+</p>
+
+<h3>6. Complete LLM Flow</h3>
+
+<pre>
+User Text
+    ↓
+Tokenization
+    ↓
+Token IDs
+    ↓
+Context Window
+    ↓
+Transformer
+    ↓
+Next-Token Prediction
+    ↓
+Generated Token
+    ↓
+Next-Token Prediction
+    ↓
+...
+    ↓
+Generated Text
+</pre>
+
+<h3>7. Key Takeaway</h3>
+
+<table>
+<tr>
+<th>Concept</th>
+<th>Meaning</th>
+</tr>
+
+<tr>
+<td>Tokenization</td>
+<td>Converts text into tokens and token IDs.</td>
+</tr>
+
+<tr>
+<td>Pretraining</td>
+<td>Teaches the model general language patterns from large datasets.</td>
+</tr>
+
+<tr>
+<td>Next-Token Prediction</td>
+<td>Predicts the next token from the preceding context.</td>
+</tr>
+
+<tr>
+<td>Context Window</td>
+<td>Defines the token context available to the model for a request.</td>
+</tr>
+
+<tr>
+<td>Base Model</td>
+<td>A pretrained model before instruction-focused tuning.</td>
+</tr>
+
+<tr>
+<td>Instruction-Tuned Model</td>
+<td>A model further trained to follow instructions and perform tasks.</td>
+</tr>
+</table>
+
+<p>
+<strong>In simple terms:</strong> tokenization converts text into numbers,
+pretraining teaches the model language patterns, the context window determines
+what information the model can consider, next-token prediction drives
+autoregressive generation, and instruction tuning makes a pretrained model
+more useful for following user instructions.
+</p>
+
+</section>
+
+<h3>8. Example — Tokenization with Hugging Face</h3>
+
+<p>
+We can directly see how an LLM tokenizer converts text into tokens and token
+IDs.
+</p>
+
+<pre>
+pip install transformers
+</pre>
+
+<pre><code>
+from transformers import AutoTokenizer
+
+model_name = "gpt2"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+text = "Artificial intelligence is powerful."
+
+tokens = tokenizer.tokenize(text)
+
+token_ids = tokenizer.encode(text)
+
+print("Text:")
+print(text)
+
+print("\nTokens:")
+print(tokens)
+
+print("\nToken IDs:")
+print(token_ids)
+</code></pre>
+
+<pre>
+Text
+ ↓
+Tokenizer
+ ↓
+Tokens
+ ↓
+Token IDs
+</pre>
+
+
+<h3>9. Example — Next-Token Prediction</h3>
+
+<p>
+A causal language model predicts what token is likely to come next from the
+previous tokens.
+</p>
+
+<pre><code>
+import torch
+
+from transformers import (
+    AutoTokenizer,
+    AutoModelForCausalLM
+)
+
+
+model_name = "gpt2"
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+model = AutoModelForCausalLM.from_pretrained(
+    model_name
+)
+
+model.eval()
+
+
+text = "Artificial intelligence is"
+
+inputs = tokenizer(
+    text,
+    return_tensors="pt"
+)
+
+
+with torch.no_grad():
+
+    outputs = model(**inputs)
+
+
+# Get logits for the last input token
+next_token_logits = outputs.logits[:, -1, :]
+
+# Find the most likely next token
+next_token_id = torch.argmax(
+    next_token_logits,
+    dim=-1
+)
+
+
+next_token = tokenizer.decode(
+    next_token_id
+)
+
+
+print("Input:")
+print(text)
+
+print("\nPredicted next token:")
+print(next_token)
+</code></pre>
+
+<p>
+The model produces a probability score for every possible next token.
+<code>argmax()</code> selects the token with the highest score.
+</p>
+
+
+<h3>10. Example — Context Window and Token Counting</h3>
+
+<p>
+The context window is measured in tokens rather than simply in words.
+We can use a tokenizer to count the number of tokens in an input.
+</p>
+
+<pre><code>
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("gpt2")
+
+text = """
+Artificial intelligence allows computers
+to learn patterns from data and perform
+tasks that normally require human intelligence.
+"""
+
+tokens = tokenizer.encode(text)
+
+print("Number of tokens:")
+print(len(tokens))
+</code></pre>
+
+<p>
+This gives a simple practical demonstration of why token count matters when
+working with LLM context windows.
+</p>
+
+
+<h3>11. Example — Base Model vs Instruction-Tuned Model</h3>
+
+<p>
+A base model is primarily trained to continue text, whereas an
+instruction-tuned model is additionally trained to follow instructions.
+</p>
+
+<pre><code>
+from transformers import pipeline
+
+
+# Base language model
+base_model = pipeline(
+    "text-generation",
+    model="gpt2"
+)
+
+
+# Instruction-tuned model
+instruction_model = pipeline(
+    "text-generation",
+    model="HuggingFaceH4/zephyr-7b-beta"
+)
+
+
+prompt = "Explain artificial intelligence in simple words."
+
+
+print("BASE MODEL:")
+print(
+    base_model(
+        prompt,
+        max_new_tokens=40
+    )[0]["generated_text"]
+)
+
+
+print("\nINSTRUCTION-TUNED MODEL:")
+print(
+    instruction_model(
+        prompt,
+        max_new_tokens=40
+    )[0]["generated_text"]
+)
+</code></pre>
+
+<p>
+The important conceptual difference is:
+</p>
+
+<pre>
+Base Model
+    ↓
+Learn language patterns
+    ↓
+Continue text
+
+Instruction-Tuned Model
+    ↓
+Learn language patterns
+    +
+Learn to follow instructions
+    ↓
+Respond to tasks
+</pre>
+
+<h3>12. Practical Summary</h3>
+
+<table>
+<tr>
+<th>Concept</th>
+<th>Practical Demonstration</th>
+</tr>
+
+<tr>
+<td>Tokenization</td>
+<td>Display tokens and token IDs</td>
+</tr>
+
+<tr>
+<td>Pretraining</td>
+<td>Understand the training objective; full pretraining is not performed here</td>
+</tr>
+
+<tr>
+<td>Next-Token Prediction</td>
+<td>Predict the next token using a causal language model</td>
+</tr>
+
+<tr>
+<td>Context Window</td>
+<td>Count tokens in an input</td>
+</tr>
+
+<tr>
+<td>Base vs Instruction-Tuned</td>
+<td>Compare responses from the two model types</td>
+</tr>
+</table>
+
+<h3>Build a Tiny GPT-Style Language Model from Scratch</h3>
+<pre></code>
+import torch
+import torch.nn as nn
+import torch.optim as optim
+
+
+# ============================================================
+# 1. Training text
+# ============================================================
+
+text = """
+the cat is sleeping
+the cat is sitting
+the cat is eating
+the dog is running
+the dog is sleeping
+the dog is eating
+the bird is flying
+the bird is singing
+"""
+
+
+# ============================================================
+# 2. Create vocabulary
+# ============================================================
+
+words = text.split()
+
+vocab = sorted(set(words))
+
+word_to_id = {
+    word: i
+    for i, word in enumerate(vocab)
+}
+
+id_to_word = {
+    i: word
+    for word, i in word_to_id.items()
+}
+
+vocab_size = len(vocab)
+
+print("Vocabulary:")
+print(word_to_id)
+
+print("\nVocabulary size:")
+print(vocab_size)
+
+
+# ============================================================
+# 3. Convert words into token IDs
+# ============================================================
+
+token_ids = [
+    word_to_id[word]
+    for word in words
+]
+
+token_ids = torch.tensor(
+    token_ids,
+    dtype=torch.long
+)
+
+
+print("\nToken IDs:")
+print(token_ids)
+
+
+# ============================================================
+# 4. Create next-token prediction examples
+#
+# Example:
+#
+# Input:
+#     the cat is
+#
+# Target:
+#     sleeping
+#
+# ============================================================
+
+sequence_length = 3
+
+inputs = []
+targets = []
+
+for i in range(
+    len(token_ids) - sequence_length
+):
+
+    input_sequence = token_ids[
+        i:i + sequence_length
+    ]
+
+    target_token = token_ids[
+        i + sequence_length
+    ]
+
+    inputs.append(input_sequence)
+    targets.append(target_token)
+
+
+inputs = torch.stack(inputs)
+
+targets = torch.stack(targets)
+
+
+print("\nTraining Inputs:")
+print(inputs)
+
+print("\nTraining Targets:")
+print(targets)
+
+
+# ============================================================
+# 5. GPT Block
+# ============================================================
+
+class GPTBlock(nn.Module):
+
+    def __init__(
+        self,
+        embedding_dim,
+        num_heads,
+        hidden_dim
+    ):
+
+        super().__init__()
+
+
+        # ----------------------------------------------------
+        # Causal self-attention
+        # ----------------------------------------------------
+
+        self.attention = nn.MultiheadAttention(
+            embed_dim=embedding_dim,
+            num_heads=num_heads,
+            batch_first=True
+        )
+
+
+        # ----------------------------------------------------
+        # Layer Normalization
+        # ----------------------------------------------------
+
+        self.norm1 = nn.LayerNorm(
+            embedding_dim
+        )
+
+
+        # ----------------------------------------------------
+        # Feed-Forward Network
+        # ----------------------------------------------------
+
+        self.feed_forward = nn.Sequential(
+
+            nn.Linear(
+                embedding_dim,
+                hidden_dim
+            ),
+
+            nn.ReLU(),
+
+            nn.Linear(
+                hidden_dim,
+                embedding_dim
+            )
+        )
+
+
+        # ----------------------------------------------------
+        # Second Layer Normalization
+        # ----------------------------------------------------
+
+        self.norm2 = nn.LayerNorm(
+            embedding_dim
+        )
+
+
+    def forward(self, x, mask):
+
+        # ====================================================
+        # 1. Causal Self-Attention
+        # ====================================================
+
+        attention_output, _ = self.attention(
+            x,
+            x,
+            x,
+            attn_mask=mask
+        )
+
+
+        # ====================================================
+        # 2. Residual Connection + LayerNorm
+        # ====================================================
+
+        x = self.norm1(
+            x + attention_output
+        )
+
+
+        # ====================================================
+        # 3. Feed-Forward Network
+        # ====================================================
+
+        ff_output = self.feed_forward(x)
+
+
+        # ====================================================
+        # 4. Residual Connection + LayerNorm
+        # ====================================================
+
+        x = self.norm2(
+            x + ff_output
+        )
+
+
+        return x
+
+
+# ============================================================
+# 6. Tiny GPT Model
+# ============================================================
+
+class TinyGPT(nn.Module):
+
+    def __init__(
+        self,
+        vocab_size,
+        embedding_dim,
+        num_heads,
+        hidden_dim,
+        num_layers,
+        sequence_length
+    ):
+
+        super().__init__()
+
+
+        self.sequence_length = sequence_length
+
+
+        # ----------------------------------------------------
+        # Token Embedding
+        # ----------------------------------------------------
+
+        self.token_embedding = nn.Embedding(
+            vocab_size,
+            embedding_dim
+        )
+
+
+        # ----------------------------------------------------
+        # Positional Embedding
+        # ----------------------------------------------------
+
+        self.position_embedding = nn.Embedding(
+            sequence_length,
+            embedding_dim
+        )
+
+
+        # ----------------------------------------------------
+        # Multiple GPT Blocks
+        # ----------------------------------------------------
+
+        self.blocks = nn.ModuleList(
+
+            [
+                GPTBlock(
+                    embedding_dim,
+                    num_heads,
+                    hidden_dim
+                )
+
+                for _ in range(num_layers)
+            ]
+        )
+
+
+        # ----------------------------------------------------
+        # Final Layer Normalization
+        # ----------------------------------------------------
+
+        self.final_norm = nn.LayerNorm(
+            embedding_dim
+        )
+
+
+        # ----------------------------------------------------
+        # Output Layer
+        #
+        # Converts hidden representation into
+        # scores for every vocabulary token.
+        # ----------------------------------------------------
+
+        self.output_layer = nn.Linear(
+            embedding_dim,
+            vocab_size
+        )
+
+
+    def forward(self, x):
+
+        batch_size, seq_len = x.shape
+
+
+        # ====================================================
+        # 1. Token Embedding
+        # ====================================================
+
+        token_embeddings = self.token_embedding(x)
+
+
+        # ====================================================
+        # 2. Positional Embedding
+        # ====================================================
+
+        positions = torch.arange(
+            seq_len,
+            device=x.device
+        )
+
+        position_embeddings = self.position_embedding(
+            positions
+        )
+
+
+        # ====================================================
+        # 3. Combine token + position embeddings
+        # ====================================================
+
+        x = (
+            token_embeddings
+            +
+            position_embeddings
+        )
+
+
+        # ====================================================
+        # 4. Create Causal Mask
+        #
+        # Future tokens are hidden.
+        #
+        # Example for 3 tokens:
+        #
+        #       1   2   3
+        #   1   ✓   X   X
+        #   2   ✓   ✓   X
+        #   3   ✓   ✓   ✓
+        #
+        # ====================================================
+
+        mask = torch.triu(
+            torch.ones(
+                seq_len,
+                seq_len,
+                device=x.device
+            ),
+            diagonal=1
+        ).bool()
+
+
+        # ====================================================
+        # 5. Pass through GPT blocks
+        # ====================================================
+
+        for block in self.blocks:
+
+            x = block(
+                x,
+                mask
+            )
+
+
+        # ====================================================
+        # 6. Final normalization
+        # ====================================================
+
+        x = self.final_norm(x)
+
+
+        # ====================================================
+        # 7. Use last token representation
+        # ====================================================
+
+        last_token = x[:, -1, :]
+
+
+        # ====================================================
+        # 8. Predict next token
+        # ====================================================
+
+        logits = self.output_layer(
+            last_token
+        )
+
+
+        return logits
+
+
+# ============================================================
+# 7. Model parameters
+# ============================================================
+
+embedding_dim = 32
+
+num_heads = 4
+
+hidden_dim = 64
+
+num_layers = 2
+
+
+# ============================================================
+# 8. Create model
+# ============================================================
+
+model = TinyGPT(
+    vocab_size=vocab_size,
+    embedding_dim=embedding_dim,
+    num_heads=num_heads,
+    hidden_dim=hidden_dim,
+    num_layers=num_layers,
+    sequence_length=sequence_length
+)
+
+
+print("\nTiny GPT Model:")
+print(model)
+
+
+# ============================================================
+# 9. Loss and optimizer
+# ============================================================
+
+criterion = nn.CrossEntropyLoss()
+
+optimizer = optim.Adam(
+    model.parameters(),
+    lr=0.01
+)
+
+
+# ============================================================
+# 10. Training
+# ============================================================
+
+epochs = 1000
+
+print("\nTraining...\n")
+
+
+for epoch in range(epochs):
+
+    # --------------------------------------------------------
+    # Clear previous gradients
+    # --------------------------------------------------------
+
+    optimizer.zero_grad()
+
+
+    # --------------------------------------------------------
+    # Forward pass
+    # --------------------------------------------------------
+
+    logits = model(inputs)
+
+
+    # --------------------------------------------------------
+    # Calculate loss
+    # --------------------------------------------------------
+
+    loss = criterion(
+        logits,
+        targets
+    )
+
+
+    # --------------------------------------------------------
+    # Backpropagation
+    # --------------------------------------------------------
+
+    loss.backward()
+
+
+    # --------------------------------------------------------
+    # Update model parameters
+    # --------------------------------------------------------
+
+    optimizer.step()
+
+
+    # --------------------------------------------------------
+    # Display training progress
+    # --------------------------------------------------------
+
+    if (epoch + 1) % 100 == 0:
+
+        print(
+            "Epoch:",
+            epoch + 1,
+            "Loss:",
+            loss.item()
+        )
+
+
+# ============================================================
+# 11. Prediction function
+# ============================================================
+
+def predict_next_word(
+    model,
+    text
+):
+
+    model.eval()
+
+
+    # --------------------------------------------------------
+    # Convert input text into words
+    # --------------------------------------------------------
+
+    words_input = text.split()
+
+
+    # --------------------------------------------------------
+    # Convert words into IDs
+    # --------------------------------------------------------
+
+    input_ids = [
+        word_to_id[word]
+        for word in words_input
+    ]
+
+
+    # --------------------------------------------------------
+    # Create tensor
+    # --------------------------------------------------------
+
+    x = torch.tensor(
+        [input_ids],
+        dtype=torch.long
+    )
+
+
+    # --------------------------------------------------------
+    # Prediction without gradients
+    # --------------------------------------------------------
+
+    with torch.no_grad():
+
+        logits = model(x)
+
+
+        # ----------------------------------------------------
+        # Convert logits to probabilities
+        # ----------------------------------------------------
+
+        probabilities = torch.softmax(
+            logits,
+            dim=-1
+        )
+
+
+        # ----------------------------------------------------
+        # Select highest-probability token
+        # ----------------------------------------------------
+
+        predicted_id = torch.argmax(
+            probabilities,
+            dim=-1
+        ).item()
+
+
+    return id_to_word[predicted_id]
+
+
+# ============================================================
+# 12. Test the model
+# ============================================================
+
+test_sentences = [
+    "the cat is",
+    "the dog is",
+    "the bird is"
+]
+
+
+print("\nPredictions:")
+print("-----------------------------")
+
+
+for sentence in test_sentences:
+
+    prediction = predict_next_word(
+        model,
+        sentence
+    )
+
+    print(
+        sentence,
+        "→",
+        prediction
+    )
+</code></pre>   
+
+</body>
+</html>
