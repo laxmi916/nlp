@@ -1552,7 +1552,7 @@ while
   same basic operation: <strong>matrix multiplication</strong>.
 </p>
 
-<p>
+<p class="equation">
   \[
   Q = XW_Q
   \qquad|\qquad
@@ -2160,7 +2160,7 @@ const attentionWK = [
   The softmax function is:
 </p>
 
-<p>
+<p class="equation">
   \[
   \text{attention weight}_i 
   =
@@ -2785,7 +2785,7 @@ const attentionWK = [
   and all the resulting vectors are added together.
 </p>
 
-<p>
+<p class="equation">
   \[
   \text{Output}
   =
@@ -3402,7 +3402,7 @@ const attentionWK = [
   </strong>
 </p>
 
-<p>
+<p class="equation">
   \[
   \begin{aligned}
   \text{Output} ={}&
@@ -3431,7 +3431,7 @@ const attentionWK = [
   For the first dimension:
 </p>
 
-<p>
+<p class="equation">
   \[
   \begin{aligned}
   d_1={}&
@@ -3455,7 +3455,7 @@ const attentionWK = [
   For the second dimension:
 </p>
 
-<p>
+<p class="equation">
   \[
   \begin{aligned}
   d_2={}&
@@ -3479,7 +3479,7 @@ const attentionWK = [
   For the third dimension:
 </p>
 
-<p>
+<p class="equation">
   \[
   \begin{aligned}
   d_3={}&
@@ -3503,7 +3503,7 @@ const attentionWK = [
   For the fourth dimension:
 </p>
 
-<p>
+<p class="equation">
   \[
   \begin{aligned}
   d_4={}&
@@ -3525,7 +3525,7 @@ const attentionWK = [
 
 <h3>Output vector for "it"</h3>
 
-<p>
+<p class="equation">
   \[
   \boxed{
   \text{Output}_{it}
@@ -3640,7 +3640,7 @@ const attentionWK = [
   Each head independently performs scaled dot-product attention:
 </p>
 
-<p>
+<p class="equation">
   \[
   \text{head}_i =
   \operatorname{softmax}
@@ -3664,7 +3664,7 @@ const attentionWK = [
   outputs are concatenated:
 </p>
 
-<p>
+<p class="equation">
   \[
   \operatorname{Concat}
   (\text{head}_1,\text{head}_2,\ldots,\text{head}_A)
@@ -3677,7 +3677,7 @@ const attentionWK = [
   maps it back to the Transformer's model dimension:
 </p>
 
-<p>
+<p class="equation">
   \[
   \operatorname{MultiHeadAttention}(X)
   =
@@ -3792,7 +3792,7 @@ const attentionWK = [
   written as:
 </p>
 
-<p>
+<p class="equation">
   \[
   \mathrm{FFN}(x_i)
   =
@@ -3908,7 +3908,7 @@ const attentionWK = [
   The final LayerNorm operation is:
 </p>
 
-<p>
+<p class="equation">
   \[
   \mathrm{LayerNorm}(x)
   =
@@ -3964,7 +3964,7 @@ const attentionWK = [
   to the attention mechanism:
 </p>
 
-<p>
+<p class="equation">
   \[
   t_{2,i}
   =
@@ -3987,7 +3987,7 @@ const attentionWK = [
   The attention output is added to the original token representation:
 </p>
 
-<p>
+<p class="equation">
   \[
   t_{3,i} = x_i + t_{2,i}
   \]
@@ -4035,7 +4035,7 @@ const attentionWK = [
   residual connection:
 </p>
 
-<p>
+<p class="equation">
   \[
   h_i = t_{3,i} + t_{5,i}
   \]
@@ -4055,7 +4055,7 @@ const attentionWK = [
   residual connection.
 </p>
 
-<p>
+<p class="equation">
   \[
   t_{3,i} = x_i + t_{2,i}
   \]
