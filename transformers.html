@@ -1,0 +1,4542 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Transformers — A Simple Mathematical Tutorial</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.7;color:#111827;max-width:950px;margin:0 auto;padding:28px;background:#fff}
+  h1{font-size:2.2rem;color:#0b3d91;margin:0 0 18px} h2{font-size:1.55rem;color:#0b3d91;margin-top:38px} h3{color:#174ea6;margin-top:28px}
+  p,li{font-size:1rem;text-align:justify} .box{border-left:5px solid #0b3d91;background:#f5f9ff;padding:15px 18px;margin:18px 0;border-radius:6px}
+  .note{background:#fff7e6;border:1px solid #ffd591;padding:14px 16px;margin:18px 0;border-radius:6px}
+  .equation{font-family:"Times New Roman",serif;font-size:1.18rem;background:#f6f8fa;border:1px solid #e1e4e8;padding:13px;text-align:center;margin:14px 0;border-radius:6px;overflow:auto}
+  .small{color:#4b5563;font-size:.93rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:18px 0}.card{border:1px solid #dbe3ee;padding:15px;border-radius:9px;background:#fbfdff}.card b{color:#0b3d91}
+  .meaning {
+    color: #008fbd;
+    font-weight: bold;
+    margin-left: 10px;
+}
+  table{border-collapse:collapse;width:100%;margin:18px 0}th,td{border:1px solid #d1d5db;padding:9px;text-align:center}th{background:#eef4ff}
+  pre{background:#111827;color:#f9fafb;padding:15px;border-radius:8px;overflow:auto}.flow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:22px 0}.node{padding:11px 15px;border:2px solid #93c5fd;background:#eff6ff;border-radius:8px;font-weight:600}.arrow{font-size:1.4rem;color:#2563eb}
+  svg{max-width:100%;height:auto}.toc{background:#f8fafc;border:1px solid #e5e7eb;padding:18px;border-radius:8px}.toc li{margin:5px 0}
+  @media(max-width:600px){body{padding:18px}h1{font-size:1.8rem}h2{font-size:1.35rem}}
+
+
+  /* =========================================================
+     QKV INTERACTIVE STYLES
+     ========================================================= */
+
+  #qkv-interactive {
+    margin-top: 2.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .qkv-title {
+    color: #0f172a;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+  }
+
+  .qkv-description {
+    color: #64748b;
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+  }
+
+
+  /* Token area */
+
+  .qkv-token-section {
+    margin-bottom: 1rem;
+  }
+
+  .qkv-label {
+    color: #475569;
+    font-weight: 600;
+    margin-right: 0.5rem;
+  }
+
+  .qkv-tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+  }
+
+  .qkv-token {
+    border: 1px solid #cbd5e1;
+    background: white;
+    color: #334155;
+    border-radius: 0.4rem;
+    padding: 0.55rem 0.75rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+  }
+
+  .qkv-token:hover {
+    border-color: #0f172a;
+  }
+
+  .qkv-token.active {
+    background: #0f172a;
+    color: white;
+    border-color: #0f172a;
+    font-weight: 600;
+  }
+
+
+  /* Q K V buttons */
+
+  .qkv-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.25rem 0;
+  }
+
+  .qkv-matrix-btn {
+    min-width: 48px;
+    padding: 0.55rem 0.85rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.4rem;
+    background: white;
+    color: #334155;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .qkv-matrix-btn:hover {
+    border-color: #0f172a;
+  }
+
+  .qkv-matrix-btn.active {
+    background: #0f766e;
+    border-color: #0f766e;
+    color: white;
+  }
+
+
+  /* Main visualization */
+
+  .qkv-main-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.4rem;
+
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+
+    padding: 2rem 1.5rem;
+    margin-top: 1rem;
+
+    overflow-x: auto;
+  }
+
+  .qkv-column {
+    min-width: 145px;
+    text-align: center;
+  }
+
+  .matrix-column {
+    min-width: 260px;
+  }
+
+  .qkv-heading {
+    color: #475569;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+  }
+
+  .qkv-output-heading {
+    color: #0f766e;
+  }
+
+  .qkv-symbol {
+    color: #64748b;
+    font-size: 1.7rem;
+    font-weight: 600;
+  }
+
+
+  /* Embedding vector */
+
+  .qkv-vector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: center;
+  }
+
+  .qkv-vector span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 70px;
+    height: 35px;
+
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.3rem;
+
+    font-family: monospace;
+    color: #334155;
+  }
+
+  .qkv-token-name {
+    margin-top: 0.7rem;
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+
+
+  /* Matrix */
+
+  .qkv-matrix {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.3rem;
+    max-width: 260px;
+    margin: auto;
+  }
+
+  .qkv-matrix span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 38px;
+
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.25rem;
+
+    font-family: monospace;
+    font-size: 0.78rem;
+    color: #334155;
+  }
+
+
+  /* Output */
+
+  .qkv-output-vector {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: center;
+  }
+
+  .qkv-output-vector span {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    width: 78px;
+    height: 35px;
+
+    background: #ccfbf1;
+    border: 1px solid #99f6e4;
+    border-radius: 0.3rem;
+
+    font-family: monospace;
+    font-weight: 700;
+    color: #0f766e;
+  }
+
+
+  /* Formula */
+
+  .qkv-formula-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.6rem;
+
+    padding: 1rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .qkv-formula {
+    color: #0f172a;
+    font-family: Georgia, serif;
+    font-size: 1.15rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .qkv-formula-card p {
+    color: #64748b;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+
+  /* Detailed calculation */
+
+  .qkv-calculation-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.6rem;
+
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .qkv-calculation-card h3 {
+    color: #0f172a;
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  #qkvCalculationIntro {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  .qkv-calculation {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.45rem;
+
+    padding: 0.8rem 1rem;
+    margin-top: 0.6rem;
+
+    font-family: monospace;
+    font-size: 0.85rem;
+
+    overflow-x: auto;
+  }
+
+  .qkv-calculation strong {
+    color: #0f172a;
+  }
+
+
+  /* Insight */
+
+  .qkv-insight {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.6rem;
+
+    padding: 1.1rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .qkv-insight h3 {
+    color: #0f172a;
+    margin-top: 0;
+  }
+
+  .qkv-insight p {
+    color: #475569;
+    line-height: 1.7;
+    margin-bottom: 0;
+  }
+
+
+  @media (max-width: 700px) {
+
+    .qkv-main-card {
+      justify-content: flex-start;
+      padding: 1.5rem 1rem;
+    }
+
+    .qkv-symbol {
+      font-size: 1.3rem;
+    }
+
+  }
+
+</style>
+
+</head>
+<body>
+<h1>A. Introduction to the Transformer</h1>
+<h2>1. What is a Transformer?</h2>
+<p>A Transformer is a neural-network architecture that uses self-attention to let every token dynamically gather relevant information from other tokens in a sequence, updating vector representations layer by layer.</p>
+
+<section>
+  <h2>Transformer Architecture</h2>
+
+  <p>
+    The figure below shows the main components involved in transforming an input sequence into contextualized
+    representations. These contextualized representations can then be used for a particular task, such as predicting the next token in a
+  language model, classifying a sequence, or generating another sequence.
+  </p>
+
+<img src="./images/transformer-architecture.png"
+    alt="Diagram of Transformer architecture"
+    width="100%">
+
+  <p>
+    At a high level, a Transformer can be understood through three main stages:
+  </p>
+
+  <h3>1. Input Representation</h3>
+
+  <ul>
+    <li>
+      Each input token is converted into a numerical vector using a
+      <strong>token embedding matrix</strong>.
+    </li>
+    <li>
+      <strong>Positional information</strong> is incorporated so that the
+      model can represent the order of tokens in the sequence.
+    </li>
+    <li>
+      The vectors obtained after combining token embeddings with positional information are used as the initial input to the Transformer blocks.
+    </li>
+  </ul>
+
+  <h3>2. Transformer Blocks</h3>
+
+  <p>
+    The input representations are passed through one or more
+    <strong>Transformer blocks</strong>. These blocks are the core of the
+    Transformer and progressively build context-aware representations.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Multi-head self-attention</strong> allows each token to gather
+      relevant information from other tokens in the sequence.
+    </li>
+    <li>
+      <strong>Feedforward networks</strong> further transform the
+      representation of each token.
+    </li>
+    <li>
+      <strong>Residual connections and layer normalization</strong> help
+      preserve information and stabilize the learning process.
+    </li>
+  </ul>
+
+  <p>
+    If the input sequence is represented by
+    <span class="code">X = (x<sub>1</sub>, x<sub>2</sub>, ..., x<sub>n</sub>)</span>,
+    the Transformer blocks progressively transform these vectors into
+    contextualized representations
+    <span class="code">H = (h<sub>1</sub>, h<sub>2</sub>, ..., h<sub>n</sub>)</span>.
+  </p>
+
+  <h3>3. Output / Language Modeling Head</h3>
+
+  <p>
+    The final contextualized representations can be used for different
+    tasks depending on the type of Transformer model.
+  </p>
+
+  <ul>
+    <li>
+      In <strong>language modeling</strong>, the final representation is
+      converted into scores for the vocabulary and a
+      <strong>softmax</strong> produces the probability of possible output
+      tokens.
+    </li>
+    <li>
+      In other applications, the representations can instead be used for
+      tasks such as classification, sequence labeling, translation, or
+      question answering.
+    </li>
+  </ul>
+
+  <div class="note">
+    <strong>Key idea:</strong>
+    A Transformer takes token representations as input and uses
+    self-attention to allow tokens to exchange information, producing
+    context-aware representations that can then be used for different
+    downstream tasks.
+  </div>
+</section>
+
+<section>
+  <h2>Summary</h2>
+
+  <p>
+    A Transformer processes a sequence by first representing its tokens as
+    vectors, incorporating positional information, and then repeatedly
+    transforming these representations through Transformer blocks.
+    The central mechanism is <strong>self-attention</strong>, which allows
+    each token to gather relevant information from other tokens in the
+    sequence. The resulting contextualized representations can then be used
+    for language modeling or other sequence-processing tasks.
+  </p>
+</section>
+
+<div class="grid">
+<div class="card"><b>Input</b><br>Tokens → embeddings + position information</div>
+<div class="card"><b>Attention</b><br>Which tokens are important to this token?</div>
+<div class="card"><b>FFN</b><br>Process the updated representation</div>
+<div class="card"><b>Output</b><br>Predict the next token or perform another task</div>
+</div>
+
+
+<h2>From Words to Vectors</h2>
+
+<p>
+  Consider the sentence:
+</p>
+
+<p>
+  <strong>The chicken didn't cross the road because it was too wide.</strong>
+</p>
+
+<p>
+  Before self-attention can operate on the sentence, each token must be
+  represented as a numerical vector. These vectors are called
+  <strong>token embeddings</strong>.
+</p>
+
+<p>
+  For simplicity, suppose the model dimension is
+  <strong>d = 4</strong>. Each token is therefore represented by four
+  numerical values.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Token</th>
+      <th>Embedding</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>The</td>
+      <td>[0.2, 0.1, 0.4, 0.3]</td>
+    </tr>
+    <tr>
+      <td>chicken</td>
+      <td>[0.8, 0.6, 0.2, 0.7]</td>
+    </tr>
+    <tr>
+      <td>didn't</td>
+      <td>[0.5, 0.9, 0.3, 0.6]</td>
+    </tr>
+    <tr>
+      <td>cross</td>
+      <td>[0.4, 0.7, 0.1, 0.8]</td>
+    </tr>
+    <tr>
+      <td>the</td>
+      <td>[0.3, 0.2, 0.6, 0.5]</td>
+    </tr>
+    <tr>
+      <td>road</td>
+      <td>[0.9, 0.4, 0.3, 0.6]</td>
+    </tr>
+    <tr>
+      <td>because</td>
+      <td>[0.2, 0.8, 0.5, 0.3]</td>
+    </tr>
+    <tr>
+      <td>it</td>
+      <td>[0.6, 0.3, 0.8, 0.4]</td>
+    </tr>
+    <tr>
+      <td>was</td>
+      <td>[0.4, 0.5, 0.7, 0.2]</td>
+    </tr>
+    <tr>
+      <td>too</td>
+      <td>[0.7, 0.2, 0.4, 0.9]</td>
+    </tr>
+    <tr>
+      <td>wide</td>
+      <td>[0.8, 0.5, 0.6, 0.3]</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  If there are <strong>N</strong> tokens and each token is represented using
+  <strong>d</strong> numbers, all token embeddings can be arranged into a
+  single matrix:
+</p>
+
+<p>If there are <b>N</b> tokens, we can put all vectors into one matrix:</p>
+<div class="equation">X ∈ ℝ<sup>N × d</sup></div>
+<p>  For this sentence, there are 11 tokens and we have assumed
+  <strong>d = 4</strong>. Therefore:</p>
+<div class="equation">X has shape 11 × 4</div>
+
+<h2>Why Do We Need Position Information?</h2>
+
+<p>
+  The token embeddings tell the model <strong>what tokens are present</strong>,
+  but they do not by themselves tell the model <strong>where those tokens
+  occur in the sequence</strong>.
+</p>
+
+<p>
+  For example, consider:
+</p>
+
+<p>
+  <strong>The chicken crossed the road.</strong>
+</p>
+
+<p>
+  and:
+</p>
+
+<p>
+  <strong>The road crossed the chicken.</strong>
+</p>
+
+<p>
+  The same words are present, but their order is different and therefore
+  their meaning is different.
+</p>
+
+<p>
+  Therefore, positional information is incorporated into the token
+  representations so that the Transformer can distinguish between different
+  token orders.
+</p>
+
+<p>
+  Conceptually:
+</p>
+
+<div class="equation">X<sub>input</sub> = TokenEmbedding + PositionalInformation</div>
+
+<p>
+  Different Transformer implementations use different mechanisms for
+  representing position. The important idea is that the model needs
+  information about <strong>where each token occurs in the sequence</strong>.
+</p>
+
+<h1>B. Attention</h1>
+
+<h3>What is Self-Attention?</h3>
+
+<p>
+  <strong>Self-attention is a mechanism that allows each token in a sequence
+  to examine the other tokens in the same sequence and determine how much
+  information to gather from each of them when constructing its updated
+  representation.</strong>
+</p>
+
+<p>
+  In other words, instead of representing each token independently,
+  self-attention allows the representation of a token to depend on the
+  other tokens that provide useful context.
+</p>
+
+<div class="key-idea">
+  <strong>Simple idea:</strong>
+  <p>
+    For each token, self-attention asks:
+  </p>
+  <p>
+    <strong>"Which other tokens are relevant to understanding this token,
+    and how much information should I take from them?"</strong>
+  </p>
+</div>
+
+<p>
+  The model answers this question mathematically by assigning an
+  <strong>attention weight</strong> to each token. A larger weight means
+  that the corresponding token contributes more information to the updated
+  representation.
+</p>
+
+<h3>Why Do We Need Self-Attention?</h3>
+<p>Let us first  understand the problem it is designed to solve.</p>
+
+<p>In older models such as Word2Vec, each word has one fixed vector. Its representation does not change with the sentence.
+</p>
+<p>
+But in real language, a word's meaning depends on its context.
+</p>
+<p>
+  Consider the following two sentences:
+</p>
+
+<div class="example">
+  <p>
+    <strong>The chicken didn't cross the road because it was too wide.</strong>
+  </p>
+  <p>
+    <strong>The chicken didn't cross the road because it was too tired.</strong>
+  </p>
+</div>
+
+<p>
+  In both sentences, the word <strong>"it"</strong> is the same token.
+  However, its interpretation depends on the surrounding words.
+</p>
+
+<ul>
+  <li>
+    In the first sentence, <strong>"wide"</strong> provides context that
+    makes <strong>"road"</strong> the natural interpretation of "it".
+  </li>
+  <li>
+    In the second sentence, <strong>"tired"</strong> provides context that
+    makes <strong>"chicken"</strong> the natural interpretation of "it".
+  </li>
+</ul>
+
+<p>
+  This illustrates an important property of language:
+  <strong>the meaning of a token can depend on the other tokens around it.</strong>
+</p>
+
+<p>
+  A token's initial embedding does not by itself describe how that token
+  should be interpreted in every possible sentence. The Transformer therefore
+  needs a mechanism that allows the representation of one token to incorporate
+  useful information from other tokens.
+</p>
+
+<p>
+  <strong>Self-attention provides this mechanism.</strong>
+</p>
+
+<p>
+  When processing a token, self-attention allows the model to examine other
+  tokens in the sequence and determine how relevant they are to the current
+  token.
+</p>
+
+<div class="key-idea">
+  <p>For each token, we can think of self-attention as asking:</p>
+  <p>
+    <strong>"Which other tokens contain information that is useful for understanding
+    this token in the current context?"</strong>
+  </p>
+</div>
+
+<p>
+  Attention provides a mathematical way to determine <b>how much information to gather from each token</b> by assigning an attention weight to each token: <b>tokens considered more relevant receive larger weights, while less relevant tokens receive smaller weights</b>.</p>
+       
+  <p class="box">
+            The chicken didn't cross the road because
+            <strong>it</strong> was too wide.
+            <span class="meaning">→ it = road</span>
+        </p>
+  <img src="./images/SelfAttension2.png" 
+       alt="Simple Attention Diagram" 
+       width="100%">
+
+        <p class="box">
+            The chicken didn't cross the road because
+            <strong>it</strong> was too tired.
+            <span class="meaning">→ it = chicken</span>
+        </p>
+  <img src="./images/SelfAttension1.png" 
+       alt="Simple Attention Diagram" 
+       width="100%">
+
+   <p>
+  The information from these tokens is then combined to produce an updated
+  representation of the current token. This updated representation is
+  <strong>context-aware</strong> because it incorporates information from
+  other tokens in the sequence.
+</p>    
+
+    <img src="./images/Attentions_Embeddings.png" 
+       alt="Simple Attention Diagram" 
+       width="100%">   
+
+<h2>1. Query, Key and Value</h2>
+
+<p>
+    We have an embedding for every word in the sentence. The goal of
+    <strong>self-attention</strong> is to make each embedding
+    <strong>context-aware</strong> by allowing it to gather useful
+    information from other words.
+</p>
+
+<p>
+  Suppose the input vector for the word <strong>"it"</strong> is:
+</p>
+
+<p>
+  \[
+  x_{it} =
+  [0.6,\;0.3,\;0.8,\;0.4]
+  \]
+</p>
+
+<p>
+  The Transformer transforms this input vector into three different vectors:
+</p>
+
+<p>
+    
+  \[q_{it} = x_{it} W_Q\]
+</p>
+
+<p>
+  \[k_{it} = x_{it} W_K\]
+</p>
+
+<p>
+  \[v_{it} = x_{it} W_V\]
+</p>
+
+<p>
+  The matrices
+  <strong>W<sub>Q</sub>, W<sub>K</sub>, and W<sub>V</sub></strong>
+  are learned during training. The same learned projection matrices are
+  applied to every token position.
+</p>
+
+<p>Consider the word <strong>“it”</strong>:</p>
+
+<blockquote>
+    The chicken didn’t cross the road because <strong>it</strong> was too
+    <strong>wide</strong>.
+</blockquote>
+
+<p>
+    When processing <strong>“it”</strong>, the model needs to determine
+    which other words can help explain what <strong>“it”</strong> refers to.
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Vector</th>
+            <th>Role</th>
+            <th>Example when processing <strong>“it”</strong></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>q<sub>it</sub>(Query)</strong></td>
+            <td><strong>What information am I looking for?</strong></td>
+            <td>
+                “I need information that helps identify what
+                <strong>it</strong> refers to.”
+            </td>
+        </tr>
+        <tr>
+            <td><strong>k<sub>road</sub> (Key)</strong></td>
+            <td><strong>What kind of information do I contain?</strong></td>
+            <td>
+                <strong>road:</strong> “I represent something that can be
+                <strong>wide</strong>.”
+            </td>
+        </tr>
+        <tr>
+            <td><strong>v<sub>road</sub> (Value)</strong></td>
+            <td><strong>What information should I actually provide?</strong></td>
+            <td>
+                Information about <strong>road</strong> that can be passed
+                to <strong>it</strong>.
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<p>Now consider the second sentence:</p>
+
+<blockquote>
+    The chicken didn’t cross the road because <strong>it</strong> was too
+    <strong>tired</strong>.
+</blockquote>
+
+<table>
+    <thead>
+        <tr>
+            <th>Vector</th>
+            <th>Role</th>
+            <th>Example</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>q<sub>it</sub> (Query)</strong></td>
+            <td>What am I looking for?</td>
+            <td>
+                “Who or what does <strong>it</strong> refer to?”
+            </td>
+        </tr>
+        <tr>
+            <td><strong>k<sub>chicken</sub> (Key)</strong></td>
+            <td>What do I contain?</td>
+            <td>
+                <strong>chicken:</strong> “I represent an animal that can be
+                <strong>tired</strong>.”
+            </td>
+        </tr>
+        <tr>
+            <td><strong>v<sub>chicken</sub> (Value)</strong></td>
+            <td>What information do I provide?</td>
+            <td>
+                Information about <strong>chicken</strong> that helps
+                interpret <strong>it</strong>.
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<p>
+  Therefore, instead of transforming one token at a time, the Transformer
+  can perform these operations for the entire sequence simultaneously using
+  matrix multiplication:
+</p>
+
+<p>
+  \[
+  Q = XW_Q
+  \]
+</p>
+
+<p>
+  \[
+  K = XW_K
+  \]
+</p>
+
+<p>
+  \[
+  V = XW_V
+  \]
+</p>
+
+<p>
+  Here, <strong>X</strong> contains the input vectors of all tokens
+  \[
+  X =
+  \begin{bmatrix}
+  x_1 \\
+  x_2 \\
+  \vdots \\
+  x_N
+  \end{bmatrix}
+  \]
+while
+  <strong>Q</strong>, <strong>K</strong>, and <strong>V</strong> contain
+  the corresponding Query, Key, and Value vectors for all tokens.
+</p>
+
+<p>
+  Think of <strong>Query, Key, and Value</strong> as three different roles
+  created from the same input vector.
+</p>
+
+<div class="grid">
+<div class="card"><strong>Query (Q):</strong> represents what information this token is
+    looking for from the other tokens.</div>
+<div class="card"><strong>Key (K):</strong> represents the information used to determine
+    how relevant each token is to another token.</div>
+<div class="card"><strong>Value (V):</strong> contains the information that will actually
+    be gathered when a token receives attention.</div>
+</div>
+
+<div class="key-idea">
+    <h3>Key Insight</h3>
+
+    <p>
+        <strong>Q and K</strong> determine which tokens are relevant.
+        <strong>V</strong> carries the information that is actually used.
+    </p>
+
+    <p>
+        <strong>Q + K → determine relevance</strong>
+        <br>
+        <strong>V → provides the information</strong>
+    </p>
+</div>
+
+<!-- =========================================================
+     INTERACTIVE Q, K, V CALCULATION
+     ========================================================= -->
+
+<section id="qkv-interactive">
+
+  <h2 class="qkv-title">Computing Q, K, and V</h2>
+
+  <p class="qkv-description">
+    Before calculating attention scores or determining token similarity, we first transform each input embedding into three different representations: Query (Q), Key (K), and Value (V). Each representation is obtained by applying its corresponding learned weight matrix to the token's input embedding.
+  </p>
+
+  <!-- Sentence tokens -->
+  <div class="qkv-token-section">
+
+    <div class="qkv-label">Sentence:</div>
+
+    <div id="qkvTokens" class="qkv-tokens"></div>
+
+  </div>
+
+
+  <!-- Q K V buttons -->
+  <div class="qkv-controls">
+
+    <span class="qkv-label">Matrix:</span>
+
+    <button class="qkv-matrix-btn active" data-type="Q">
+      Q
+    </button>
+
+    <button class="qkv-matrix-btn" data-type="K">
+      K
+    </button>
+
+    <button class="qkv-matrix-btn" data-type="V">
+      V
+    </button>
+
+  </div>
+
+
+  <!-- Main visualization -->
+  <div class="qkv-main-card">
+
+    <!-- Embedding -->
+    <div class="qkv-column">
+
+      <div class="qkv-heading">
+        Embedding
+      </div>
+
+      <div id="qkvEmbedding" class="qkv-vector"></div>
+
+      <div id="qkvTokenName" class="qkv-token-name"></div>
+
+    </div>
+
+
+    <div class="qkv-symbol">×</div>
+
+
+    <!-- Weight matrix -->
+    <div class="qkv-column matrix-column">
+
+      <div id="qkvMatrixTitle" class="qkv-heading">
+        W<sub>Q</sub>
+      </div>
+
+      <div id="qkvMatrix" class="qkv-matrix"></div>
+
+    </div>
+
+
+    <div class="qkv-symbol">=</div>
+
+
+    <!-- Output -->
+    <div class="qkv-column">
+
+      <div id="qkvOutputTitle" class="qkv-heading qkv-output-heading">
+        Q
+      </div>
+
+      <div id="qkvOutput" class="qkv-output-vector"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- Formula -->
+  <div class="qkv-formula-card">
+
+    <div id="qkvFormula" class="qkv-formula">
+      q<sub>it</sub> = x<sub>it</sub>W<sub>Q</sub>
+    </div>
+
+    <p>
+      Each output component is obtained by multiplying the embedding
+      with one column of the selected weight matrix and adding the results.
+    </p>
+
+  </div>
+
+
+  <!-- Detailed calculation -->
+  <div class="qkv-calculation-card">
+
+    <h3>Step-by-step calculation</h3>
+
+    <p id="qkvCalculationIntro"></p>
+
+    <div id="qkvCalculations"></div>
+
+  </div>
+
+
+  <!-- Explanation -->
+  <div class="qkv-insight">
+
+    <h3>What happened?</h3>
+
+    <p id="qkvInsight"></p>
+
+  </div>
+
+</section>
+
+
+
+
+<script>
+
+  /* =========================================================
+     TOKEN EMBEDDINGS
+     ========================================================= */
+
+  const qkvData = {
+
+    "The":      [0.2, 0.1, 0.4, 0.3],
+
+    "chicken":  [0.8, 0.6, 0.2, 0.7],
+
+    "didn't":   [0.5, 0.9, 0.3, 0.6],
+
+    "cross":    [0.4, 0.7, 0.1, 0.8],
+
+    "the":      [0.3, 0.2, 0.6, 0.5],
+
+    "road":     [0.9, 0.4, 0.3, 0.6],
+
+    "because":  [0.2, 0.8, 0.5, 0.3],
+
+    "it":       [0.6, 0.3, 0.8, 0.4],
+
+    "was":      [0.4, 0.5, 0.7, 0.2],
+
+    "too":      [0.7, 0.2, 0.4, 0.9],
+
+    "wide":     [0.8, 0.5, 0.6, 0.3]
+
+  };
+
+
+  /* =========================================================
+     LEARNED WEIGHT MATRICES
+     
+     These are intentionally different from the matrices
+     shown in the reference screenshot.
+     ========================================================= */
+
+  const weightMatrices = {
+
+    Q: [
+
+      [0.2, 0.4, 0.1, 0.3],
+
+      [0.5, 0.1, 0.3, 0.2],
+
+      [0.3, 0.2, 0.6, 0.1],
+
+      [0.4, 0.3, 0.2, 0.5]
+
+    ],
+
+    K: [
+
+        [0.30, 0.70, 0.30, 0.50],
+
+        [0.15, 0.05, 0.05, 0.15],
+
+        [-0.20, 0.15, 0.25, 0.05],
+
+        [0.05, 0.10, 0.10, 0.40]
+
+    ],
+
+    V: [
+
+      [0.4, 0.2, 0.3, 0.1],
+
+      [0.1, 0.6, 0.2, 0.4],
+
+      [0.3, 0.1, 0.5, 0.2],
+
+      [0.2, 0.3, 0.1, 0.7]
+
+    ]
+
+  };
+
+
+  /* =========================================================
+     STATE
+     ========================================================= */
+
+  let selectedToken = "it";
+
+  let selectedType = "Q";
+
+
+  /* =========================================================
+     DOM ELEMENTS
+     ========================================================= */
+
+  const tokenContainer =
+    document.getElementById("qkvTokens");
+
+  const embeddingContainer =
+    document.getElementById("qkvEmbedding");
+
+  const tokenName =
+    document.getElementById("qkvTokenName");
+
+  const matrixContainer =
+    document.getElementById("qkvMatrix");
+
+  const outputContainer =
+    document.getElementById("qkvOutput");
+
+  const matrixTitle =
+    document.getElementById("qkvMatrixTitle");
+
+  const outputTitle =
+    document.getElementById("qkvOutputTitle");
+
+  const formula =
+    document.getElementById("qkvFormula");
+
+  const calculationIntro =
+    document.getElementById("qkvCalculationIntro");
+
+  const calculations =
+    document.getElementById("qkvCalculations");
+
+  const insight =
+    document.getElementById("qkvInsight");
+
+
+  /* =========================================================
+     CREATE TOKEN BUTTONS
+     ========================================================= */
+
+  Object.keys(qkvData).forEach(token => {
+
+    const button =
+      document.createElement("button");
+
+    button.className = "qkv-token";
+
+    button.textContent = token;
+
+    if (token === selectedToken) {
+      button.classList.add("active");
+    }
+
+    button.addEventListener("click", () => {
+
+      selectedToken = token;
+
+      document
+        .querySelectorAll(".qkv-token")
+        .forEach(btn => btn.classList.remove("active"));
+
+      button.classList.add("active");
+
+      updateQKV();
+
+    });
+
+    tokenContainer.appendChild(button);
+
+  });
+
+
+  /* =========================================================
+     Q / K / V BUTTONS
+     ========================================================= */
+
+  document
+    .querySelectorAll(".qkv-matrix-btn")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        selectedType =
+          button.dataset.type;
+
+        document
+          .querySelectorAll(".qkv-matrix-btn")
+          .forEach(btn =>
+            btn.classList.remove("active")
+          );
+
+        button.classList.add("active");
+
+        updateQKV();
+
+      });
+
+    });
+
+
+  /* =========================================================
+     MATRIX MULTIPLICATION
+     
+     Row vector × matrix
+     
+     x = [x1 x2 x3 x4]
+     
+     output[0] =
+       x1*w11 + x2*w21 + x3*w31 + x4*w41
+     ========================================================= */
+
+  function multiplyVectorMatrix(vector, matrix) {
+
+    const result = [];
+
+    for (let column = 0; column < 4; column++) {
+
+      let sum = 0;
+
+      for (let row = 0; row < 4; row++) {
+
+        sum +=
+          vector[row] *
+          matrix[row][column];
+
+      }
+
+      result.push(sum);
+
+    }
+
+    return result;
+
+  }
+
+
+  /* =========================================================
+     FORMAT NUMBER
+     ========================================================= */
+
+  function formatNumber(number) {
+
+    return number.toFixed(2);
+
+  }
+
+
+  /* =========================================================
+     RENDER VECTOR
+     ========================================================= */
+
+  function renderVector(container, values, output = false) {
+
+    container.innerHTML = "";
+
+    values.forEach(value => {
+
+      const span =
+        document.createElement("span");
+
+      span.textContent =
+        formatNumber(value);
+
+      container.appendChild(span);
+
+    });
+
+  }
+
+
+  /* =========================================================
+     RENDER MATRIX
+     ========================================================= */
+
+  function renderMatrix(matrix) {
+
+    matrixContainer.innerHTML = "";
+
+    matrix.forEach(row => {
+
+      row.forEach(value => {
+
+        const span =
+          document.createElement("span");
+
+        span.textContent =
+          formatNumber(value);
+
+        matrixContainer.appendChild(span);
+
+      });
+
+    });
+
+  }
+
+
+  /* =========================================================
+     DETAILED CALCULATION
+     ========================================================= */
+
+  function renderCalculations(vector, matrix, result) {
+
+    calculations.innerHTML = "";
+
+    for (let column = 0; column < 4; column++) {
+
+      let terms = [];
+
+      for (let row = 0; row < 4; row++) {
+
+        terms.push(
+
+          `${formatNumber(vector[row])} × ${formatNumber(matrix[row][column])}`
+
+        );
+
+      }
+
+      const calculation =
+        document.createElement("div");
+
+      calculation.className =
+        "qkv-calculation";
+
+      calculation.innerHTML =
+
+        `<strong>
+          ${selectedType}[${column}]
+        </strong>
+        =
+        ${terms.join(" + ")}
+        =
+        <strong>${formatNumber(result[column])}</strong>`;
+
+      calculations.appendChild(calculation);
+
+    }
+
+  }
+
+
+  /* =========================================================
+     MAIN UPDATE
+     ========================================================= */
+
+  function updateQKV() {
+
+    const embedding =
+      qkvData[selectedToken];
+
+    const matrix =
+      weightMatrices[selectedType];
+
+    const result =
+      multiplyVectorMatrix(
+        embedding,
+        matrix
+      );
+
+
+    /* Embedding */
+
+    renderVector(
+      embeddingContainer,
+      embedding
+    );
+
+
+    tokenName.textContent =
+      `x("${selectedToken}")`;
+
+
+    /* Matrix */
+
+    renderMatrix(matrix);
+
+
+    /* Output */
+
+    renderVector(
+      outputContainer,
+      result,
+      true
+    );
+
+
+    /* Titles */
+
+    matrixTitle.innerHTML =
+      `W<sub>${selectedType}</sub>`;
+
+    outputTitle.textContent =
+      selectedType;
+
+
+    /* Formula */
+
+    const lower =
+      selectedType.toLowerCase();
+
+    formula.innerHTML =
+
+      `${lower}<sub>${selectedToken}</sub>
+       =
+       x<sub>${selectedToken}</sub>
+       W<sub>${selectedType}</sub>`;
+
+
+    /* Intro */
+
+    calculationIntro.innerHTML =
+
+      `For <strong>"${selectedToken}"</strong>,
+       each component of the ${selectedType} vector is obtained by
+       taking a dot product between the embedding and one column of
+       <strong>W<sub>${selectedType}</sub></strong>.`;
+
+
+    /* Detailed calculations */
+
+    renderCalculations(
+      embedding,
+      matrix,
+      result
+    );
+
+
+    /* Insight */
+
+    let description = "";
+
+    if (selectedType === "Q") {
+
+      description =
+        `The embedding of "${selectedToken}" has been projected
+         into a <strong>Query vector</strong>. This vector will later
+         be compared with the Keys of the other tokens to determine
+         how strongly "${selectedToken}" should attend to them.`;
+
+    }
+
+    else if (selectedType === "K") {
+
+      description =
+        `The embedding of "${selectedToken}" has been projected
+         into a <strong>Key vector</strong>. This vector will later
+         be compared with the Query of another token to determine
+         how relevant "${selectedToken}" is to that token.`;
+
+    }
+
+    else {
+
+      description =
+        `The embedding of "${selectedToken}" has been projected
+         into a <strong>Value vector</strong>. This vector contains
+         the information that can contribute to the updated
+         representation when "${selectedToken}" receives attention.`;
+
+    }
+
+    insight.innerHTML = description;
+
+  }
+
+
+  /* =========================================================
+     INITIAL DISPLAY
+     ========================================================= */
+
+  updateQKV();
+
+</script>
+
+<p>
+  Notice something? <strong>Q, K, and V</strong> are all computed using the
+  same basic operation: <strong>matrix multiplication</strong>.
+</p>
+
+<p>
+  \[
+  Q = XW_Q
+  \qquad|\qquad
+  K = XW_K
+  \qquad|\qquad
+  V = XW_V
+  \]
+</p>
+
+<p>
+  The operation itself does not change. What changes are the
+  <strong>learned weight matrices</strong>
+  <strong>W<sub>Q</sub>, W<sub>K</sub>, and W<sub>V</sub></strong>.
+</p>
+
+<p>
+  During training, backpropagation adjusts these weight matrices so that
+  <strong>Q</strong> and <strong>K</strong> learn useful relationships for
+  determining which tokens should attend to each other, while
+  <strong>V</strong> learns how to represent the information that is
+  actually passed through the attention mechanism.
+</p>
+
+<div class="key-idea">
+  <strong>Key idea:</strong>
+  The operation is simple matrix multiplication; the learned weights
+  determine what each of the three representations learns to capture.
+</div>
+
+<!-- =========================================================
+     STEP 6: COMPUTING ATTENTION SCORES
+     ========================================================= -->
+
+<h2>2. Computing Attention Scores and Scaling</h2>
+
+<p>
+  Now we find how strongly one token should attend to every other token.
+  For a selected <strong>query token</strong>, we compare its
+  <strong>Query (Q)</strong> with the <strong>Key (K)</strong> of every
+  token in the sentence.
+</p>
+
+<p>
+  The similarity between a Query and a Key is measured using the
+  <strong>dot product</strong>.
+  If the Query and Key point in similar directions, the score is higher,
+  indicating a stronger relationship.
+</p>
+
+<p>
+  The scaled dot-product attention score is:
+</p>
+
+<p>
+  \[
+  \text{score}(Q,K)
+  =
+  \frac{Q \cdot K}{\sqrt{d_k}}
+  \]
+</p>
+
+<p>
+  In our example, each Q and K vector has four components, so
+  <strong>d<sub>k</sub> = 4</strong> and:
+</p>
+
+<p>
+  \[
+  \sqrt{d_k}=\sqrt{4}=2
+  \]
+</p>
+
+<p>
+  We divide by \(\sqrt{d_k}\) to keep the dot-product values from becoming
+  too large as the dimensionality increases, which helps make training
+  more stable.
+</p>
+
+
+<!-- Query token selection -->
+
+<div style="margin-top: 1.5rem;">
+
+  <p>
+    <strong>Query token (attending from):</strong>
+  </p>
+
+  <div id="attentionQueryTokens"
+       style="display:flex; flex-wrap:wrap; gap:0.45rem;">
+  </div>
+
+</div>
+
+
+<!-- Formula -->
+
+<div style="margin-top:1.25rem;
+            background:#f8fafc;
+            border:1px solid #e2e8f0;
+            border-radius:0.6rem;
+            padding:1rem;">
+
+  <p id="attentionScoreFormula"
+     style="font-family:monospace;
+            text-align:center;
+            margin:0;">
+  </p>
+
+</div>
+
+
+<!-- Attention scores -->
+
+<div style="margin-top:1.25rem;">
+
+  <h3 id="attentionScoresTitle">
+    Attention scores
+  </h3>
+
+  <div id="attentionScores">
+  </div>
+
+</div>
+
+
+<!-- Explanation -->
+
+<div class="key-idea"
+     style="margin-top:1.25rem;">
+
+  <h3>Key Idea</h3>
+
+  <p>
+    The similarity is measured using the <b>dot product</b>. If Q and K point in similar directions, they produce a higher score.
+    A <b>higher score means that the two vectors are more closely aligned</b>,
+    so that token is considered more relevant to the selected token.
+  </p>
+
+</div>
+
+
+<script>
+
+  /* =========================================================
+     ATTENTION SCORE CALCULATION
+     ========================================================= */
+
+  const attentionTokens = [
+    "The",
+    "chicken",
+    "didn't",
+    "cross",
+    "the",
+    "road",
+    "because",
+    "it",
+    "was",
+    "too",
+    "wide"
+  ];
+
+
+  /*
+   * The same embeddings and WQ/WK matrices used
+   * in the previous QKV interactive section.
+   */
+
+  const attentionEmbeddings = {
+
+    "The":      [0.2, 0.1, 0.4, 0.3],
+
+    "chicken":  [0.8, 0.6, 0.2, 0.7],
+
+    "didn't":   [0.5, 0.9, 0.3, 0.6],
+
+    "cross":    [0.4, 0.7, 0.1, 0.8],
+
+    "the":      [0.3, 0.2, 0.6, 0.5],
+
+    "road":     [0.9, 0.4, 0.3, 0.6],
+
+    "because":  [0.2, 0.8, 0.5, 0.3],
+
+    "it":       [0.6, 0.3, 0.8, 0.4],
+
+    "was":      [0.4, 0.5, 0.7, 0.2],
+
+    "too":      [0.7, 0.2, 0.4, 0.9],
+
+    "wide":     [0.8, 0.5, 0.6, 0.3]
+
+  };
+
+
+  /*
+   * WQ from the previous section
+   */
+
+  const attentionWQ = [
+
+    [0.2, 0.4, 0.1, 0.3],
+
+    [0.5, 0.1, 0.3, 0.2],
+
+    [0.3, 0.2, 0.6, 0.1],
+
+    [0.4, 0.3, 0.2, 0.5]
+
+  ];
+
+
+  /*
+   * WK from the previous section
+   */
+
+const attentionWK = [
+
+  [0.30, 0.70, 0.30, 0.50],
+
+  [0.15, 0.05, 0.05, 0.15],
+
+  [-0.20, 0.15, 0.25, 0.05],
+
+  [0.05, 0.10, 0.10, 0.40]
+
+];
+
+  let selectedAttentionToken = "it";
+
+
+  /* =========================================================
+     MATRIX MULTIPLICATION
+     ========================================================= */
+
+  function attentionMultiply(vector, matrix) {
+
+    const result = [];
+
+    for (let column = 0; column < 4; column++) {
+
+      let sum = 0;
+
+      for (let row = 0; row < 4; row++) {
+
+        sum +=
+          vector[row] *
+          matrix[row][column];
+
+      }
+
+      result.push(sum);
+
+    }
+
+    return result;
+
+  }
+
+
+  /* =========================================================
+     DOT PRODUCT
+     ========================================================= */
+
+  function dotProduct(a, b) {
+
+    let sum = 0;
+
+    for (let i = 0; i < a.length; i++) {
+
+      sum += a[i] * b[i];
+
+    }
+
+    return sum;
+
+  }
+
+
+  /* =========================================================
+     CREATE QUERY TOKEN BUTTONS
+     ========================================================= */
+
+  const attentionQueryContainer =
+    document.getElementById(
+      "attentionQueryTokens"
+    );
+
+
+  attentionTokens.forEach(token => {
+
+    const button =
+      document.createElement("button");
+
+    button.textContent = token;
+
+    button.style.padding = "0.55rem 0.75rem";
+    button.style.border = "1px solid #cbd5e1";
+    button.style.borderRadius = "0.4rem";
+    button.style.background = "white";
+    button.style.cursor = "pointer";
+    button.style.color = "#334155";
+
+    if (token === selectedAttentionToken) {
+
+      button.style.background = "#0f766e";
+      button.style.color = "white";
+
+    }
+
+    button.addEventListener("click", () => {
+
+      selectedAttentionToken = token;
+
+      updateAttentionScores();
+
+    });
+
+    attentionQueryContainer.appendChild(button);
+
+  });
+
+
+  /* =========================================================
+     UPDATE BUTTON APPEARANCE
+     ========================================================= */
+
+  function updateQueryButtons() {
+
+    const buttons =
+      attentionQueryContainer.querySelectorAll(
+        "button"
+      );
+
+    buttons.forEach(button => {
+
+      if (
+        button.textContent ===
+        selectedAttentionToken
+      ) {
+
+        button.style.background = "#0f766e";
+        button.style.color = "white";
+
+      } else {
+
+        button.style.background = "white";
+        button.style.color = "#334155";
+
+      }
+
+    });
+
+  }
+
+
+  /* =========================================================
+     MAIN ATTENTION CALCULATION
+     ========================================================= */
+
+  function updateAttentionScores() {
+
+    /*
+     * 1. Get the embedding of the selected token
+     */
+
+    const queryEmbedding =
+      attentionEmbeddings[
+        selectedAttentionToken
+      ];
+
+
+    /*
+     * 2. Convert it into Q
+     */
+
+    const queryVector =
+      attentionMultiply(
+        queryEmbedding,
+        attentionWQ
+      );
+
+
+    /*
+     * 3. Calculate K for every token
+     */
+
+    const keyVectors = {};
+
+    attentionTokens.forEach(token => {
+
+      keyVectors[token] =
+        attentionMultiply(
+          attentionEmbeddings[token],
+          attentionWK
+        );
+
+    });
+
+
+    /*
+     * 4. Calculate scaled dot-product scores
+     */
+
+    const scores = {};
+
+    attentionTokens.forEach(token => {
+
+      const dot =
+        dotProduct(
+          queryVector,
+          keyVectors[token]
+        );
+
+      scores[token] =
+        dot / Math.sqrt(4);
+
+    });
+
+
+    /*
+     * 5. Find maximum score for visualisation
+     */
+
+    const maxScore =
+      Math.max(
+        ...Object.values(scores)
+      );
+
+
+    /*
+     * 6. Display formula
+     */
+
+    document.getElementById(
+      "attentionScoreFormula"
+    ).innerHTML =
+
+      `score(Q, K) =
+       (Q · K) / √d<sub>k</sub>
+       =
+       (Q · K) / 2.00`;
+
+
+    /*
+     * 7. Display title
+     */
+
+    document.getElementById(
+      "attentionScoresTitle"
+    ).innerHTML =
+
+      `Attention scores for
+       "<strong>${selectedAttentionToken}</strong>":`;
+
+
+    /*
+     * 8. Display scores
+     */
+
+    const container =
+      document.getElementById(
+        "attentionScores"
+      );
+
+    container.innerHTML = "";
+
+
+    attentionTokens.forEach(token => {
+
+      const score = scores[token];
+
+
+      /*
+       * Width of attention bar.
+       * Minimum width makes small scores visible.
+       */
+
+      const width =
+        Math.max(
+          5,
+          (score / maxScore) * 100
+        );
+
+
+      const row =
+        document.createElement("div");
+
+      row.style.display = "grid";
+      row.style.gridTemplateColumns =
+        "100px 1fr 65px";
+      row.style.alignItems = "center";
+      row.style.gap = "0.75rem";
+      row.style.marginBottom = "0.65rem";
+
+
+      const tokenLabel =
+        document.createElement("div");
+
+      tokenLabel.textContent = token;
+
+      tokenLabel.style.color = "#475569";
+
+
+      const barBackground =
+        document.createElement("div");
+
+      barBackground.style.height = "18px";
+      barBackground.style.background = "#f1f5f9";
+      barBackground.style.borderRadius = "0.3rem";
+      barBackground.style.overflow = "hidden";
+
+
+      const bar =
+        document.createElement("div");
+
+      bar.style.height = "100%";
+      bar.style.width = width + "%";
+      bar.style.background = "#14b8a6";
+      bar.style.borderRadius = "0.3rem";
+
+
+      /*
+       * Highlight the query token itself
+       */
+
+      if (
+        token === selectedAttentionToken
+      ) {
+
+        bar.style.background = "#0f766e";
+        tokenLabel.style.fontWeight = "700";
+
+      }
+
+
+      barBackground.appendChild(bar);
+
+
+      const scoreLabel =
+        document.createElement("div");
+
+      scoreLabel.textContent =
+        score.toFixed(2);
+
+      scoreLabel.style.fontFamily =
+        "monospace";
+
+      scoreLabel.style.textAlign =
+        "right";
+
+      scoreLabel.style.color =
+        "#475569";
+
+
+      row.appendChild(tokenLabel);
+      row.appendChild(barBackground);
+      row.appendChild(scoreLabel);
+
+      container.appendChild(row);
+
+    });
+
+
+    updateQueryButtons();
+
+  }
+
+
+  /* =========================================================
+     INITIAL DISPLAY
+     ========================================================= */
+
+  updateAttentionScores();
+
+</script>
+
+<!-- =========================================================
+     STEP 7: SOFTMAX NORMALIZATION
+     ========================================================= -->
+
+<h2>3.  Softmax Normalization</h2>
+
+<p>
+  The attention scores calculated in the previous step can be positive,
+  negative, or have different magnitudes. We use <strong>softmax</strong>
+  to convert these raw scores into normalized attention weights.
+</p>
+
+<p>
+  These attention weights are between <strong>0 and 1</strong>, and all
+  the weights together sum to <strong>1 (100%)</strong>.
+</p>
+
+<p>
+  This answers the question:
+</p>
+
+<div class="key-idea">
+  <strong>
+    "How should I distribute my attention across all the tokens?"
+  </strong>
+</div>
+
+<p>
+  The softmax function is:
+</p>
+
+<p>
+  \[
+  \text{attention weight}_i 
+  =
+  \operatorname{softmax}(s_i)
+  =
+  \frac{e^{s_i}}
+  {\displaystyle\sum_{j=1}^{N}e^{s_j}}
+  \]
+</p>
+
+<p>
+  Here, \(s_i\) is the raw attention score for a token.
+  The denominator contains the exponentials of the scores of
+  <strong>all tokens</strong>.
+</p>
+
+
+<!-- Query token -->
+
+<p>
+  <strong>Query token:</strong>
+</p>
+
+<div id="softmaxQueryTokens"
+     style="display:flex; flex-wrap:wrap; gap:0.45rem;">
+</div>
+
+
+<!-- Formula -->
+
+<div style="margin-top:1.25rem;
+            background:#f8fafc;
+            border:1px solid #e2e8f0;
+            border-radius:0.6rem;
+            padding:1rem;">
+
+  <p id="softmaxFormula"
+     style="font-family:monospace;
+            text-align:center;
+            margin:0;">
+  </p>
+
+</div>
+
+
+<!-- Raw scores and attention weights -->
+
+<div style="margin-top:1.5rem;">
+
+  <div style="display:grid;
+              grid-template-columns:1fr 1fr;
+              gap:2rem;">
+
+    <div>
+
+      <h3 id="rawScoresTitle">
+        Raw Scores
+      </h3>
+
+      <div id="rawScores">
+      </div>
+
+    </div>
+
+
+    <div>
+
+      <h3>
+        Attention Weights
+      </h3>
+
+      <div id="softmaxWeights">
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div class="key-idea"
+     style="margin-top:1.5rem;">
+
+  <h3>Key Idea</h3>
+
+  <p>
+    Softmax converts the raw attention scores into weights that tell the
+    model how much attention to give to each token.
+  </p>
+
+  <p>
+    A larger raw score produces a larger attention weight, while a smaller
+    score produces a smaller weight.
+  </p>
+
+  <p>
+    All attention weights together add up to
+    <strong>100%</strong>.
+  </p>
+
+</div>
+
+
+<script>
+
+  /* =========================================================
+     TOKENS
+     ========================================================= */
+
+  const softmaxTokens = [
+    "The",
+    "chicken",
+    "didn't",
+    "cross",
+    "the",
+    "road",
+    "because",
+    "it",
+    "was",
+    "too",
+    "wide"
+  ];
+
+
+  /* =========================================================
+     SAME EMBEDDINGS USED EARLIER
+     ========================================================= */
+
+  const softmaxEmbeddings = {
+
+    "The":      [0.2, 0.1, 0.4, 0.3],
+
+    "chicken":  [0.8, 0.6, 0.2, 0.7],
+
+    "didn't":   [0.5, 0.9, 0.3, 0.6],
+
+    "cross":    [0.4, 0.7, 0.1, 0.8],
+
+    "the":      [0.3, 0.2, 0.6, 0.5],
+
+    "road":     [0.9, 0.4, 0.3, 0.6],
+
+    "because":  [0.2, 0.8, 0.5, 0.3],
+
+    "it":       [0.6, 0.3, 0.8, 0.4],
+
+    "was":      [0.4, 0.5, 0.7, 0.2],
+
+    "too":      [0.7, 0.2, 0.4, 0.9],
+
+    "wide":     [0.8, 0.5, 0.6, 0.3]
+
+  };
+
+
+  /* =========================================================
+     WQ
+     ========================================================= */
+
+  const softmaxWQ = [
+
+    [0.2, 0.4, 0.1, 0.3],
+
+    [0.5, 0.1, 0.3, 0.2],
+
+    [0.3, 0.2, 0.6, 0.1],
+
+    [0.4, 0.3, 0.2, 0.5]
+
+  ];
+
+
+
+  /* =========================================================
+     WK
+     ========================================================= */
+
+  const softmaxWK = [
+
+  [0.30, 0.70, 0.30, 0.50],
+
+  [0.15, 0.05, 0.05, 0.15],
+
+  [-0.20, 0.15, 0.25, 0.05],
+
+  [0.05, 0.10, 0.10, 0.40]
+
+  ];
+
+
+  /* =========================================================
+     MATRIX MULTIPLICATION
+     ========================================================= */
+
+  function softmaxMultiply(vector, matrix) {
+
+    const result = [];
+
+    for (let column = 0; column < 4; column++) {
+
+      let sum = 0;
+
+      for (let row = 0; row < 4; row++) {
+
+        sum += vector[row] * matrix[row][column];
+
+      }
+
+      result.push(sum);
+
+    }
+
+    return result;
+
+  }
+
+
+  /* =========================================================
+     DOT PRODUCT
+     ========================================================= */
+
+  function softmaxDot(a, b) {
+
+    let sum = 0;
+
+    for (let i = 0; i < a.length; i++) {
+
+      sum += a[i] * b[i];
+
+    }
+
+    return sum;
+
+  }
+
+
+  /* =========================================================
+     CALCULATE RAW ATTENTION SCORES
+     ========================================================= */
+
+  function calculateRawScores(queryToken) {
+
+    const queryEmbedding =
+      softmaxEmbeddings[queryToken];
+
+    const query =
+      softmaxMultiply(
+        queryEmbedding,
+        softmaxWQ
+      );
+
+
+    const scores = {};
+
+
+    softmaxTokens.forEach(token => {
+
+      const key =
+        softmaxMultiply(
+          softmaxEmbeddings[token],
+          softmaxWK
+        );
+
+
+      const dot =
+        softmaxDot(query, key);
+
+
+      /*
+       * sqrt(d_k) = sqrt(4) = 2
+       */
+
+      scores[token] =
+        dot / 2;
+
+    });
+
+
+    return scores;
+
+  }
+
+
+  /* =========================================================
+     SOFTMAX
+     ========================================================= */
+
+  function calculateSoftmax(scores) {
+
+    const values =
+      Object.values(scores);
+
+
+    /*
+     * Subtract the maximum value for numerical stability.
+     * This does not change the final softmax probabilities.
+     */
+
+    const maxScore =
+      Math.max(...values);
+
+
+    const exponentials = {};
+
+
+    let total = 0;
+
+
+    softmaxTokens.forEach(token => {
+
+      const value =
+        Math.exp(
+          scores[token] - maxScore
+        );
+
+      exponentials[token] = value;
+
+      total += value;
+
+    });
+
+
+    const weights = {};
+
+
+    softmaxTokens.forEach(token => {
+
+      weights[token] =
+        exponentials[token] / total;
+
+    });
+
+
+    return weights;
+
+  }
+
+
+  /* =========================================================
+     SELECTED QUERY TOKEN
+     ========================================================= */
+
+  let selectedSoftmaxToken = "it";
+
+
+  const softmaxQueryContainer =
+    document.getElementById(
+      "softmaxQueryTokens"
+    );
+
+
+  softmaxTokens.forEach(token => {
+
+    const button =
+      document.createElement("button");
+
+    button.textContent = token;
+
+    button.style.padding = "0.55rem 0.75rem";
+    button.style.border = "1px solid #cbd5e1";
+    button.style.borderRadius = "0.4rem";
+    button.style.background = "white";
+    button.style.cursor = "pointer";
+    button.style.color = "#334155";
+
+
+    button.addEventListener("click", () => {
+
+      selectedSoftmaxToken = token;
+
+      updateSoftmax();
+
+    });
+
+
+    softmaxQueryContainer.appendChild(button);
+
+  });
+
+
+  /* =========================================================
+     UPDATE BUTTONS
+     ========================================================= */
+
+  function updateSoftmaxButtons() {
+
+    const buttons =
+      softmaxQueryContainer.querySelectorAll(
+        "button"
+      );
+
+
+    buttons.forEach(button => {
+
+      if (
+        button.textContent ===
+        selectedSoftmaxToken
+      ) {
+
+        button.style.background = "#0f766e";
+        button.style.color = "white";
+
+      } else {
+
+        button.style.background = "white";
+        button.style.color = "#334155";
+
+      }
+
+    });
+
+  }
+
+
+  /* =========================================================
+     DISPLAY SOFTMAX
+     ========================================================= */
+
+  function updateSoftmax() {
+
+    const scores =
+      calculateRawScores(
+        selectedSoftmaxToken
+      );
+
+
+    const weights =
+      calculateSoftmax(scores);
+
+
+    /*
+     * Formula
+     */
+
+    document.getElementById(
+      "softmaxFormula"
+    ).innerHTML =
+
+      `softmax(s<sub>i</sub>) =
+       e<sup>s<sub>i</sub></sup> /
+       Σ e<sup>s<sub>j</sub></sup>`;
+
+
+    /*
+     * Title
+     */
+
+    document.getElementById(
+      "rawScoresTitle"
+    ).innerHTML =
+
+      `Raw Scores for
+       "<strong>${selectedSoftmaxToken}</strong>":`;
+
+
+    /*
+     * Raw scores
+     */
+
+    const rawContainer =
+      document.getElementById(
+        "rawScores"
+      );
+
+    rawContainer.innerHTML = "";
+
+
+    /*
+     * Attention weights
+     */
+
+    const weightContainer =
+      document.getElementById(
+        "softmaxWeights"
+      );
+
+    weightContainer.innerHTML = "";
+
+
+    softmaxTokens.forEach(token => {
+
+      const score =
+        scores[token];
+
+      const weight =
+        weights[token];
+
+
+      /* ---------- RAW SCORE ---------- */
+
+      const rawRow =
+        document.createElement("div");
+
+      rawRow.style.display = "flex";
+      rawRow.style.justifyContent =
+        "space-between";
+      rawRow.style.marginBottom = "0.55rem";
+
+
+      const rawToken =
+        document.createElement("span");
+
+      rawToken.textContent = token;
+
+
+      const rawValue =
+        document.createElement("strong");
+
+      rawValue.textContent =
+        score.toFixed(2);
+
+
+      rawRow.appendChild(rawToken);
+      rawRow.appendChild(rawValue);
+
+      rawContainer.appendChild(rawRow);
+
+
+      /* ---------- ATTENTION WEIGHT ---------- */
+
+      const weightRow =
+        document.createElement("div");
+
+      weightRow.style.display = "grid";
+      weightRow.style.gridTemplateColumns =
+        "85px 1fr 65px";
+      weightRow.style.alignItems = "center";
+      weightRow.style.gap = "0.6rem";
+      weightRow.style.marginBottom =
+        "0.55rem";
+
+
+      const weightToken =
+        document.createElement("span");
+
+      weightToken.textContent = token;
+
+
+      const barBackground =
+        document.createElement("div");
+
+      barBackground.style.height = "18px";
+      barBackground.style.background =
+        "#f1f5f9";
+      barBackground.style.borderRadius =
+        "0.3rem";
+      barBackground.style.overflow =
+        "hidden";
+
+
+      const bar =
+        document.createElement("div");
+
+      bar.style.height = "100%";
+
+      bar.style.width =
+        (weight * 100) + "%";
+
+      bar.style.background =
+        "#14b8a6";
+
+      bar.style.borderRadius =
+        "0.3rem";
+
+
+      const percentage =
+        document.createElement("span");
+
+      percentage.textContent =
+        (weight * 100).toFixed(1) + "%";
+
+      percentage.style.fontFamily =
+        "monospace";
+
+      percentage.style.textAlign =
+        "right";
+
+
+      barBackground.appendChild(bar);
+
+
+      weightRow.appendChild(weightToken);
+      weightRow.appendChild(barBackground);
+      weightRow.appendChild(percentage);
+
+
+      weightContainer.appendChild(
+        weightRow
+      );
+
+    });
+
+
+    updateSoftmaxButtons();
+
+  }
+
+
+  /* =========================================================
+     INITIAL DISPLAY
+     ========================================================= */
+
+  updateSoftmax();
+
+</script>
+
+<!-- ============================================================
+     Step 8: Computing the Output (Weighted Sum of V)
+     ============================================================ -->
+
+<h2>4. Computing the Output (Weighted Sum of V)</h2>
+
+<p>
+  Finally, we use the <strong>attention weights</strong> calculated in the
+  previous step to compute a <strong>weighted sum of the Value vectors</strong>.
+</p>
+
+
+<p>
+  Each Value vector is multiplied by its corresponding attention weight,
+  and all the resulting vectors are added together.
+</p>
+
+<p>
+  \[
+  \text{Output}
+  =
+  \sum_{i=1}^{N}
+  \left(
+  \text{attention weight}_i \times V_i
+  \right)
+  \]
+</p>
+
+<p>
+  This produces a new <strong>contextualized representation</strong> for
+  the query token. It contains information gathered from the tokens in
+  the sequence according to their attention weights.
+</p>
+
+  <div class="diagram-container">
+    <svg viewBox="0 0 1280 380" role="img" aria-label="Block diagram of a single attention head">
+      <!-- Input -->
+      <rect x="20" y="150" width="100" height="50" fill="#a3c9f1" stroke="#333" rx="6"/>
+      <text x="70" y="180" text-anchor="middle" font-size="14" fill="#000">Input xᵢ</text>
+
+      <!-- Q, K, V projections -->
+      <rect x="180" y="50" width="100" height="40" fill="#f9d29d" stroke="#333" rx="6"/>
+      <text x="230" y="75" text-anchor="middle" font-size="14">Query (Q)</text>
+
+      <rect x="180" y="150" width="100" height="40" fill="#f9d29d" stroke="#333" rx="6"/>
+      <text x="230" y="175" text-anchor="middle" font-size="14">Key (K)</text>
+
+      <rect x="180" y="250" width="100" height="40" fill="#f9d29d" stroke="#333" rx="6"/>
+      <text x="230" y="275" text-anchor="middle" font-size="14">Value (V)</text>
+
+      <!-- Arrows from input -->
+      <line x1="120" y1="175" x2="180" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="120" y1="175" x2="180" y2="170" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="120" y1="175" x2="180" y2="270" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Dot product -->
+      <rect x="340" y="50" width="120" height="40" fill="#d1f7c4" stroke="#333" rx="6"/>
+      <text x="400" y="75" text-anchor="middle" font-size="14">Q · Kᵀ</text>
+      <line x1="280" y1="70" x2="340" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="280" y1="170" x2="340" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Softmax -->
+      <rect x="500" y="50" width="120" height="40" fill="#ffd6e0" stroke="#333" rx="6"/>
+      <text x="560" y="75" text-anchor="middle" font-size="14">Softmax</text>
+      <line x1="460" y1="70" x2="500" y2="70" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Weighted sum -->
+      <rect x="680" y="150" width="140" height="40" fill="#e0c7ff" stroke="#333" rx="6"/>
+      <text x="750" y="175" text-anchor="middle" font-size="14">Σ (weights × V)</text>
+      <line x1="620" y1="70" x2="680" y2="170" stroke="#333" marker-end="url(#arrow)"/>
+      <line x1="280" y1="270" x2="680" y2="170" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Output -->
+      <rect x="900" y="150" width="120" height="50" fill="#a3f1d1" stroke="#333" rx="6"/>
+      <text x="960" y="180" text-anchor="middle" font-size="14">Output</text>
+      <line x1="820" y1="170" x2="900" y2="175" stroke="#333" marker-end="url(#arrow)"/>
+
+      <!-- Arrow marker -->
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+
+<p>
+  Select a query token below to see how its contextualized representation
+  is calculated.
+</p>
+
+<!-- Query token buttons -->
+<div id="step8-token-buttons"
+     style="display:flex; gap:8px; flex-wrap:wrap; margin:1rem 0;">
+</div>
+
+<!-- Calculation area -->
+<div id="step8-calculation"></div>
+
+
+<script>
+(function () {
+
+  /* ============================================================
+     1. Input Embeddings
+     ============================================================ */
+
+  const step8Embeddings = [
+    { token: "The",     vector: [0.2, 0.1, 0.4, 0.3] },
+    { token: "chicken", vector: [0.8, 0.6, 0.2, 0.7] },
+    { token: "didn't",  vector: [0.5, 0.9, 0.3, 0.6] },
+    { token: "cross",   vector: [0.4, 0.7, 0.1, 0.8] },
+    { token: "the",     vector: [0.3, 0.2, 0.6, 0.5] },
+    { token: "road",    vector: [0.9, 0.4, 0.3, 0.6] },
+    { token: "because",  vector: [0.2, 0.8, 0.5, 0.3] },
+    { token: "it",      vector: [0.6, 0.3, 0.8, 0.4] },
+    { token: "was",     vector: [0.4, 0.5, 0.7, 0.2] },
+    { token: "too",     vector: [0.7, 0.2, 0.4, 0.9] },
+    { token: "wide",    vector: [0.8, 0.5, 0.6, 0.3] }
+  ];
+
+
+  /* ============================================================
+     2. Learned Weight Matrices
+     ============================================================ */
+
+  const step8Weights = {
+
+    Q: [
+      [0.2, 0.4, 0.1, 0.3],
+      [0.5, 0.1, 0.3, 0.2],
+      [0.3, 0.2, 0.6, 0.1],
+      [0.4, 0.3, 0.2, 0.5]
+    ],
+
+    K: [
+      [0.30, 0.70, 0.30, 0.50],
+      [0.15, 0.05, 0.05, 0.15],
+      [-0.20, 0.15, 0.25, 0.05],
+      [0.05, 0.10, 0.10, 0.40]
+    ],
+
+    V: [
+      [0.4, 0.2, 0.3, 0.1],
+      [0.1, 0.6, 0.2, 0.4],
+      [0.3, 0.1, 0.5, 0.2],
+      [0.2, 0.3, 0.1, 0.7]
+    ]
+
+  };
+
+
+  /* ============================================================
+     3. Matrix Multiplication
+     
+     x is a row vector:
+     
+     x = [x1, x2, x3, x4]
+     
+     result = xW
+     ============================================================ */
+
+  function step8MultiplyVectorMatrix(x, W) {
+
+    const result = new Array(W[0].length).fill(0);
+
+    for (let j = 0; j < W[0].length; j++) {
+
+      for (let i = 0; i < x.length; i++) {
+
+        result[j] += x[i] * W[i][j];
+
+      }
+
+    }
+
+    return result;
+  }
+
+
+  /* ============================================================
+     4. Dot Product
+     ============================================================ */
+
+  function step8DotProduct(a, b) {
+
+    let sum = 0;
+
+    for (let i = 0; i < a.length; i++) {
+      sum += a[i] * b[i];
+    }
+
+    return sum;
+  }
+
+
+  /* ============================================================
+     5. Softmax
+     ============================================================ */
+
+  function step8Softmax(scores) {
+
+    const maxScore = Math.max(...scores);
+
+    const exponentials = scores.map(function (score) {
+      return Math.exp(score - maxScore);
+    });
+
+    const sum = exponentials.reduce(function (a, b) {
+      return a + b;
+    }, 0);
+
+    return exponentials.map(function (value) {
+      return value / sum;
+    });
+  }
+
+
+  /* ============================================================
+     6. Calculate Q, K and V for every token
+     ============================================================ */
+
+  const step8Q = [];
+  const step8K = [];
+  const step8V = [];
+
+  step8Embeddings.forEach(function (item) {
+
+    step8Q.push(
+      step8MultiplyVectorMatrix(
+        item.vector,
+        step8Weights.Q
+      )
+    );
+
+    step8K.push(
+      step8MultiplyVectorMatrix(
+        item.vector,
+        step8Weights.K
+      )
+    );
+
+    step8V.push(
+      step8MultiplyVectorMatrix(
+        item.vector,
+        step8Weights.V
+      )
+    );
+
+  });
+
+
+  /* ============================================================
+     7. Calculate Attention for a Query Token
+     ============================================================ */
+
+  function step8CalculateAttention(queryIndex) {
+
+    const q = step8Q[queryIndex];
+
+    const dk = q.length;
+
+    const scale = Math.sqrt(dk);
+
+    const scores = [];
+
+    /*
+       score(i,j) = Qi · Kj / sqrt(dk)
+    */
+
+    for (let j = 0; j < step8Embeddings.length; j++) {
+
+      const dot = step8DotProduct(
+        q,
+        step8K[j]
+      );
+
+      scores.push(dot / scale);
+
+    }
+
+    const weights = step8Softmax(scores);
+
+    return {
+      scores: scores,
+      weights: weights
+    };
+
+  }
+
+
+  /* ============================================================
+     8. Calculate Contextualized Output
+     ============================================================ */
+
+  function step8CalculateOutput(queryIndex) {
+
+    const attention =
+      step8CalculateAttention(queryIndex);
+
+    const weights = attention.weights;
+
+    const output =
+      new Array(step8V[0].length).fill(0);
+
+
+    /*
+       Output =
+       Σ attention_weight × Value
+    */
+
+    for (let i = 0; i < step8Embeddings.length; i++) {
+
+      for (let d = 0; d < step8V[i].length; d++) {
+
+        output[d] +=
+          weights[i] * step8V[i][d];
+
+      }
+
+    }
+
+    return {
+      scores: attention.scores,
+      weights: weights,
+      output: output
+    };
+
+  }
+
+
+  /* ============================================================
+     9. Create Token Buttons
+     ============================================================ */
+
+  const buttonContainer =
+    document.getElementById("step8-token-buttons");
+
+  step8Embeddings.forEach(function (item, index) {
+
+    const button =
+      document.createElement("button");
+
+    button.textContent = item.token;
+
+    button.style.cssText = `
+      padding: 8px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-weight: 500;
+    `;
+
+    button.addEventListener("click", function () {
+
+      step8ShowCalculation(index);
+
+    });
+
+    buttonContainer.appendChild(button);
+
+  });
+
+
+  /* ============================================================
+     10. Display Calculation
+     ============================================================ */
+
+  function step8ShowCalculation(queryIndex) {
+
+    const container =
+      document.getElementById("step8-calculation");
+
+    const queryToken =
+      step8Embeddings[queryIndex].token;
+
+    const result =
+      step8CalculateOutput(queryIndex);
+
+    const scores = result.scores;
+
+    const weights = result.weights;
+
+    const output = result.output;
+
+
+    let html = "";
+
+
+    
+
+    /* ------------------------------------------------------------
+       Component-by-Component Calculation
+       ------------------------------------------------------------ */
+
+    html += `
+      <h4>4. Component-by-Component Calculation</h4>
+
+      <p>
+        Each output dimension is calculated separately.
+      </p>
+    `;
+
+
+    for (let dimension = 0; dimension < output.length; dimension++) {
+
+      let calculation = "";
+
+      step8Embeddings.forEach(function (item, index) {
+
+        const weight =
+          weights[index];
+
+        const value =
+          step8V[index][dimension];
+
+
+        calculation +=
+          `${weight.toFixed(4)} × ${value.toFixed(4)}`;
+
+
+        if (index < step8Embeddings.length - 1) {
+
+          calculation += " + ";
+
+        }
+
+      });
+
+
+      html += `
+        <div style="
+          background:#f8fafc;
+          border:1px solid #e2e8f0;
+          border-radius:8px;
+          padding:0.8rem;
+          margin:0.6rem 0;
+          overflow-x:auto;
+        ">
+
+          <strong>d${dimension + 1}</strong>
+
+          =
+
+          ${calculation}
+
+          =
+
+          <strong>
+            ${output[dimension].toFixed(4)}
+          </strong>
+
+        </div>
+      `;
+
+    }
+
+
+    /* ------------------------------------------------------------
+       Final Output
+       ------------------------------------------------------------ */
+
+    html += `
+      <div style="
+        background:#ecfeff;
+        border:1px solid #99f6e4;
+        border-radius:10px;
+        padding:1.2rem;
+        margin-top:1.5rem;
+        text-align:center;
+      ">
+
+        <h3>
+          Output Vector for "${queryToken}"
+        </h3>
+
+        <div style="
+          font-size:1.25rem;
+          font-weight:700;
+        ">
+
+          [${output
+            .map(function (x) {
+              return x.toFixed(4);
+            })
+            .join(", ")}]
+
+        </div>
+
+        <p>
+          This is the new
+          <strong>contextualized representation</strong>
+          for "${queryToken}".
+        </p>
+
+      </div>
+    `;
+
+
+    container.innerHTML = html;
+
+  }
+
+
+  /* ============================================================
+     11. Show "it" Initially
+     ============================================================ */
+
+  const itIndex =
+    step8Embeddings.findIndex(function (item) {
+      return item.token === "it";
+    });
+
+  if (itIndex !== -1) {
+
+    step8ShowCalculation(itIndex);
+
+  }
+
+})();
+</script>
+
+
+<h3>Computing output for: <strong>"it"</strong></h3>
+
+<p>
+  The attention weights from the previous step determine how much
+  information <strong>"it"</strong> receives from each token.
+</p>
+
+<p>
+  The Value vectors are obtained using:
+</p>
+
+<p>
+  \[
+  V = XW_V
+  \]
+</p>
+
+<p>
+  Using our learned \(W_V\) matrix, the Value vectors are:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Token</th>
+      <th>Value Vector \(V_i\)</th>
+      <th>Attention Weight</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>The</td>
+      <td>[0.27, 0.23, 0.31, 0.35]</td>
+      <td>6.9%</td>
+    </tr>
+
+    <tr>
+      <td>chicken</td>
+      <td>[0.58, 0.75, 0.53, 0.85]</td>
+      <td>10.7%</td>
+    </tr>
+
+    <tr>
+      <td>didn't</td>
+      <td>[0.50, 0.85, 0.54, 0.89]</td>
+      <td>9.4%</td>
+    </tr>
+
+    <tr>
+      <td>cross</td>
+      <td>[0.42, 0.75, 0.39, 0.90]</td>
+      <td>8.9%</td>
+    </tr>
+
+    <tr>
+      <td>the</td>
+      <td>[0.42, 0.39, 0.48, 0.58]</td>
+      <td>7.8%</td>
+    </tr>
+
+    <tr>
+      <td>road</td>
+      <td>[0.61, 0.63, 0.56, 0.73]</td>
+      <td>10.9%</td>
+    </tr>
+
+    <tr>
+      <td>because</td>
+      <td>[0.37, 0.66, 0.50, 0.65]</td>
+      <td>7.6%</td>
+    </tr>
+
+    <tr>
+      <td>it</td>
+      <td>[0.59, 0.50, 0.68, 0.62]</td>
+      <td>9.2%</td>
+    </tr>
+
+    <tr>
+      <td>was</td>
+      <td>[0.46, 0.51, 0.59, 0.52]</td>
+      <td>8.1%</td>
+    </tr>
+
+    <tr>
+      <td>too</td>
+      <td>[0.60, 0.57, 0.54, 0.86]</td>
+      <td>10.2%</td>
+    </tr>
+
+    <tr>
+      <td>wide</td>
+      <td>[0.61, 0.61, 0.67, 0.61]</td>
+      <td>10.2%</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Therefore:
+</p>
+
+<p>
+  <strong>
+    Output = Σ (attention weight<sub>i</sub> × V<sub>i</sub>)
+  </strong>
+</p>
+
+<p>
+  \[
+  \begin{aligned}
+  \text{Output} ={}&
+  6.9\%[0.27,0.23,0.31,0.35]\\
+  &+10.7\%[0.58,0.75,0.53,0.85]\\
+  &+9.4\%[0.50,0.85,0.54,0.89]\\
+  &+8.9\%[0.42,0.75,0.39,0.90]\\
+  &+7.8\%[0.42,0.39,0.48,0.58]\\
+  &+10.9\%[0.61,0.63,0.56,0.73]\\
+  &+7.6\%[0.37,0.66,0.50,0.65]\\
+  &+9.2\%[0.59,0.50,0.68,0.62]\\
+  &+8.1\%[0.46,0.51,0.59,0.52]\\
+  &+10.2\%[0.60,0.57,0.54,0.86]\\
+  &+10.2\%[0.61,0.61,0.67,0.61]
+  \end{aligned}
+  \]
+</p>
+
+<h3>Step-by-step calculation</h3>
+
+<p>
+  The weighted Value vectors are added <strong>component by component</strong>.
+</p>
+
+<p>
+  For the first dimension:
+</p>
+
+<p>
+  \[
+  \begin{aligned}
+  d_1={}&
+  0.069(0.27)+
+  0.107(0.58)+
+  0.094(0.50)+
+  0.089(0.42)\\
+  &+0.078(0.42)+
+  0.109(0.61)+
+  0.076(0.37)+
+  0.092(0.59)\\
+  &+0.081(0.46)+
+  0.102(0.60)+
+  0.102(0.61)\\
+  &\approx \boxed{0.5074}
+  \end{aligned}
+  \]
+</p>
+
+<p>
+  For the second dimension:
+</p>
+
+<p>
+  \[
+  \begin{aligned}
+  d_2={}&
+  0.069(0.23)+
+  0.107(0.75)+
+  0.094(0.85)+
+  0.089(0.75)\\
+  &+0.078(0.39)+
+  0.109(0.63)+
+  0.076(0.66)+
+  0.092(0.50)\\
+  &+0.081(0.51)+
+  0.102(0.57)+
+  0.102(0.61)\\
+  &\approx \boxed{0.5997}
+  \end{aligned}
+  \]
+</p>
+
+<p>
+  For the third dimension:
+</p>
+
+<p>
+  \[
+  \begin{aligned}
+  d_3={}&
+  0.069(0.31)+
+  0.107(0.53)+
+  0.094(0.54)+
+  0.089(0.39)\\
+  &+0.078(0.48)+
+  0.109(0.56)+
+  0.076(0.50)+
+  0.092(0.68)\\
+  &+0.081(0.59)+
+  0.102(0.54)+
+  0.102(0.67)\\
+  &\approx \boxed{0.5338}
+  \end{aligned}
+  \]
+</p>
+
+<p>
+  For the fourth dimension:
+</p>
+
+<p>
+  \[
+  \begin{aligned}
+  d_4={}&
+  0.069(0.35)+
+  0.107(0.85)+
+  0.094(0.89)+
+  0.089(0.90)\\
+  &+0.078(0.58)+
+  0.109(0.73)+
+  0.076(0.65)+
+  0.092(0.62)\\
+  &+0.081(0.52)+
+  0.102(0.86)+
+  0.102(0.61)\\
+  &\approx \boxed{0.7022}
+  \end{aligned}
+  \]
+</p>
+
+<h3>Output vector for "it"</h3>
+
+<p>
+  \[
+  \boxed{
+  \text{Output}_{it}
+  =
+  [0.5074,\;0.5997,\;0.5338,\;0.7022]
+  }
+  \]
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Dimension</th>
+      <th>Output value</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td>d<sub>1</sub></td>
+      <td>0.5074</td>
+    </tr>
+
+    <tr>
+      <td>d<sub>2</sub></td>
+      <td>0.5997</td>
+    </tr>
+
+    <tr>
+      <td>d<sub>3</sub></td>
+      <td>0.5338</td>
+    </tr>
+
+    <tr>
+      <td>d<sub>4</sub></td>
+      <td>0.7022</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="key-idea">
+  <h3>Key Idea</h3>
+
+  <p>
+    The <strong>attention weights</strong> determine how much information
+    is taken from each token, while the <strong>Value vectors</strong>
+    contain the information being gathered.
+  </p>
+
+  <p>
+    Therefore, the output for <strong>"it"</strong> is a new
+    <strong>contextualized representation</strong>. It is a weighted
+    combination of the Value vectors from the sequence, rather than simply
+    being the original embedding of "it".
+  </p>
+</div>
+<h2>5. The Complete Scaled Dot-Product Attention Formula</h2>
+<div class="equation"><b>Attention(Q,K,V) = softmax(QK<sup>T</sup> / √d<sub>k</sub>)V</b></div>
+<p>Read it from left to right:</p>
+<div class="flow"><span class="node">Q</span><span class="arrow">×</span><span class="node">Kᵀ</span><span class="arrow">→</span><span class="node">Scores</span><span class="arrow">→</span><span class="node">Scale</span><span class="arrow">→</span><span class="node">Softmax</span><span class="arrow">→</span><span class="node">Weights × V</span></div>
+<p>The reference attention page presents the same compact formula: <b>softmax(QKᵀ / √d) × V</b>.</p>
+
+<h3>Why QKᵀ?</h3>
+<p>Calculating one token at a time would be slow. Instead, all queries and keys are stored as matrices.</p>
+<div class="equation">Q ∈ ℝ<sup>N×d<sub>k</sub></sup> &nbsp;&nbsp; K ∈ ℝ<sup>N×d<sub>k</sub></sup></div>
+<p>Then one matrix multiplication calculates all pairwise scores:</p>
+<div class="equation">QK<sup>T</sup> ∈ ℝ<sup>N×N</sup></div>
+<p>Entry (i,j) tells us how strongly token i matches token j.</p>
+
+<h2>6. Causal Masking — Do Not Look into the Future</h2>
+<p>For a next-token language model, a token must not use future tokens.</p>
+<p>For example, when predicting after:</p>
+<div class="equation">The cat</div>
+<p>the model cannot use the future answer.</p>
+<p>The causal mask is:</p>
+<div class="equation">M<sub>ij</sub> = 0 &nbsp; if j ≤ i<br>M<sub>ij</sub> = −∞ &nbsp; if j &gt; i</div>
+<p>Therefore:</p>
+<div class="equation">MaskedScores = QK<sup>T</sup>/√d<sub>k</sub> + M</div>
+<p>After softmax, the positions containing −∞ become zero attention.</p>
+
+<h2>7. Multi-Head Attention</h2>
+
+<p>
+  A single attention mechanism may learn one type of relationship between
+  tokens. To capture different types of relationships at the same time,
+  a Transformer uses <strong>multiple parallel attention heads</strong>.
+</p>
+
+<p>
+  Each attention head has its own learned
+  <strong>Q, K, and V projection matrices</strong>. Therefore, each head
+  can learn to focus on different aspects of the sequence.
+</p>
+
+<p>
+  For example, one head may learn to focus on
+  <strong>short-range relationships</strong>, while another may capture
+  <strong>long-distance dependencies</strong>. Another head may learn
+  relationships related to <strong>syntax</strong>, while another may
+  focus more on <strong>semantic relationships</strong>.
+</p>
+
+<p>
+  Thus, the same input sequence is examined from several different
+  learned perspectives simultaneously. This allows multi-head attention
+  to produce a richer representation than a single attention mechanism.
+</p>
+
+<h3>Attention in Each Head</h3>
+
+<p>
+  Each head independently performs scaled dot-product attention:
+</p>
+
+<p>
+  \[
+  \text{head}_i =
+  \operatorname{softmax}
+  \left(
+  \frac{Q_iK_i^T}{\sqrt{d_k}} + M
+  \right)V_i
+  \]
+</p>
+
+<p>
+  Here, \(Q_i\), \(K_i\), and \(V_i\) are the Query, Key, and Value
+  projections learned specifically for head \(i\). The mask \(M\) can be
+  used to restrict attention when required, such as preventing a
+  language model from looking at future tokens.
+</p>
+
+<h3>Combining the Heads</h3>
+
+<p>
+  After all attention heads independently process the sequence, their
+  outputs are concatenated:
+</p>
+
+<p>
+  \[
+  \operatorname{Concat}
+  (\text{head}_1,\text{head}_2,\ldots,\text{head}_A)
+  \]
+</p>
+
+<p>
+  Concatenation brings together the information learned by all the heads.
+  An output projection matrix \(W_O\) then combines this information and
+  maps it back to the Transformer's model dimension:
+</p>
+
+<p>
+  \[
+  \operatorname{MultiHeadAttention}(X)
+  =
+  \operatorname{Concat}
+  (\text{head}_1,\ldots,\text{head}_A)W_O
+  \]
+</p>
+
+<div class="key-idea">
+  <h3>Key Idea</h3>
+
+  <p>
+    <strong>Multiple heads → different learned perspectives → richer
+    representation.</strong>
+  </p>
+
+  <p>
+    Each head can learn different relationships among the tokens, and the
+    final projection combines these complementary pieces of information
+    into a single representation.
+  </p>
+</div>
+
+<h1>C. Transformer Block Overview</h1>
+
+<p>
+  A <strong>Transformer block</strong> is a modular unit that is repeatedly
+  stacked in a Transformer model. It mainly performs two operations:
+</p>
+
+<ol>
+  <li>
+    <strong>Self-attention</strong> — allows each token to gather relevant
+    information from other tokens.
+  </li>
+  <li>
+    <strong>Feed-forward network (FFN)</strong> — further transforms the
+    representation of each token.
+  </li>
+</ol>
+
+<p>
+  <strong>Residual connections</strong> and <strong>layer normalization</strong>
+  support these operations by helping preserve information and stabilize
+  training.
+</p>
+
+<div class="key-idea">
+  <h2>1. Residual Stream</h2>
+
+  <p>
+    Think of the <strong>residual stream</strong> as a path carrying each
+    token's vector through the Transformer.
+  </p>
+
+  <p>
+    At each stage, the Transformer computes new information using
+    <strong>attention</strong> or the <strong>feed-forward network</strong>
+    and <strong>adds it to the existing vector</strong>.
+  </p>
+
+  <p>
+    This allows information to <strong>accumulate</strong> as the token
+    passes through the layers instead of replacing the information from
+    earlier layers.
+  </p>
+
+  <div style="text-align:center; margin:1.5rem 0;">
+    <img
+      src="./images/residualstream.png"
+      alt="Transformer residual stream showing multi-head attention, layer normalization, and feed-forward network"
+      style="max-width:100%; height:auto; border-radius:8px;"
+    >
+  </div>
+
+  <p>
+    In simple terms:
+  </p>
+
+  <p style="text-align:center;">
+    <strong>New representation = Old representation + New information</strong>
+  </p>
+</div>
+
+<h3>Why Residual Connections?</h3>
+
+<p>
+  Residual connections help <strong>information and gradients flow through
+  deep networks</strong>, allowing earlier information to remain available
+  while each layer progressively refines the representation.
+</p>
+
+<h2>2. Feedforward Network (FFN)</h2>
+
+<p>
+  A <strong>Feedforward Network (FFN)</strong> is applied
+  <strong>independently to each token</strong>. It does not exchange
+  information between different token positions; <strong>self-attention</strong>
+  performs that role.
+</p>
+
+<p>
+  The same FFN weights are used for every token position within a
+  Transformer layer, but <strong>each Transformer layer has its own FFN
+  weights</strong>.
+</p>
+
+<h3>2.1 Mathematical Form</h3>
+
+<p>
+  For a token representation <strong>x<sub>i</sub></strong>, the FFN can be
+  written as:
+</p>
+
+<p>
+  \[
+  \mathrm{FFN}(x_i)
+  =
+  \mathrm{GELU}(x_iW_1+b_1)W_2+b_2
+  \]
+</p>
+
+<ul>
+  <li>
+    <strong>W<sub>1</sub></strong> expands the representation from the model
+    dimension <strong>d</strong> to a larger hidden dimension
+    <strong>d<sub>ff</sub></strong>.
+  </li>
+  <li>
+    <strong>GELU</strong> introduces a nonlinear transformation.
+  </li>
+  <li>
+    <strong>W<sub>2</sub></strong> projects the representation back to the
+    original model dimension <strong>d</strong>.
+  </li>
+  <li>
+    <strong>b<sub>1</sub></strong> and <strong>b<sub>2</sub></strong> are
+    learned bias terms.
+  </li>
+</ul>
+
+<p>
+  The original Transformer used <strong>ReLU</strong>, while many modern
+  Transformers use <strong>GELU</strong> or other activation functions.
+</p>
+
+<h3>2.2 Intuition</h3>
+
+<p>
+  The FFN acts like a <strong>per-token processor</strong>. After
+  self-attention has gathered information from other tokens, the FFN
+  transforms and refines each token's representation using learned
+  nonlinear transformations.
+</p>
+
+<p>
+  During training, the FFN's weights are adjusted through
+  <strong>backpropagation and the training loss</strong>. In an LLM, these
+  learned transformations help produce representations that are useful for
+  the model's training objective, such as <strong>next-token prediction</strong>.
+</p>
+
+<div class="key-idea">
+  <p>
+    <strong>Self-attention:</strong> gathers information from other tokens.
+  </p>
+
+  <p>
+    <strong>FFN:</strong> processes and refines the information for each token.
+  </p>
+</div>
+<h2>3. Layer Normalization (LayerNorm)</h2>
+
+<p>
+  <strong>Layer Normalization (LayerNorm)</strong> normalizes the features
+  of each token vector. It helps keep the values in a stable range during
+  training.
+</p>
+
+<p>
+  For a token vector
+  <strong>x = [1, 2, 3, 4]</strong>, LayerNorm works as follows:
+</p>
+
+<h3>Step-by-step computation</h3>
+
+<ol>
+  <li>
+    <strong>Calculate the mean:</strong>
+    <br>
+    &mu; = (1 + 2 + 3 + 4) / 4 = 2.5
+  </li>
+
+  <li>
+    <strong>Calculate the variance:</strong>
+    <br>
+    &sigma;<sup>2</sup> =
+    [(1 - 2.5)<sup>2</sup> + (2 - 2.5)<sup>2</sup>
+    + (3 - 2.5)<sup>2</sup> + (4 - 2.5)<sup>2</sup>] / 4
+    = 1.25
+  </li>
+
+  <li>
+    <strong>Calculate the standard deviation:</strong>
+    <br>
+    &sigma; = &radic;1.25 &asymp; 1.1180
+  </li>
+
+  <li>
+    <strong>Normalize each feature:</strong>
+    <br>
+    x&#770; = (x - &mu;) / &radic;(&sigma;<sup>2</sup> + &epsilon;)
+    <br>
+    &asymp; [-1.3416, -0.4472, 0.4472, 1.3416]
+  </li>
+</ol>
+
+<p>
+  LayerNorm then uses two <strong>learnable parameters</strong>:
+</p>
+
+<ul>
+  <li><strong>&gamma;</strong> — learnable scaling factor (gain)</li>
+  <li><strong>&beta;</strong> — learnable shifting factor (offset)</li>
+</ul>
+
+<p>
+  The final LayerNorm operation is:
+</p>
+
+<p>
+  \[
+  \mathrm{LayerNorm}(x)
+  =
+  \gamma \odot \hat{x} + \beta
+  \]
+</p>
+
+<p>
+  The normalization keeps the features well-scaled, while the learnable
+  <strong>&gamma;</strong> and <strong>&beta;</strong> allow the network to
+  adjust the scale and shift when needed.
+</p>
+
+<div class="key-idea">
+  <h3>Key Idea</h3>
+  <p>
+    LayerNorm normalizes the <strong>features of each token independently</strong>.
+    It does not normalize across different tokens.
+  </p>
+
+  <p>
+    This is different from <strong>Batch Normalization</strong>, which
+    normalizes using statistics across a batch.
+  </p>
+</div>
+
+<h2>Full Transformer Block — Step-by-Step</h2>
+
+<p>
+  The following equations describe a <strong>Pre-LN Transformer block</strong>.
+  For the input sequence
+  <strong>X = [x<sub>1</sub>, x<sub>2</sub>, ..., x<sub>N</sub>]</strong>,
+  each token is processed through the following steps:
+</p>
+
+<h3>Step 1: Layer Normalization</h3>
+
+<p>
+  First, the representation of each token is normalized:
+</p>
+
+<p>
+  \[
+  t_{1,i} = \mathrm{LayerNorm}(x_i)
+  \]
+</p>
+
+<h3>Step 2: Multi-Head Attention</h3>
+
+<p>
+  The normalized representation of token <strong>i</strong> is used as a
+  query, while the normalized representations of all tokens are available
+  to the attention mechanism:
+</p>
+
+<p>
+  \[
+  t_{2,i}
+  =
+  \mathrm{MultiHeadAttention}
+  \left(
+  t_{1,i},
+  [t_{1,1},t_{1,2},\ldots,t_{1,N}]
+  \right)
+  \]
+</p>
+
+<p>
+  This is the step where information is <strong>mixed across tokens</strong>.
+  Each token can attend to other tokens in the sequence.
+</p>
+
+<h3>Step 3: First Residual Connection</h3>
+
+<p>
+  The attention output is added to the original token representation:
+</p>
+
+<p>
+  \[
+  t_{3,i} = x_i + t_{2,i}
+  \]
+</p>
+
+<p>
+  This residual connection helps preserve information from the earlier
+  representation.
+</p>
+
+<h3>Step 4: Layer Normalization</h3>
+
+<p>
+  The result is normalized again before entering the feedforward network:
+</p>
+
+<p>
+  \[
+  t_{4,i} = \mathrm{LayerNorm}(t_{3,i})
+  \]
+</p>
+
+<h3>Step 5: Feedforward Network</h3>
+
+<p>
+  The FFN transforms the representation of token <strong>i</strong>
+  independently:
+</p>
+
+<p>
+  \[
+  t_{5,i} = \mathrm{FFN}(t_{4,i})
+  \]
+</p>
+
+<p>
+  Unlike attention, the FFN does <strong>not mix information between
+  different token positions</strong>.
+</p>
+
+<h3>Step 6: Second Residual Connection</h3>
+
+<p>
+  Finally, the FFN output is added to the representation from the first
+  residual connection:
+</p>
+
+<p>
+  \[
+  h_i = t_{3,i} + t_{5,i}
+  \]
+</p>
+
+<div class="key-idea">
+  <h3>Complete Flow</h3>
+</div>
+<div class="flow"><span class="node">X</span><span class="arrow">→</span><span class="node">LayerNorm</span><span class="arrow">→</span><span class="node">Multi-Head Attention</span><span class="arrow">→</span><span class="node">+ Add Residual</span><span class="arrow">→</span><span class="node">LayerNorm</span><span class="arrow">→</span><span class="node">FFN</span><span class="arrow">→</span><span class="node">+ Add Residual</span><span class="arrow">→</span><span class="node">H</span></div>
+
+<h2>Where Does Cross-Token Information Enter?</h2>
+
+<p>
+  <strong>Attention</strong> is the part of the Transformer that mixes
+  information across different token positions. It reads information from
+  other tokens and adds the result to the current token through the
+  residual connection.
+</p>
+
+<p>
+  \[
+  t_{3,i} = x_i + t_{2,i}
+  \]
+</p>
+<img src="./images/crosstoken.png" alt="Cross-token information flow through attention" 
+     style="max-width:100%; height:auto; display:block; margin:1rem auto;">
+
+<ul>
+  <li><strong>Attention:</strong> mixes information across tokens.</li>
+  <li><strong>Residual connection:</strong> carries this information forward.</li>
+  <li><strong>FFN and LayerNorm:</strong> operate on each token independently.</li>
+</ul>
+
+<p>
+  From the <strong>residual-stream perspective</strong>, attention heads can
+  be viewed as moving useful information from one token's residual stream
+  to another. Thus, the representation of a token can contain information
+  originating from other tokens.
+</p>
+
+<div class="key-idea">
+  <strong>Key Idea:</strong> Attention introduces cross-token information;
+  FFN and LayerNorm then process the resulting representation locally.
+</div>
+
+<h2>A Real Transformer/LLM Adds</h2>
+
+<ul>
+  <li>
+    <strong>Multiple Transformer layers:</strong>
+    The Transformer block is stacked many times so that representations
+    can be progressively refined. The number of layers depends on the
+    particular model.
+  </li>
+
+  <li>
+    <strong>Multi-head attention:</strong>
+    Multiple attention heads operate in parallel. Each head has its own
+    learned Q, K, and V projections and can learn different relationships
+    between tokens.
+  </li>
+
+  <li>
+    <strong>Feed-forward network:</strong>
+    After attention, a neural network further transforms the representation
+    of each token.
+  </li>
+
+  <li>
+    <strong>Residual connections:</strong>
+    The input to a sublayer is combined with its output, helping information
+    and gradients flow through the deep network.
+  </li>
+</ul>
+
+<img src="./images/Transformers_arch_base.jpg" alt="Transformer architecture overview" 
+     style="max-width:100%; height:auto; display:block; margin:1rem auto;">
+
+<h2>Stacking Blocks — Building Deep Models</h2>
+
+<p>
+  Transformer models are created by <strong>stacking many Transformer
+  blocks</strong>. Because each block has the same input and output
+  dimension <strong>d</strong>, the output of one block can be directly
+  passed as the input to the next block.
+</p>
+
+<p>
+  Typical layer counts include:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Typical Layers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>T5 / GPT-3 small</td>
+      <td>~12</td>
+    </tr>
+    <tr>
+      <td>GPT-3 large</td>
+      <td>~96</td>
+    </tr>
+    <tr>
+      <td>Modern LLMs</td>
+      <td>100s or more</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  At <strong>shallow layers</strong>, the residual stream mainly represents
+  information about the current token. As information passes through
+  <strong>deeper layers</strong>, the representation can encode increasingly
+  useful contextual information for the model's training objective, such as
+  <strong>next-token prediction</strong>.
+</p>
+
+<div class="key-idea">
+  <strong>Key Idea:</strong> Stacking Transformer blocks allows the model to
+  build increasingly rich representations layer by layer.
+</div>
+
+<h2>From Hidden State to the Next Token</h2>
+<p>After the final Transformer block, the last hidden vector can be mapped to vocabulary scores called <b>logits</b>.</p>
+<div class="equation">u = hW<sup>T</sup> + b</div>
+<p>Then softmax converts logits into probabilities:</p>
+<div class="equation">P(next token) = softmax(u)</div>
+<p>For example:</p>
+<table><tr><th>Token</th><th>Probability</th></tr><tr><td>the</td><td>0.10</td></tr><tr><td>cat</td><td>0.05</td></tr><tr><td>mat</td><td>0.15</td></tr><tr><td>sat</td><td>0.70</td></tr></table>
+<p>The model can then select or sample the next token and continue generation.</p>
+
+<h2>The Whole Transformer in One Picture</h2>
+<div class="flow"><span class="node">Text</span><span class="arrow">→</span><span class="node">Tokens</span><span class="arrow">→</span><span class="node">Embeddings + Position</span><span class="arrow">→</span><span class="node">Transformer Blocks</span><span class="arrow">→</span><span class="node">Hidden States</span><span class="arrow">→</span><span class="node">Linear / Unembedding</span><span class="arrow">→</span><span class="node">Softmax</span><span class="arrow">→</span><span class="node">Next Token</span></div>
+
+<h2>20. The Most Important Mathematical Chain</h2>
+<p>If you remember only one sequence, remember this:</p>
+<div class="equation"><b>X → Q,K,V → QKᵀ → divide by √d<sub>k</sub> → mask → softmax → ×V → multi-head → residual + LayerNorm → FFN → residual + LayerNorm</b></div>
+<p>For the attention part alone:</p>
+<div class="equation"><b>Attention(Q,K,V) = softmax(QK<sup>T</sup>/√d<sub>k</sub> + M)V</b></div>
+
+<h2>Simple Numerical Summary</h2>
+<table><tr><th>Step</th><th>Operation</th><th>Meaning</th></tr>
+<tr><td>1</td><td>xW<sub>Q</sub>, xW<sub>K</sub>, xW<sub>V</sub></td><td>Create Query, Key, Value</td></tr>
+<tr><td>2</td><td>QK<sup>T</sup></td><td>Measure token-to-token similarity</td></tr>
+<tr><td>3</td><td>/√d<sub>k</sub></td><td>Scale scores</td></tr>
+<tr><td>4</td><td>+ M</td><td>Block future tokens when needed</td></tr>
+<tr><td>5</td><td>softmax</td><td>Convert scores to attention weights</td></tr>
+<tr><td>6</td><td>weights × V</td><td>Collect information from values</td></tr>
+<tr><td>7</td><td>Concat + W<sub>O</sub></td><td>Combine attention heads</td></tr>
+<tr><td>8</td><td>+ residual</td><td>Preserve previous information</td></tr>
+<tr><td>9</td><td>FFN</td><td>Transform each token independently</td></tr>
+<tr><td>10</td><td>LayerNorm + residual</td><td>Stabilize and pass the representation onward</td></tr>
+</table>
+
+<h2>Summary</h2>
+
+<p>
+  Each <strong>Transformer block</strong> performs the following steps:
+</p>
+
+<ul>
+  <li>Normalizes the token representation.</li>
+
+  <li>
+    Allows the token to gather contextual information through
+    <strong>multi-head attention</strong>.
+  </li>
+
+  <li>
+    Adds the gathered information back using a
+    <strong>residual connection</strong>.
+  </li>
+
+  <li>Normalizes the resulting representation again.</li>
+
+  <li>
+    Applies a <strong>position-wise feedforward network (FFN)</strong>
+    to each token independently.
+  </li>
+
+  <li>
+    Adds the FFN output back using another
+    <strong>residual connection</strong>.
+  </li>
+</ul>
+
+<p>
+  By <strong>stacking many Transformer blocks</strong>, the model builds
+  increasingly rich representations and forms the deep Transformer
+  architectures used in <strong>NLP, vision, and other applications</strong>.
+</p>
+
+<div class="key-idea">
+  <strong>Key Idea:</strong>
+  A Transformer becomes deep by repeatedly applying the same basic
+  block—attention, residual connections, normalization, and FFN—layer by layer.
+</div>
+
+<h1>D. The Language Modeling Head in Transformers</h1>
+
+<h3>1. What Does the Language Modeling Head Do?</h3>
+
+<p>
+  A Transformer takes input tokens and passes them through multiple
+  Transformer blocks. These blocks produce a <strong>contextualized hidden
+  representation</strong> for each token.
+</p>
+
+<p>
+  To turn this representation into a prediction, we use a
+  <strong>Language Modeling Head</strong>. It converts the final hidden
+  representation into probabilities for all tokens in the vocabulary.
+</p>
+
+<p>
+  In simple terms:
+</p>
+
+<p>
+  <strong>Hidden representation → Logits → Probabilities → Predicted token</strong>
+</p>
+
+<img src="./images/languagemodelinghead.png"
+     alt="Language modeling head"
+     width="700">
+
+<p>
+  <strong>Figure:</strong> The language modeling head maps the final hidden
+  representation into a probability distribution over the vocabulary.
+</p>
+
+<h3>2. Language Models as Token Predictors</h3>
+
+<p>
+  A language model learns to predict the next token from the tokens that
+  came before it.
+</p>
+
+<p>
+  For example, given:
+</p>
+
+<p>
+  <strong>Thanks for all the</strong>
+</p>
+
+<p>
+  the model estimates probabilities for possible next tokens such as
+  <strong>help, support, time, information</strong>, and so on.
+</p>
+
+<p>
+  The Transformer uses attention to build a representation that contains
+  information from the available context.
+</p>
+
+<h3>3. From Hidden State to Token Probabilities</h3>
+
+<p>
+  Suppose the final Transformer layer produces the hidden state
+  <strong>h<sub>L</sub><sup>N</sup></strong> for the last token at position
+  <strong>N</strong>.
+</p>
+
+<p>
+  Let the hidden-state dimension be <strong>d</strong> and the vocabulary
+  size be <strong>|V|</strong>.
+</p>
+
+<h4>Step 1: Final Hidden Representation</h4>
+
+<p>
+  The final Transformer block produces:
+</p>
+
+<p>
+  \[
+  h_L^N \in \mathbb{R}^{d}
+  \]
+</p>
+
+<p>
+  This vector contains the information the Transformer has gathered from
+  the context.
+</p>
+
+<h4>Step 2: Convert the Hidden State into Logits</h4>
+
+<p>
+  The language modeling head projects the hidden state into vocabulary
+  space:
+</p>
+
+<p>
+  \[
+  u = h_L^N W^T + b
+  \]
+</p>
+
+<p>
+  Here:
+</p>
+
+<ul>
+  <li><strong>W</strong> is the projection weight matrix.</li>
+  <li><strong>b</strong> is the bias.</li>
+  <li><strong>u</strong> contains one score, called a <strong>logit</strong>, for every vocabulary token.</li>
+</ul>
+
+<p>
+  Therefore:
+</p>
+
+<p>
+  \[
+  u \in \mathbb{R}^{|V|}
+  \]
+</p>
+
+<h4>Step 3: Convert Logits into Probabilities</h4>
+
+<p>
+  The logits are converted into probabilities using <strong>softmax</strong>:
+</p>
+
+<p>
+  \[
+  y = \mathrm{softmax}(u)
+  \]
+</p>
+
+<p>
+  Now every vocabulary token has a probability, and all probabilities
+  together sum to 1.
+</p>
+
+<p>
+  The token with a high probability is a strong candidate for the next
+  token.
+</p>
+
+<h3>4. Weight Tying and the Unembedding Layer</h3>
+
+<p>
+  The input embedding matrix can also be used to map hidden representations
+  back into vocabulary space. This is called <strong>weight tying</strong>.
+</p>
+
+<p>
+  If the embedding matrix is:
+</p>
+
+<p>
+  \[
+  E \in \mathbb{R}^{|V| \times d}
+  \]
+</p>
+
+<p>
+  its transpose can be used as the <strong>unembedding matrix</strong>:
+</p>
+
+<p>
+  \[
+  E^T \in \mathbb{R}^{d \times |V|}
+  \]
+</p>
+
+<p>
+  The logits can then be computed as:
+</p>
+
+<p>
+  \[
+  u = h_L^N E^T
+  \]
+</p>
+
+<p>
+  This allows the same learned token representations to be used for both
+  <strong>input embeddings</strong> and <strong>output prediction</strong>.
+</p>
+
+<h3>5. From Logits to the Predicted Token</h3>
+
+<p>
+  The complete process can be viewed as:
+</p>
+
+<p>
+  \[
+  h_L^N
+  \rightarrow
+  u
+  \rightarrow
+  \mathrm{softmax}(u)
+  \rightarrow
+  \text{token probabilities}
+  \]
+</p>
+
+<p>
+  For example:
+</p>
+
+<ul>
+  <li><strong>"the"</strong> → 5%</li>
+  <li><strong>"chicken"</strong> → 12%</li>
+  <li><strong>"road"</strong> → 3%</li>
+  <li><strong>"because"</strong> → 25%</li>
+  <li><strong>"is"</strong> → 18%</li>
+</ul>
+
+<p>
+  The model can then choose or sample a token from this probability
+  distribution.
+</p>
+
+<h3>6. Text Generation</h3>
+
+<p>
+  During text generation, the selected token is added to the sequence.
+  The Transformer processes the updated sequence again and produces a new
+  probability distribution for the next token.
+</p>
+
+<p>
+  This process is repeated:
+</p>
+
+<p>
+  \[
+  w_i \rightarrow w_{i+1} \rightarrow w_{i+2} \rightarrow \cdots
+  \]
+</p>
+
+<img src="./images/decoderonly.png"
+     alt="Decoder-only Transformer language model"
+     width="600">
+
+<p>
+  <strong>Figure:</strong> A decoder-only Transformer passes the input
+  tokens through stacked Transformer blocks and uses the language modeling
+  head to predict the next token.
+</p>
+
+<h3>7. Decoder-Only Transformers</h3>
+
+<p>
+  Models such as GPT use a <strong>decoder-only Transformer</strong>.
+  They use <strong>causal self-attention</strong>, which prevents a token
+  from looking at future tokens.
+</p>
+
+<p>
+  For example, when predicting the next token after:
+</p>
+
+<p>
+  <strong>The chicken didn't cross</strong>
+</p>
+
+<p>
+  the model can use the tokens before the prediction position, but not
+  tokens that come after it.
+</p>
+
+<p>
+  The final hidden representation is passed to the language modeling head,
+  which produces the probability distribution for the next token.
+</p>
+
+
+<h3>8. Summary</h3>
+
+<p>
+  The language modeling head converts the Transformer's final hidden
+  representation into a prediction over the vocabulary.
+</p>
+
+<ol>
+  <li>Take the final hidden state <strong>h<sub>L</sub><sup>N</sup></strong>.</li>
+  <li>Project it into vocabulary space to obtain <strong>logits</strong>.</li>
+  <li>Apply <strong>softmax</strong> to obtain token probabilities.</li>
+  <li>Use those probabilities to select or sample the next token.</li>
+</ol>
+
+<div class="key-idea">
+  <strong>Key Idea:</strong>
+  The Transformer builds the contextual representation, while the
+  <strong>language modeling head</strong> converts that representation into
+  probabilities over possible next tokens.
+</div>
+
+<script async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</body>
+</html>
