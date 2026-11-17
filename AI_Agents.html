@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agents — Beginner Python Tutorial</title>
+<style>
+:root{--bg:#f4f7fb;--paper:#fff;--ink:#17243a;--muted:#52627a;--line:#d9e2ef;--code:#102238;--blue:#075985;--soft:#eaf4fb}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.68 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(120deg,#082f49,#075985);color:#fff;padding:30px max(22px,calc((100% - 900px)/2))}
+header h1{margin:0;font-size:clamp(1.8rem,4vw,2.6rem);line-height:1.2}
+main{max-width:900px;margin:28px auto;padding:0 20px 60px}
+.section{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:20px}
+h2{font-size:1.55rem;line-height:1.25;margin:0 0 14px;color:#0c3b5b}
+h3{font-size:1.12rem;margin:22px 0 8px;color:#124766}
+p{margin:10px 0}ul,ol{padding-left:24px}li{margin:5px 0}
+.muted{color:var(--muted)}
+.callout{background:var(--soft);border-left:4px solid #0891b2;padding:13px 16px;border-radius:8px;margin:16px 0}
+.warning{background:#fff7e6;border-left:4px solid #d97706;padding:13px 16px;border-radius:8px;margin:16px 0}
+pre{background:var(--code);color:#e5f1fb;padding:18px;border-radius:11px;overflow:auto;font:.86rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+p code,li code,td code{background:#edf2f7;padding:2px 5px;border-radius:4px;color:#0b4a6b}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.94rem}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:#edf5fa}
+.flow{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:16px 0}
+.step{background:#edf6fb;border:1px solid #c8e0ed;border-radius:9px;padding:11px 8px;text-align:center;font-size:.86rem}
+.step b{display:block;color:#075985}
+@media(max-width:700px){.section{padding:19px}.flow{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><h1>AI Agents with Python</h1></header>
+<main>
+
+<section class="section">
+<h2>1. What is an AI Agent?</h2>
+<p>A normal question-answering application usually follows a fixed sequence: receive a question, retrieve information if needed, and generate an answer. An <strong>AI Agent</strong> can do more. It interprets the user's request, decides whether a tool is needed, asks to use the appropriate tool, receives the tool's result, and then prepares a response.</p>
+<p>For example, consider an e-commerce assistant. A customer may ask about the return policy, calculate a discount, or ask a question that requires both operations.</p>
+<div class="callout"><strong>Simple definition:</strong> An AI Agent is an application in which an AI model can decide when to use available tools to complete a task. The model decides which tool to request; Python executes the actual function.</div>
+<h3>RAG application vs AI Agent</h3>
+<table>
+<tr><th>RAG question-answering</th><th>AI Agent</th></tr>
+<tr><td>Retrieves relevant information and uses it to answer.</td><td>Can choose among tools based on the user's request.</td></tr>
+<tr><td>Usually follows a predefined retrieval-and-generation flow.</td><td>Can follow different tool-use paths for different requests.</td></tr>
+<tr><td>In this example, it searches store policy documents.</td><td>It can search policy documents and calculate discounts.</td></tr>
+</table>
+<p>An agent can use a RAG function as one of its tools. In this tutorial, the knowledge-base search tool reuses the RAG pipeline, while a second tool performs a discount calculation.</p>
+</section>
+
+<section class="section">
+<h2>2. Understand the Agent workflow</h2>
+<p>The notebook implements the following interaction between the customer, Gemini and Python tools:</p>
+<div class="flow">
+<div class="step"><b>1. Request</b>Customer asks</div>
+<div class="step"><b>2. Decide</b>Gemini selects a tool</div>
+<div class="step"><b>3. Call</b>Structured function call</div>
+<div class="step"><b>4. Execute</b>Python runs function</div>
+<div class="step"><b>5. Return</b>Tool result to Gemini</div>
+<div class="step"><b>6. Answer</b>Gemini responds</div>
+</div>
+<ol>
+<li>The customer enters a request.</li>
+<li>Gemini interprets the request and decides whether a tool is needed.</li>
+<li>If a tool is needed, Gemini returns a structured function call with its name and arguments.</li>
+<li>Python executes the requested function.</li>
+<li>The tool result is sent back to Gemini.</li>
+<li>Gemini produces a natural-language response for the customer.</li>
+</ol>
+<div class="callout"><strong>Important distinction:</strong> Gemini does not directly execute our Python code. It requests a function call. Our Python application checks the requested function, runs it, and sends the result back to Gemini.</div>
+</section>
+
+<section class="section">
+<h2>3. Install libraries and initialize Gemini</h2>
+<p>We use the Google Gen AI SDK to communicate with Gemini and ChromaDB to maintain the store knowledge base.</p>
+<pre><code>!pip install -q -U google-genai chromadb
+
+import os
+import chromadb
+from google import genai
+from google.colab import userdata
+from google.genai import types
+
+# Read API key from Google Colab Secrets
+api_key = userdata.get("GEMINI_API_KEY")
+
+if not api_key:
+    raise ValueError(
+        "Add GEMINI_API_KEY to Colab Secrets "
+        "and enable notebook access."
+    )
+
+# Initialize Gemini client
+client = genai.Client(
+    api_key=api_key,
+    http_options={"api_version": "v1beta"}
+)
+
+EMBEDDING_MODEL = "gemini-embedding-001"
+GENERATION_MODEL = "gemini-2.5-flash"</code></pre>
+<p>Add a secret named <code>GEMINI_API_KEY</code> in the Google Colab Secrets panel and enable notebook access. The embedding model converts text into vectors; the generation model interprets requests, chooses tools and generates responses.</p>
+</section>
+
+<section class="section">
+<h2>4. Create sample store policy documents</h2>
+<p>Our demonstration agent answers questions about two sample policy documents: a return policy and a shipping policy.</p>
+<pre><code>from pathlib import Path
+
+documents_dir = Path("documents")
+documents_dir.mkdir(exist_ok=True)
+
+return_policy = """RETURN POLICY
+
+Customers can request a return within 10 days of delivery.
+The product must be unused and returned in its original packaging.
+Some personal-care products cannot be returned after opening.
+Refunds are initiated after the returned product passes inspection.
+The refund is generally processed to the original payment method.
+"""
+
+shipping_policy = """SHIPPING POLICY
+
+Standard delivery usually takes 3 to 5 business days.
+Express delivery usually takes 1 to 2 business days.
+Orders above Rs. 2000 are eligible for free standard shipping.
+Shipping availability depends on the delivery PIN code.
+Customers receive a tracking link after the order is dispatched.
+"""
+
+(documents_dir / "return_policy.txt").write_text(
+    return_policy, encoding="utf-8"
+)
+(documents_dir / "shipping_policy.txt").write_text(
+    shipping_policy, encoding="utf-8"
+)</code></pre>
+<p>These are sample text files created by the notebook. They are not connected to a real store's policy system.</p>
+</section>
+
+<section class="section">
+<h2>5. Prepare the RAG knowledge base</h2>
+<p>Before the agent can search store policies, we need to index the policy documents. This is the RAG part of the application.</p>
+<h3>Initialize persistent ChromaDB</h3>
+<pre><code>chroma_client = chromadb.PersistentClient(
+    path="/content/chroma_db"
+)
+
+collection = chroma_client.get_or_create_collection(
+    name="store_knowledge"
+)</code></pre>
+<p>Unlike a temporary in-memory client, <code>PersistentClient</code> stores ChromaDB data at the specified path. In this Colab example, the path is <code>/content/chroma_db</code>.</p>
+<h3>Read and split documents into chunks</h3>
+<pre><code>def read_documents(folder):
+    loaded_documents = []
+
+    for file_path in Path(folder).glob("*.txt"):
+        text = file_path.read_text(encoding="utf-8")
+        loaded_documents.append({
+            "filename": file_path.name,
+            "text": text
+        })
+
+    return loaded_documents
+
+
+def split_text(text, chunk_size=700, overlap=100):
+    chunks = []
+    start = 0
+
+    while start < len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+
+        if end >= len(text):
+            break
+
+        start = end - overlap
+
+    return chunks</code></pre>
+<p><code>read_documents()</code> reads every text file in the folder. <code>split_text()</code> divides long text into chunks of up to 700 characters. The next chunk starts 100 characters before the previous chunk ends, creating an overlap.</p>
+<div class="callout"><strong>Why overlap?</strong> A useful sentence or idea may fall across a chunk boundary. Overlap keeps some surrounding text in the next chunk, reducing the chance of separating related information.</div>
+<h3>Generate embeddings</h3>
+<pre><code>def create_embedding(text):
+    result = client.models.embed_content(
+        model=EMBEDDING_MODEL,
+        contents=text
+    )
+
+    return result.embeddings[0].values</code></pre>
+<p>This function sends a text chunk to <code>gemini-embedding-001</code> and returns its numerical vector.</p>
+<h3>Index the chunks in ChromaDB</h3>
+<pre><code>def ingest_documents():
+    loaded_documents = read_documents("documents")
+
+    ids = []
+    texts = []
+    embeddings = []
+    metadatas = []
+
+    for document in loaded_documents:
+        chunks = split_text(document["text"])
+
+        for index, chunk in enumerate(chunks):
+            ids.append(f'{document["filename"]}_{index}')
+            texts.append(chunk)
+            embeddings.append(create_embedding(chunk))
+
+            metadatas.append({
+                "source": document["filename"],
+                "chunk": index
+            })
+
+    if ids:
+        collection.upsert(
+            ids=ids,
+            documents=texts,
+            embeddings=embeddings,
+            metadatas=metadatas
+        )
+
+    print(f"Indexed {len(ids)} document chunks.")
+
+
+ingest_documents()
+print("Records in collection:", collection.count())</code></pre>
+<p>For every chunk, the program creates an ID, generates an embedding, and records metadata containing the source filename and chunk number. <code>upsert()</code> inserts or updates these records in ChromaDB.</p>
+</section>
+
+<section class="section">
+<h2>6. Create the document retrieval function</h2>
+<p>When a customer asks a policy question, we convert that question into an embedding and retrieve the three most relevant chunks.</p>
+<pre><code>def retrieve_documents(question, top_k=3):
+    if collection.count() == 0:
+        return []
+
+    query_vector = create_embedding(question)
+
+    results = collection.query(
+        query_embeddings=[query_vector],
+        n_results=min(top_k, collection.count()),
+        include=["documents", "metadatas", "distances"]
+    )
+
+    documents = results.get("documents", [[]])[0]
+    metadatas = results.get("metadatas", [[]])[0]
+
+    retrieved = []
+
+    for document, metadata in zip(documents, metadatas):
+        retrieved.append({
+            "text": document,
+            "source": metadata.get("source", "unknown")
+        })
+
+    return retrieved</code></pre>
+<p>The function returns the retrieved text along with its source filename. The distance values are requested from ChromaDB, although this function does not use them in its return value.</p>
+<h3>Test retrieval</h3>
+<pre><code>question = "How many days do customers have to return a product?"
+
+for item in retrieve_documents(question):
+    print("Source:", item["source"])
+    print(item["text"])
+    print("-" * 50)</code></pre>
+<p>The retrieved chunk should contain the return-policy information stating that customers can request a return within 10 days of delivery.</p>
+</section>
+
+<section class="section">
+<h2>7. Build the RAG question-answering function</h2>
+<p>We can now use the retrieval function to create a normal RAG question-answering function. This helps us understand the component that will later become an Agent tool.</p>
+<pre><code>def answer_question(question):
+    retrieved = retrieve_documents(question)
+
+    if not retrieved:
+        return (
+            "I could not find relevant information "
+            "in the store documents."
+        )
+
+    context_parts = []
+
+    for item in retrieved:
+        context_parts.append(
+            f'Source: {item["source"]}\n{item["text"]}'
+        )
+
+    context = "\n\n".join(context_parts)
+
+    prompt = f"""
+Answer the question using only the store policy context below.
+If the answer is not present in the context, clearly say that
+the documents do not provide the information.
+
+Context:
+{context}
+
+Question:
+{question}
+"""
+
+    response = client.models.generate_content(
+        model=GENERATION_MODEL,
+        contents=prompt
+    )
+
+    return response.text or "No text response was returned."
+
+
+print(answer_question(
+    "When is free standard shipping available?"
+))</code></pre>
+<p>This function follows a fixed RAG process: retrieve relevant policy text, add it to a prompt, and ask Gemini to generate an answer.</p>
+<div class="callout">In the Agent, we will expose the retrieval operation as a tool. Gemini will decide when to call it rather than our program calling it for every question.</div>
+</section>
+
+<section class="section">
+<h2>8. Create Python tools for the Agent</h2>
+<p>A tool is a normal Python function that performs a specific task. In this example, we provide two tools.</p>
+<h3>Tool 1 — Search the knowledge base</h3>
+<pre><code>def search_knowledge_base(question: str) -> str:
+    """Search store policy documents for relevant information."""
+
+    results = retrieve_documents(question, top_k=3)
+
+    if not results:
+        return (
+            "No relevant information was found "
+            "in the store documents."
+        )
+
+    passages = []
+
+    for index, item in enumerate(results, start=1):
+        passages.append(
+            f'Passage {index} (source: {item["source"]}): '
+            f'{item["text"]}'
+        )
+
+    return "\n\n".join(passages)</code></pre>
+<p>This function reuses the RAG retrieval pipeline. It returns the matching passages and their source filenames as a text result.</p>
+<h3>Tool 2 — Calculate a discount</h3>
+<pre><code>def calculate_discount(
+    price: float,
+    discount_percent: float
+) -> str:
+    """Calculate the final price after a percentage discount."""
+
+    if price < 0:
+        return "Price cannot be negative."
+
+    if discount_percent < 0 or discount_percent > 100:
+        return "Discount must be between 0 and 100."
+
+    discount_amount = price * discount_percent / 100
+    final_price = price - discount_amount
+
+    return (
+        f"Original price: Rs. {price:.2f}. "
+        f"Discount: {discount_percent:.2f}%. "
+        f"Discount amount: Rs. {discount_amount:.2f}. "
+        f"Final price: Rs. {final_price:.2f}."
+    )
+
+
+print(calculate_discount(5000, 10))
+print(search_knowledge_base("What is the express delivery time?"))</code></pre>
+<p>This function validates the inputs, calculates the discount amount, subtracts it from the original price, and returns a formatted result.</p>
+<div class="callout"><strong>Why are these called tools?</strong> They give the Agent capabilities beyond generating text. One tool searches external knowledge stored in ChromaDB; the other performs a deterministic calculation using Python.</div>
+</section>
+
+<section class="section">
+<h2>9. Tell Gemini which tools are available</h2>
+<p>Defining Python functions is not enough. Gemini also needs descriptions of the available functions, their names, and the arguments they accept. We provide this information through function declarations.</p>
+<h3>Function declaration for knowledge search</h3>
+<pre><code>search_function = types.FunctionDeclaration(
+    name="search_knowledge_base",
+    description=(
+        "Search the store policy documents for "
+        "an answer to a policy question."
+    ),
+    parameters_json_schema={
+        "type": "object",
+        "properties": {
+            "question": {
+                "type": "string",
+                "description": "The store policy question to search for."
+            }
+        },
+        "required": ["question"]
+    }
+)</code></pre>
+<h3>Function declaration for discount calculation</h3>
+<pre><code>discount_function = types.FunctionDeclaration(
+    name="calculate_discount",
+    description=(
+        "Calculate the final price after "
+        "a percentage discount."
+    ),
+    parameters_json_schema={
+        "type": "object",
+        "properties": {
+            "price": {
+                "type": "number",
+                "description": "Original product price in rupees."
+            },
+            "discount_percent": {
+                "type": "number",
+                "description": "Discount percentage from 0 to 100."
+            }
+        },
+        "required": ["price", "discount_percent"]
+    }
+)</code></pre>
+<p>The declaration describes what the tool does and what input parameters are required. Gemini uses these descriptions to decide which function is appropriate and to prepare the arguments.</p>
+<h3>Group the function declarations into a tool</h3>
+<pre><code>agent_tools = types.Tool(
+    function_declarations=[
+        search_function,
+        discount_function
+    ]
+)</code></pre>
+<p>We now have one tool configuration containing both available functions.</p>
+</section>
+
+<section class="section">
+<h2>10. Implement the AI Agent</h2>
+<p>This is the main part of the tutorial. The <code>run_agent()</code> function sends the customer's request to Gemini along with the tool descriptions. It then handles any function calls returned by the model.</p>
+<h3>Step A — Give the Agent instructions</h3>
+<pre><code>system_instruction = """
+You are a helpful assistant for a demonstration e-commerce store.
+
+Use search_knowledge_base for questions about store policies,
+returns, refunds, shipping, delivery, or tracking information.
+
+Use calculate_discount for percentage discount calculations.
+
+Do not invent store policy information. If the documents do not
+contain the answer, say that the documents do not provide it.
+
+For greetings or general conversation, answer directly.
+Explain tool results clearly.
+"""</code></pre>
+<p>These instructions guide the Agent's behavior and explain when each tool should be used.</p>
+<h3>Step B — Create the conversation</h3>
+<pre><code>conversation = [
+    types.Content(
+        role="user",
+        parts=[types.Part.from_text(text=user_question)]
+    )
+]</code></pre>
+<p>The conversation begins with the customer's question. We will add Gemini's responses and the tool results as the interaction continues.</p>
+<h3>Step C — Ask Gemini to decide what to do</h3>
+<pre><code>response = client.models.generate_content(
+    model=GENERATION_MODEL,
+    contents=conversation,
+    config=types.GenerateContentConfig(
+        system_instruction=system_instruction,
+        tools=[agent_tools],
+        automatic_function_calling=(
+            types.AutomaticFunctionCallingConfig(disable=True)
+        )
+    )
+)</code></pre>
+<p>We pass the system instructions and tool declarations to Gemini. Automatic function calling is disabled because this notebook demonstrates the tool-calling process manually in Python.</p>
+<p>Gemini may return a normal text answer, or it may return a structured function call asking our application to execute a tool.</p>
+<h3>Step D — Inspect the model response</h3>
+<pre><code>model_content = response.candidates[0].content
+conversation.append(model_content)
+
+function_calls = [
+    part.function_call
+    for part in model_content.parts
+    if part.function_call is not None
+]
+
+if not function_calls:
+    return response.text or "The model did not return a text answer."</code></pre>
+<p>We add Gemini's response to the conversation and inspect its parts for function calls. If no function call is present, we return the model's text answer.</p>
+<h3>Step E — Execute the requested Python function</h3>
+<pre><code>tool_response_parts = []
+
+for function_call in function_calls:
+    tool_name = function_call.name
+    arguments = dict(function_call.args or {})
+
+    try:
+        if tool_name == "search_knowledge_base":
+            result = search_knowledge_base(
+                question=arguments["question"]
+            )
+
+        elif tool_name == "calculate_discount":
+            result = calculate_discount(
+                price=float(arguments["price"]),
+                discount_percent=float(
+                    arguments["discount_percent"]
+                )
+            )
+
+        else:
+            result = f"Unknown tool: {tool_name}"
+
+        tool_result = {"result": result}
+
+    except Exception as error:
+        tool_result = {"error": str(error)}
+
+    print(f"Tool called: {tool_name}")
+    print("Tool result:", tool_result)
+
+    tool_response_parts.append(
+        types.Part.from_function_response(
+            name=tool_name,
+            response=tool_result
+        )
+    )</code></pre>
+<p>For every requested function call, Python reads the function name and arguments. It then executes the matching local function and stores the result in a function-response part.</p>
+<div class="warning"><strong>Important:</strong> Never execute arbitrary function names or code supplied by a model. This example explicitly checks the requested name against the two functions that the application allows.</div>
+<h3>Step F — Send the tool result back to Gemini</h3>
+<pre><code>conversation.append(
+    types.Content(
+        role="tool",
+        parts=tool_response_parts
+    )
+)</code></pre>
+<p>The tool result is added to the conversation. Gemini can now use that result to prepare a response for the customer. If it requests another tool, the application can execute that call in the next round.</p>
+<h3>Complete Agent function</h3>
+<p>The following combines the steps above. The loop allows up to five tool-calling rounds.</p>
+<pre><code>def run_agent(user_question):
+    system_instruction = """
+You are a helpful assistant for a demonstration e-commerce store.
+
+Use search_knowledge_base for questions about store policies,
+returns, refunds, shipping, delivery, or tracking information.
+
+Use calculate_discount for percentage discount calculations.
+
+Do not invent store policy information. If the documents do not
+contain the answer, say that the documents do not provide it.
+
+For greetings or general conversation, answer directly.
+Explain tool results clearly.
+"""
+
+    conversation = [
+        types.Content(
+            role="user",
+            parts=[types.Part.from_text(text=user_question)]
+        )
+    ]
+
+    for step in range(5):
+        response = client.models.generate_content(
+            model=GENERATION_MODEL,
+            contents=conversation,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                tools=[agent_tools],
+                automatic_function_calling=(
+                    types.AutomaticFunctionCallingConfig(
+                        disable=True
+                    )
+                )
+            )
+        )
+
+        model_content = response.candidates[0].content
+        conversation.append(model_content)
+
+        function_calls = [
+            part.function_call
+            for part in model_content.parts
+            if part.function_call is not None
+        ]
+
+        if not function_calls:
+            return (
+                response.text
+                or "The model did not return a text answer."
+            )
+
+        tool_response_parts = []
+
+        for function_call in function_calls:
+            tool_name = function_call.name
+            arguments = dict(function_call.args or {})
+
+            try:
+                if tool_name == "search_knowledge_base":
+                    result = search_knowledge_base(
+                        question=arguments["question"]
+                    )
+
+                elif tool_name == "calculate_discount":
+                    result = calculate_discount(
+                        price=float(arguments["price"]),
+                        discount_percent=float(
+                            arguments["discount_percent"]
+                        )
+                    )
+
+                else:
+                    result = f"Unknown tool: {tool_name}"
+
+                tool_result = {"result": result}
+
+            except Exception as error:
+                tool_result = {"error": str(error)}
+
+            print(f"Tool called: {tool_name}")
+            print("Tool result:", tool_result)
+
+            tool_response_parts.append(
+                types.Part.from_function_response(
+                    name=tool_name,
+                    response=tool_result
+                )
+            )
+
+        conversation.append(
+            types.Content(
+                role="tool",
+                parts=tool_response_parts
+            )
+        )
+
+    return (
+        "The Agent reached the maximum number "
+        "of tool-calling rounds."
+    )</code></pre>
+</section>
+
+<section class="section">
+<h2>11. Test the AI Agent</h2>
+<p>Now we can send different types of requests to the same Agent. Observe that the Agent chooses a tool according to the request.</p>
+<h3>Test 1 — Discount calculation</h3>
+<pre><code>question = "Calculate a 10 percent discount on Rs. 5000."
+
+answer = run_agent(question)
+
+print("Customer:", question)
+print("Agent:", answer)</code></pre>
+<p>Gemini should request <code>calculate_discount</code> with a price of 5000 and a discount percentage of 10. Python calculates a discount of Rs. 500 and a final price of Rs. 4,500.</p>
+<h3>Test 2 — Return policy question</h3>
+<pre><code>question = "What is the return period for a product?"
+
+answer = run_agent(question)
+
+print("Customer:", question)
+print("Agent:", answer)</code></pre>
+<p>Gemini should request <code>search_knowledge_base</code>. The tool retrieves the return-policy chunk, and Gemini uses the result to explain the 10-day return period.</p>
+<h3>Test 3 — One request requiring two tools</h3>
+<pre><code>question = (
+    "Tell me the return policy and calculate "
+    "a 15 percent discount on Rs. 8000."
+)
+
+answer = run_agent(question)
+
+print("Customer:", question)
+print("Agent:", answer)</code></pre>
+<p>This request needs both policy information and a calculation. Gemini can request the knowledge search and discount tools. Python executes the requested functions, sends their results back, and Gemini prepares a combined response.</p>
+<div class="callout"><strong>Observe the difference:</strong> We call <code>run_agent()</code> in the same way for all three questions. We do not manually choose the tool in the calling code. Gemini interprets the request and selects from the tools described to it.</div>
+</section>
+
+<section class="section">
+<h2>12. RAG vs AI Agent — final understanding</h2>
+<p>In this implementation, RAG and AI Agents work together, but they have different responsibilities.</p>
+<table>
+<tr><th>Component</th><th>Responsibility</th></tr>
+<tr><td>Gemini embedding model</td><td>Converts policy chunks and customer questions into vectors.</td></tr>
+<tr><td>ChromaDB</td><td>Stores vectors and retrieves relevant policy chunks.</td></tr>
+<tr><td><code>search_knowledge_base</code></td><td>Connects the Agent to the RAG retrieval function.</td></tr>
+<tr><td><code>calculate_discount</code></td><td>Performs a calculation using Python.</td></tr>
+<tr><td>Gemini 2.5 Flash</td><td>Interprets the request, selects tools when needed, and generates the response.</td></tr>
+<tr><td><code>run_agent()</code></td><td>Coordinates the model, tool execution and tool-result exchange.</td></tr>
+</table>
+<h3>Important production considerations</h3>
+<ul>
+<li>The policy files in this notebook contain demonstration information only.</li>
+<li>A production e-commerce assistant should connect to verified product, inventory, order, payment and customer systems.</li>
+<li>It must authenticate customers and authorize access before exposing private order information or performing transactions.</li>
+<li>Tool inputs must be validated, and sensitive actions should have suitable permission checks and confirmation steps.</li>
+<li>Tool errors, missing information and maximum tool-call rounds should be handled clearly.</li>
+</ul>
+<p><strong>In summary:</strong> An AI Agent uses an LLM to interpret a request and decide which available tool can help. The application executes the tool and returns its result to the model. The model then uses the result to produce a response. In this tutorial, we built an e-commerce demonstration Agent with two tools: a RAG-based policy search and a Python discount calculator.</p>
+</section>
+
+</main>
+</body>
+</html>
