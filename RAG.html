@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retrieval-Augmented Generation (RAG) — Beginner Tutorial</title>
+<style>
+:root{--bg:#f4f7fb;--paper:#fff;--ink:#17243a;--muted:#52627a;--blue:#075985;--cyan:#0e7490;--line:#d9e2ef;--code:#102238;--soft:#eaf4fb}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.68 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:linear-gradient(120deg,#082f49,#075985);color:#fff;padding:30px max(22px,calc((100% - 900px)/2))} header.title-only h1{margin:0;font-size:clamp(1.8rem,4vw,2.6rem)}
+
+h1{font-size:clamp(2rem,5vw,3.2rem);line-height:1.12;margin:.5rem 0 1rem}
+
+main{max-width:900px;margin:28px auto;padding:0 20px 60px;display:block}
+nav{position:sticky;top:18px;align-self:start;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px}
+nav strong{display:block;margin-bottom:10px}nav a{display:block;color:var(--muted);text-decoration:none;padding:5px 0;font-size:.9rem}nav a:hover{color:var(--blue)}
+article{min-width:0}.section{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:20px}
+h2{font-size:1.55rem;line-height:1.25;margin:0 0 14px;color:#0c3b5b}h3{font-size:1.12rem;margin:22px 0 8px;color:#124766}
+p{margin:10px 0}ul,ol{padding-left:24px}li{margin:5px 0}.muted{color:var(--muted)}
+.callout{background:var(--soft);border-left:4px solid #0891b2;padding:13px 16px;border-radius:8px;margin:16px 0}
+.warning{background:#fff7e6;border-left:4px solid #d97706;padding:13px 16px;border-radius:8px;margin:16px 0}
+.diagram{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#082f49}
+figcaption{font-size:.86rem;color:var(--muted);margin-top:8px}
+pre{background:var(--code);color:#e5f1fb;padding:18px;border-radius:11px;overflow:auto;font: .88rem/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}p code,li code{background:#edf2f7;padding:2px 5px;border-radius:4px;color:#0b4a6b}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.94rem}th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}th{background:#edf5fa}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:16px 0}.step{background:#edf6fb;border:1px solid #c8e0ed;border-radius:9px;padding:12px;text-align:center;font-size:.9rem}.step b{display:block;color:#075985}
+footer{text-align:center;color:var(--muted);padding:20px}
+@media(max-width:800px){main{display:block}.flow{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.section{padding:19px}.flow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="title-only"><h1>Retrieval-Augmented Generation (RAG)</h1></header>
+<main>
+<article>
+<section class="section" id="idea">
+<h2>1. What is RAG?</h2>
+<p>A Large Language Model (LLM) can answer many questions from the information learned during training. However, it may not know our private documents, university information, recently updated data, or a specific collection of facts.</p>
+<p><strong>Retrieval-Augmented Generation (RAG)</strong> addresses this by retrieving relevant information from an external knowledge source and supplying that information to the LLM before it generates an answer.</p>
+<div class="callout"><strong>Simple idea:</strong> Instead of asking the LLM to answer only from what it already knows, first search our knowledge base, then ask the LLM to answer using the retrieved information.</div>
+<p>For example, suppose we store information about RGUKT in a knowledge base. A student asks, “Where is RGUKT Basar located?” The system searches the stored information, retrieves the relevant sentence, and passes it to Gemini to generate the answer.</p>
+<h3>Why use RAG?</h3>
+<ul>
+<li>It can use information that was not part of the model's training data.</li>
+<li>We can update the knowledge base without retraining the LLM.</li>
+<li>It can reduce unsupported answers by instructing the model to use retrieved context.</li>
+<li>It is useful for document question answering, institutional help desks and internal knowledge assistants.</li>
+</ul>
+</section>
+
+<section class="section" id="architecture">
+<h2>2. Understand the RAG architecture</h2>
+<p>The diagram has two major workflows: <strong>indexing</strong> and <strong>question answering</strong>. Indexing prepares the knowledge base. Question answering retrieves information from it and generates a response.</p>
+<figure>
+<img class="diagram" src="./images/Advanced-RAG.png" alt="RAG architecture diagram">
+<figcaption>RAG Architecture.</figcaption>
+</figure>
+<h3>A. Indexing workflow — prepare the knowledge base</h3>
+<ol>
+<li><strong>Documents:</strong> Collect the source information, such as text files, PDFs, web pages or database records.</li>
+<li><strong>Chunking:</strong> Divide long documents into smaller pieces called chunks. The supplied notebook uses short text statements, so each statement is already a small unit; it does not implement a separate chunking algorithm.</li>
+<li><strong>Embedding model:</strong> Convert each chunk into a numerical vector that represents aspects of its meaning.</li>
+<li><strong>Vector store:</strong> Store the vectors together with their original text and identifiers. In this notebook, ChromaDB is the vector database.</li>
+</ol>
+<h3>B. Retrieval and generation workflow — answer a question</h3>
+<ol>
+<li>The user submits a question.</li>
+<li>The same embedding model converts the question into a vector.</li>
+<li>ChromaDB searches for the most similar stored vectors and returns their associated text.</li>
+<li>The retrieved text is combined with the question to form a prompt. This is the augmentation step.</li>
+<li>Gemini 2.5 Flash generates an answer using the supplied context.</li>
+<li>The answer is returned to the user.</li>
+</ol>
+<div class="flow">
+<div class="step"><b>1. Index</b>Prepare text</div>
+<div class="step"><b>2. Embed</b>Convert to vectors</div>
+<div class="step"><b>3. Retrieve</b>Find relevant text</div>
+<div class="step"><b>4. Augment</b>Build the prompt</div>
+<div class="step"><b>5. Generate</b>Produce an answer</div>
+</div>
+</section>
+
+<section class="section" id="indexing">
+<h2>3. Step 1 — Install libraries and initialize Gemini</h2>
+<p>We use the Google Gen AI SDK to access Gemini models and ChromaDB to store and search embeddings. Run this in Google Colab:</p>
+<pre><code>!pip install -q -U google-genai chromadb
+
+import chromadb
+from google import genai
+from google.colab import userdata
+
+# Read the API key from Colab Secrets
+api_key = userdata.get("GEMINI_API_KEY")
+
+# Initialize the Gemini client
+client = genai.Client(api_key=api_key)
+
+# Initialize an in-memory ChromaDB client
+chroma_client = chromadb.Client()
+
+# Create or reuse a collection
+collection = chroma_client.get_or_create_collection(
+    name="rgukt_knowledge_base"
+)</code></pre>
+<p>Before running the notebook, add a secret named <code>GEMINI_API_KEY</code> in Google Colab's Secrets panel and allow the notebook to access it. Do not place a real API key directly in code or publish it in a notebook.</p>
+<h3>What is a collection?</h3>
+<p>A ChromaDB <strong>collection</strong> is a named group of records. Each record can contain an ID, an embedding vector and the original document text. Here, the collection is named <code>rgukt_knowledge_base</code>.</p>
+<div class="callout"><strong>Important:</strong> <code>chromadb.Client()</code> creates an in-memory database in this example. Its data is not a permanent, disk-backed knowledge base and may be lost when the runtime ends.</div>
+</section>
+
+<section class="section" id="embeddings">
+<h2>4. Step 2 — Prepare documents and generate embeddings</h2>
+<p>The notebook defines 20 short statements about RGUKT, its location, courses, subjects, learning activities and student preparation.</p>
+<pre><code>documents = [
+    "RGUKT stands for Rajiv Gandhi University of Knowledge Technologies.",
+    "RGUKT Basar is located in Basar, Nirmal district, Telangana.",
+    "Computer Science and Engineering is one of the engineering disciplines offered at RGUKT.",
+    "Data Structures and Algorithms are important subjects in Computer Science and Engineering.",
+    "Database Management Systems teach students how to organize, store, retrieve, and manage data.",
+    # Add the remaining knowledge statements
+]</code></pre>
+<p>An <strong>embedding</strong> is a list of numbers representing text in a vector space. Texts with related meanings are generally represented by vectors that are closer to one another according to the embedding model's similarity measure.</p>
+<p>We use Google's <code>gemini-embedding-001</code> model to create an embedding for every document.</p>
+<pre><code>for i, text in enumerate(documents):
+
+    embedding_response = client.models.embed_content(
+        model="gemini-embedding-001",
+        contents=text
+    )
+
+    embedding = embedding_response.embeddings[0].values
+
+    collection.upsert(
+        ids=[f"rgukt_doc_{i}"],
+        embeddings=[embedding],
+        documents=[text]
+    )</code></pre>
+<p><strong>Line-by-line explanation:</strong></p>
+<ul>
+<li><code>enumerate(documents)</code> gives each text statement an index.</li>
+<li><code>embed_content()</code> sends the text to the embedding model.</li>
+<li><code>embeddings[0].values</code> extracts the numerical vector.</li>
+<li><code>upsert()</code> stores the ID, vector and original text. It inserts a new record or updates an existing record with the same ID.</li>
+</ul>
+<div class="callout">The vector is used for similarity search, while the original text is what we later give to the LLM as context. We do not ask Gemini to generate an answer during indexing.</div>
+</section>
+
+<section class="section" id="chroma">
+<h2>5. Step 3 — Store vectors in ChromaDB</h2>
+<p>ChromaDB is a vector database. It stores embeddings and provides a query operation to find records whose vectors are similar to a query vector.</p>
+<table>
+<tr><th>Stored field</th><th>Purpose</th></tr>
+<tr><td>ID, for example <code>rgukt_doc_1</code></td><td>Uniquely identifies a record in the collection.</td></tr>
+<tr><td>Embedding</td><td>Numerical representation used for vector search.</td></tr>
+<tr><td>Document</td><td>Original text returned after a match is found.</td></tr>
+</table>
+<p>After the loop finishes, the collection contains the indexed RGUKT statements. The notebook prints the number of documents to confirm how many statements were processed.</p>
+</section>
+
+<section class="section" id="retrieval">
+<h2>6. Step 4 — Retrieve relevant documents</h2>
+<p>Now a user asks a question:</p>
+<pre><code>user_query = "Where is RGUKT Located?"</code></pre>
+<p>We must convert the question into an embedding using the <strong>same embedding model</strong> used for the documents.</p>
+<pre><code>query_embedding_response = client.models.embed_content(
+    model="gemini-embedding-001",
+    contents=user_query
+)
+
+query_embedding = query_embedding_response.embeddings[0].values</code></pre>
+<p>Next, search the ChromaDB collection:</p>
+<pre><code>results = collection.query(
+    query_embeddings=[query_embedding],
+    n_results=5
+)
+
+retrieved_documents = results["documents"][0]</code></pre>
+<p><code>n_results=5</code> asks ChromaDB to return the five nearest matching records. The result is structured by query, so <code>results["documents"][0]</code> selects the list of documents returned for our first (and only) query.</p>
+<p>For the question “Where is RGUKT Located?”, a relevant stored statement is:</p>
+<pre><code>RGUKT Basar is located in Basar, Nirmal district, Telangana.</code></pre>
+<p>The notebook retrieves five documents, not necessarily five sentences that all contain the exact answer. They are the top matches according to the vector search.</p>
+<div class="callout"><strong>Top-k retrieval:</strong> The value <code>k</code> controls how many matching records are returned. A small value may omit useful context; a large value may add irrelevant text and increase prompt length.</div>
+</section>
+
+<section class="section" id="augment">
+<h2>7. Step 5 — Augment the prompt with retrieved context</h2>
+<p>Retrieval alone does not generate a natural-language answer. We now combine the retrieved documents into a context string and place that context alongside the user's question.</p>
+<pre><code>retrieved_context = "\n".join(retrieved_documents)
+
+rag_prompt = f"""
+You are an assistant answering questions about RGUKT.
+
+Answer the user's question strictly using the information
+provided in the retrieved context.
+
+Do not use external knowledge.
+Do not invent facts.
+If the answer is not available in the context,
+respond with: "I cannot find the answer."
+
+Retrieved Context:
+{retrieved_context}
+
+User Question:
+{user_query}
+
+Answer:
+"""</code></pre>
+<p>This is called <strong>augmentation</strong> because we enrich the original question with relevant information retrieved from the knowledge base.</p>
+<p>The instruction tells the LLM to use the supplied context and to say when the answer is unavailable. This helps guide the response, although prompt instructions alone cannot guarantee that a model will never make a mistake.</p>
+</section>
+
+<section class="section" id="generation">
+<h2>8. Step 6 — Generate the final answer</h2>
+<p>Finally, send the augmented prompt to Gemini 2.5 Flash:</p>
+<pre><code>response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents=rag_prompt
+)
+
+print(response.text)</code></pre>
+<p>Gemini reads the retrieved context and the question, then generates a response. For the example question, the expected answer is that RGUKT Basar is located in Basar, Nirmal district, Telangana.</p>
+<div class="callout"><strong>Remember the distinction:</strong> <code>gemini-embedding-001</code> converts text into vectors for searching. <code>gemini-2.5-flash</code> generates the natural-language answer. They perform different jobs.</div>
+</section>
+
+<section class="section" id="example">
+<h2>9. Complete flow in the RGUKT example</h2>
+<p>Your notebook's second example brings the stages together with 20 RGUKT knowledge statements and retrieves the top five matches.</p>
+<table>
+<tr><th>Stage</th><th>What the notebook does</th></tr>
+<tr><td>Knowledge input</td><td>Defines 20 short RGUKT text statements.</td></tr>
+<tr><td>Indexing</td><td>Embeds each statement and stores it with an ID and document text in ChromaDB.</td></tr>
+<tr><td>Question</td><td>Uses “Where is RGUKT Located?” as the user query.</td></tr>
+<tr><td>Query embedding</td><td>Embeds the question with <code>gemini-embedding-001</code>.</td></tr>
+<tr><td>Retrieval</td><td>Requests the top five matching documents from ChromaDB.</td></tr>
+<tr><td>Augmentation</td><td>Joins the retrieved documents and inserts them into the prompt.</td></tr>
+<tr><td>Generation</td><td>Sends the prompt to <code>gemini-2.5-flash</code> and prints the response.</td></tr>
+</table>
+<p>Conceptually, the data moves like this:</p>
+<pre><code>RGUKT text statements
+        |
+        v
+Embedding model (gemini-embedding-001)
+        |
+        v
+ChromaDB collection
+        |
+        |                  User question
+        |                        |
+        |                        v
+        |              Query embedding
+        |                        |
+        +------ Similarity search
+                         |
+                         v
+              Top 5 retrieved documents
+                         |
+                         v
+             Context + question prompt
+                         |
+                         v
+               Gemini 2.5 Flash
+                         |
+                         v
+                 Final answer</code></pre>
+</section>
+
+<section class="section" id="run">
+<h2>10. Run the notebook and experiment</h2>
+<ol>
+<li>Open the notebook in Google Colab.</li>
+<li>Install <code>google-genai</code> and <code>chromadb</code>.</li>
+<li>Add your Gemini API key to Colab Secrets as <code>GEMINI_API_KEY</code>.</li>
+<li>Run the initialization cells, then define the RGUKT documents.</li>
+<li>Run the indexing loop before running the retrieval cells.</li>
+<li>Ask a question and inspect the retrieved documents before looking at the generated answer.</li>
+</ol>
+<h3>Try these questions</h3>
+<ul>
+<li>What does RGUKT stand for?</li>
+<li>Which programming languages do CSE students learn?</li>
+<li>What subjects are important in Computer Science and Engineering?</li>
+<li>How are RGUKT students evaluated?</li>
+<li>Does the knowledge base mention the university's founding year?</li>
+</ul>
+<p>The last question is useful for testing grounding. If the retrieved context does not contain the founding year, the instructed response should be “I cannot find the answer.”</p>
+<h3>Experiment with the number of retrieved documents</h3>
+<pre><code># Retrieve only the closest document
+results = collection.query(
+    query_embeddings=[query_embedding],
+    n_results=1
+)
+
+# Retrieve five matching documents
+results = collection.query(
+    query_embeddings=[query_embedding],
+    n_results=5
+)</code></pre>
+<p>Compare the retrieved text and the generated answers. Observe whether retrieving more documents adds useful context or introduces unrelated information.</p>
+</section>
+
+<section class="section" id="limits">
+<h2>11. Important concepts and limitations</h2>
+<table>
+<tr><th>Concept</th><th>Beginner explanation</th></tr>
+<tr><td>Chunking</td><td>Splitting long source documents into smaller text units. The notebook uses short statements as its document units; it does not demonstrate a chunking library or overlap strategy.</td></tr>
+<tr><td>Embedding</td><td>Converting text into a numerical vector so semantic similarity can be searched.</td></tr>
+<tr><td>Vector database</td><td>Storing vectors and retrieving records with similar vectors. ChromaDB is used here.</td></tr>
+<tr><td>Top-k</td><td>The number of nearest records requested from the vector store.</td></tr>
+<tr><td>Context</td><td>The retrieved text supplied to the LLM to help answer the question.</td></tr>
+<tr><td>Grounding</td><td>Guiding the LLM to base its answer on the retrieved context rather than unsupported assumptions.</td></tr>
+</table>
+<h3>What this notebook does not yet implement</h3>
+<ul>
+<li>It does not load or parse PDF, Word or other external files; the knowledge statements are manually written in Python.</li>
+<li>It does not split long documents into chunks or create overlapping chunks.</li>
+<li>It uses an in-memory ChromaDB client rather than persistent storage.</li>
+<li>It does not include metadata filtering, citations to source documents, reranking or an evaluation pipeline.</li>
+<li>It retrieves the top five matches but does not apply a relevance threshold to reject weak matches.</li>
+</ul>
+<div class="warning"><strong>API key security:</strong> The first part of the supplied Python file contains a hard-coded API-key fallback. Do not use or share that key. If it is a real key, revoke or rotate it in the provider console and use Colab Secrets or an environment variable instead. Keep API keys out of source files and public repositories.</div>
+<h3>Final summary</h3>
+<p>RAG combines information retrieval with language generation. First, we embed and index our documents. When a question arrives, we embed the question, retrieve similar documents, add them to the prompt, and ask the LLM to generate an answer. In this tutorial, Gemini creates the embeddings and generates the answer, while ChromaDB stores and retrieves the vectors.</p>
+</section>
+</article>
+</main>
+</body>
+</html>
